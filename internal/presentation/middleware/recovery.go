@@ -43,8 +43,8 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleValidationError(ctx, *validationErrors, rm.constants.Context.Translator)
 	} else if BindingErrors, ok := err.(*exception.BindingError); ok {
 		handleBindingError(ctx, *BindingErrors, rm.constants.Context.Translator)
-	} else if AppErrors, ok := err.(*exception.AppError); ok {
-		handleAppError(ctx, *AppErrors, rm.constants.Context.Translator)
+	} else if AppErrors, ok := err.(*exception.UnauthorizedError); ok {
+		handleUnauthorizedError(ctx, *AppErrors, rm.constants.Context.Translator)
 	} else {
 		handleDefaultError(ctx, err)
 	}
@@ -88,7 +88,7 @@ func handleBindingError(ctx *gin.Context, bindingError exception.BindingError, t
 	base.Response(ctx, 400, message, nil)
 }
 
-func handleAppError(ctx *gin.Context, AppError exception.AppError, transKey string) {
+func handleUnauthorizedError(ctx *gin.Context, AppError exception.UnauthorizedError, transKey string) {
 	trans := base.GetTranslator(ctx, transKey)
 	message, _ := trans.Translate(AppError.Message)
 

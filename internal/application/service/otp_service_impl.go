@@ -48,9 +48,9 @@ func (os *OtpService) SetOTp(ctx context.Context, mobileNumber string, otp strin
 
 	if err == nil && res != nil {
 		if !res.Used {
-			return &exception.AppError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.AlreadyExist)}
+			return &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.AlreadyExist)}
 		} else if res.Used {
-			return &exception.AppError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.AlreadyUsed)}
+			return &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.AlreadyUsed)}
 		}
 	}
 
@@ -66,9 +66,9 @@ func (os *OtpService) ValidateOtp(ctx context.Context, mobileNumber string, otp 
 	if err != nil {
 		return err
 	} else if res.Used {
-		return &exception.AppError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.AlreadyUsed)}
+		return &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.AlreadyUsed)}
 	} else if !res.Used && res.OTP != otp {
-		return &exception.AppError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.Invalid)}
+		return &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.Invalid)}
 	}
 	// else if !res.Used && res.OTP == otp {
 	// 	res.Used = true
