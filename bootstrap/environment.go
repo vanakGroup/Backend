@@ -8,6 +8,7 @@ import (
 
 type Env struct {
 	PrimaryDB Database
+	Logger    Logger
 }
 
 type Database struct {
@@ -16,6 +17,13 @@ type Database struct {
 	User     string
 	Password string
 	Name     string
+}
+
+type Logger struct {
+	FilePath string
+	Encoding string
+	Level    string
+	Logger   string
 }
 
 func NewEnv() *Env {
@@ -30,6 +38,12 @@ func NewEnv() *Env {
 			User:     os.Getenv("DB_USER"),
 			Password: os.Getenv("DB_PASSWORD"),
 			Name:     os.Getenv("DB_NAME"),
+		},
+		Logger{
+			FilePath: os.Getenv("Logger_file_path"),
+			Encoding: os.Getenv("Logger_encoding"),
+			Level:    os.Getenv("Logger_level"),
+			Logger:   os.Getenv("Logger"),
 		},
 	}
 }
