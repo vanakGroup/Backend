@@ -2,6 +2,8 @@ package bootstrap
 
 import (
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -9,6 +11,7 @@ import (
 type Env struct {
 	PrimaryDB Database
 	Logger    Logger
+	Redis     Redis
 }
 
 type Database struct {
@@ -26,6 +29,20 @@ type Logger struct {
 	Logger   string
 }
 
+type Redis struct {
+	Host            string
+	Port            string
+	Password        string
+	Db              string
+	DialTimeout     time.Duration
+	ReadTimeout     time.Duration
+	WriteTimeout    time.Duration
+	PoolSize        int
+	PoolTimeout     time.Duration
+	ConnMaxIdleTime time.Duration
+	ConnMaxLifetime time.Duration
+}
+
 func NewEnv() *Env {
 	err := godotenv.Load("../../.env")
 	if err != nil {
@@ -40,10 +57,45 @@ func NewEnv() *Env {
 			Name:     os.Getenv("DB_NAME"),
 		},
 		Logger{
-			FilePath: os.Getenv("Logger_file_path"),
-			Encoding: os.Getenv("Logger_encoding"),
-			Level:    os.Getenv("Logger_level"),
-			Logger:   os.Getenv("Logger"),
+			FilePath: os.Getenv("LOGGER_FILE_PATH"),
+			Encoding: os.Getenv("LOGGER_ENCODING"),
+			Level:    os.Getenv("LOGGER_LEVEL"),
+			Logger:   os.Getenv("LOGGER"),
+		},
+		Redis{
+			Host:            os.Getenv("REDIS_HOST_CONFIG"),
+			Port:            os.Getenv("REDIS_PORT_CONFIG"),
+			Password:        os.Getenv("REDIS_PASSWORD_CONFIG"),
+			Db:              os.Getenv("REDIS_DB_CONFIG"),
+			DialTimeout:     getEnvDuration("REDIS_DIALTIMEOUT_CONFIG", 5),
+			ReadTimeout:     getEnvDuration("REDIS_READTIMEOUT_CONFIG", 5),
+			WriteTimeout:    getEnvDuration("REDIS_WRITETIMEOUT_CONFIG", 5),
+			PoolTimeout:     getEnvDuration("REDIS_POOLTIMEOUT_CONFIG", 15),
+			ConnMaxIdleTime: getEnvDuration("REDIS_CONNMAXIDLETIME_CONFIG", 500),
+			ConnMaxLifetime: getEnvDuration("REDIS_CONNMAXLIFETIME_CONFIG", 500),
+			PoolSize:        getEnvInt("REDIS_POOLSIZE_CONFIG", 10),
 		},
 	}
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	value := os.Getenv(key)
+	i, err := strconv.Atoi(value)
+
+	if err != nil {
+		return defaultValue
+	}
+
+	return i
+}
+
+func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
+	value := os.Getenv(key)
+
+	i, err := strconv.Atoi(value)
+	if err != nil {
+		return defaultValue
+	}
+
+	return time.Duration(i) * time.Second
 }
