@@ -183,4 +183,8 @@ var English = map[string]interface{}{
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",
 	},
+	"otp": map[string]interface{}{
+		"invalid":     " the otp is invalid.",
+		"alreadyUsed": "the otp is already used.",
+	},
 }

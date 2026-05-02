@@ -12,6 +12,13 @@ type Env struct {
 	PrimaryDB Database
 	Logger    Logger
 	Redis     Redis
+	OTP       OTP
+}
+
+type OTP struct {
+	Length       int
+	ExpiryMinute int
+	MaxAttempts  int
 }
 
 type Database struct {
@@ -74,6 +81,11 @@ func NewEnv() *Env {
 			ConnMaxIdleTime: getEnvDuration("REDIS_CONNMAXIDLETIME_CONFIG", 500),
 			ConnMaxLifetime: getEnvDuration("REDIS_CONNMAXLIFETIME_CONFIG", 500),
 			PoolSize:        getEnvInt("REDIS_POOLSIZE_CONFIG", 10),
+		},
+		OTP{
+			Length:       getEnvInt("OTP_LENGTH", 6),
+			ExpiryMinute: getEnvInt("OTP_EXPIRY_MINUTES", 2),
+			MaxAttempts:  getEnvInt("OTP_MAX_ATTEMPTS", 3),
 		},
 	}
 }

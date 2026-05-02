@@ -1,16 +1,29 @@
 package middleware
 
 import (
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/exception"
 	"github.com/Vanak/Backend/internal/presentation/controller/base"
 
 	"github.com/gin-gonic/gin"
 )
 
-type RecoveryMiddleware struct{}
+const (
+	genericError = "errors.generic"
+)
 
-func NewRecoveryMiddleware() *RecoveryMiddleware {
-	return &RecoveryMiddleware{}
+type RecoveryMiddleware struct {
+	constants *bootstrap.Constants
+}
+
+func NewRecoveryMiddleware(constants *bootstrap.Constants) *RecoveryMiddleware {
+	return &RecoveryMiddleware{
+		constants: constants,
+	}
 }
 
 func (rm *RecoveryMiddleware) Recovery(ctx *gin.Context) {
@@ -26,10 +39,12 @@ func (rm *RecoveryMiddleware) Recovery(ctx *gin.Context) {
 }
 
 func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
-	if validationErrors, ok := err.(exception.ValidationError); ok {
-		handleValidationError(ctx, validationErrors)
-	} else if BindingErrors, ok := err.(exception.BindingError); ok {
-		handleBindingError(ctx, BindingErrors)
+	if validationErrors, ok := err.(*exception.ValidationError); ok {
+		handleValidationError(ctx, *validationErrors, rm.constants.Context.Translator)
+	} else if BindingErrors, ok := err.(*exception.BindingError); ok {
+		handleBindingError(ctx, *BindingErrors, rm.constants.Context.Translator)
+	} else if AppErrors, ok := err.(*exception.AppError); ok {
+		handleAppError(ctx, *AppErrors, rm.constants.Context.Translator)
 	} else {
 		handleDefaultError(ctx, err)
 	}
@@ -44,20 +59,38 @@ func handleDefaultError(ctx *gin.Context, err error) {
 	)
 }
 
-func handleValidationError(ctx *gin.Context, validationError exception.ValidationError) {
-	base.Response(
-		ctx,
-		400,
-		validationError.Error(),
-		nil,
-	)
+func handleValidationError(ctx *gin.Context, validationError exception.ValidationError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	errorMessages := make(map[string]map[string]string)
+
+	for _, validationError := range validationError.FieldErros {
+		if _, ok := errorMessages[validationError.Field]; !ok {
+			errorMessages[validationError.Field] = make(map[string]string)
+		}
+		fieldName, _ := trans.Translate(validationError.Field)
+		message, _ := trans.Translate(fmt.Sprintf("errors.%s", validationError.Tag), fieldName)
+		errorMessages[validationError.Field][validationError.Tag] = message
+	}
+
+	base.Response(ctx, 422, errorMessages, nil)
 }
 
-func handleBindingError(ctx *gin.Context, BindingError exception.BindingError) {
-	base.Response(
-		ctx,
-		422,
-		BindingError.Error(),
-		nil,
-	)
+func handleBindingError(ctx *gin.Context, bindingError exception.BindingError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	message, _ := trans.Translate(genericError)
+
+	if numError, ok := bindingError.Err.(*strconv.NumError); ok {
+		message, _ = trans.Translate("errors.numeric", numError.Num)
+	} else if bindingError == http.ErrMissingFile {
+		message, _ = trans.Translate("errors.fileRequired")
+	}
+
+	base.Response(ctx, 400, message, nil)
+}
+
+func handleAppError(ctx *gin.Context, AppError exception.AppError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	message, _ := trans.Translate(AppError.Message)
+
+	base.Response(ctx, 401, message, nil)
 }

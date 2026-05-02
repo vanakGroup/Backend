@@ -5,11 +5,14 @@ package wire
 
 import (
 	"github.com/Vanak/Backend/bootstrap"
+	"github.com/Vanak/Backend/internal/application/service"
 	mathService "github.com/Vanak/Backend/internal/application/service/math"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	domainLocalization "github.com/Vanak/Backend/internal/domain/localization"
+	redisDomain "github.com/Vanak/Backend/internal/domain/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
+	redisRepo "github.com/Vanak/Backend/internal/infrastructure/repository/redis"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -22,10 +25,11 @@ type Database struct {
 
 type Application struct {
 	Database       *Database
-	MathController *math.CustomerMathController // اضافه شده برای استفاده در روت‌ها
+	MathController *math.CustomerMathController
 	Translator     domainLocalization.Translator
 	Recovery       *middleware.RecoveryMiddleware
 	Constants      *bootstrap.Constants
+	OtpService     *service.OtpService
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -36,13 +40,20 @@ func ProvideConstants(cfg *bootstrap.Config) *bootstrap.Constants {
 	return cfg.Constant
 }
 
-// تغییر در پکیج متد
+func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
+	db := database.InitRedis(cfg)
+	return &db
+}
+
 var MathProviderSet = wire.NewSet(
 	math.NewCustomerMathController,
 )
 
 var DatabaseProviderSet = wire.NewSet(
 	database.NewPostgresDataBase,
+	ProvideRedisCache,
+	redisRepo.NewUserCacheRepository,
+	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -53,6 +64,7 @@ var MiddlewareSet = wire.NewSet(
 var ServiceSet = wire.NewSet(
 	mathService.NewMathService,
 	localization.NewTranslationService,
+	service.NewOtpService,
 	wire.Bind(new(usecase.MathService), new(*mathService.MathService)),
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 )
@@ -63,6 +75,7 @@ func NewApplication(
 	trans domainLocalization.Translator,
 	rec *middleware.RecoveryMiddleware,
 	cons *bootstrap.Constants,
+	otpService *service.OtpService,
 ) *Application {
 	return &Application{
 		Database:       db,
@@ -70,6 +83,7 @@ func NewApplication(
 		Translator:     trans,
 		Recovery:       rec,
 		Constants:      cons,
+		OtpService:     otpService,
 	}
 }
 

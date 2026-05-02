@@ -1,8 +1,106 @@
 package bootstrap
 
 type Constants struct {
-	Context Context
-	Role    Role
+	Context    Context
+	Role       Role
+	RedisKey   RedisKey
+	ErrorTag   ErrorTag
+	ErrorField ErrorField
+}
+
+type ErrorTag struct {
+	AlreadyRegistered      string
+	MinimumLength          string
+	ContainsLowercase      string
+	ContainsUppercase      string
+	ContainsNumber         string
+	ContainsSpecialChar    string
+	Expired                string
+	Invalid                string
+	NotRegistered          string
+	NotVerified            string
+	NotActive              string
+	InvalidAuthCredentials string
+	ExpiredAuthToken       string
+	InvalidAuthToken       string
+	Unauthorized           string
+	AwaitingApproval       string
+	Rejected               string
+	NotExist               string
+	AlreadyExist           string
+	ForbiddenStatus        string
+	Pending                string
+	AlreadyBlocked         string
+	AlreadyActive          string
+	AlreadyResolved        string
+	AlreadyArchived        string
+	AlreadyCompleted       string
+	NotAccepted            string
+	StatusNotChange        string
+	AlreadyCanceled        string
+	AlreadyRejected        string
+	AlreadyAccepted        string
+	AlreadyDraft           string
+	InvalidRecaptcha       string
+	Required               string
+	InvalidNumber          string
+	AlreadyUsed            string
+}
+
+type ErrorField struct {
+	Recaptcha           string
+	User                string
+	Phone               string
+	Email               string
+	Password            string
+	OTP                 string
+	Corporation         string
+	NationalID          string
+	RegistrationNumber  string
+	IBAN                string
+	InstallationRequest string
+	Bid                 string
+	Address             string
+	Name                string
+	Province            string
+	City                string
+	Page                string
+	ContactType         string
+	Room                string
+	NotificationType    string
+	Notification        string
+	NotificationSetting string
+	Panel               string
+	MaintenanceRequest  string
+	MaintenanceRecord   string
+	Ticket              string
+	Role                string
+	Permission          string
+	TicketComment       string
+	Report              string
+	ContactInformation  string
+	PaymentTerm         string
+	Guarantee           string
+	GuaranteeViolation  string
+	News                string
+	Media               string
+	Blog                string
+	Post                string
+	Like                string
+	CorporationReview   string
+	CorporationStaff    string
+}
+
+type RedisKey struct {
+	OtpKey string
+}
+
+type Context struct {
+	Translator string
+}
+
+type Role struct {
+	DefaultType string
 }
 
 func NewConstant() *Constants {
@@ -13,13 +111,89 @@ func NewConstant() *Constants {
 		Role: Role{
 			DefaultType: "customer",
 		},
+		RedisKey: RedisKey{
+			OtpKey: "otp",
+		},
+		ErrorField: ErrorField{
+			Recaptcha:           "recaptcha",
+			User:                "user",
+			Phone:               "phone",
+			Email:               "email",
+			Password:            "password",
+			OTP:                 "otp",
+			Corporation:         "corporation",
+			NationalID:          "nationalID",
+			RegistrationNumber:  "registrationNumber",
+			IBAN:                "iban",
+			InstallationRequest: "installationRequest",
+			Bid:                 "bid",
+			Address:             "address",
+			Name:                "name",
+			Province:            "province",
+			City:                "city",
+			Page:                "page",
+			ContactType:         "contactType",
+			Room:                "room",
+			NotificationType:    "notificationType",
+			Notification:        "notification",
+			Panel:               "panel",
+			MaintenanceRequest:  "maintenanceRequest",
+			MaintenanceRecord:   "maintenanceRecord",
+			Ticket:              "ticket",
+			Role:                "role",
+			Permission:          "permission",
+			TicketComment:       "ticketComment",
+			Report:              "report",
+			ContactInformation:  "contactInformation",
+			NotificationSetting: "notificationSetting",
+			PaymentTerm:         "paymentTerm",
+			Guarantee:           "guarantee",
+			GuaranteeViolation:  "guaranteeViolation",
+			News:                "news",
+			Media:               "media",
+			Blog:                "blog",
+			Post:                "post",
+			Like:                "like",
+			CorporationReview:   "corporationReview",
+			CorporationStaff:    "corporationStaff",
+		},
+		ErrorTag: ErrorTag{
+			AlreadyRegistered:      "alreadyRegistered",
+			MinimumLength:          "minimumLength",
+			ContainsLowercase:      "containsLowercase",
+			ContainsUppercase:      "containsUppercase",
+			ContainsNumber:         "containsNumber",
+			ContainsSpecialChar:    "containsSpecialChar",
+			Expired:                "Expired",
+			Invalid:                "invalid",
+			NotRegistered:          "notRegistered",
+			NotVerified:            "notVerified",
+			NotActive:              "notActive",
+			InvalidAuthCredentials: "invalidAuthCredentials",
+			ExpiredAuthToken:       "expiredAuthToken",
+			InvalidAuthToken:       "invalidAuthToken",
+			Unauthorized:           "unauthorized",
+			AwaitingApproval:       "awaitingApproval",
+			Rejected:               "rejected",
+			NotExist:               "notExist",
+			AlreadyExist:           "alreadyExist",
+			ForbiddenStatus:        "forbiddenStatus",
+			Pending:                "pending",
+			AlreadyBlocked:         "alreadyBlocked",
+			AlreadyActive:          "alreadyActive",
+			AlreadyResolved:        "alreadyResolved",
+			AlreadyArchived:        "alreadyArchived",
+			AlreadyCompleted:       "alreadyCompleted",
+			NotAccepted:            "notAccepted",
+			StatusNotChange:        "statusNotChange",
+			AlreadyCanceled:        "alreadyCanceled",
+			AlreadyRejected:        "alreadyRejected",
+			AlreadyAccepted:        "alreadyAccepted",
+			AlreadyDraft:           "alreadyDraft",
+			InvalidRecaptcha:       "invalidRecaptcha",
+			Required:               "required",
+			InvalidNumber:          "invalidNumber",
+			AlreadyUsed:            "alreadyUsed",
+		},
 	}
-}
-
-type Context struct {
-	Translator string
-}
-
-type Role struct {
-	DefaultType string
 }

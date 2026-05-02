@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,10 +9,19 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var redisClient *redis.Client
+type Cache interface {
+	GetRedis() *redis.Client
+	CloseRedis()
+}
 
-func InitRedis(cfg *bootstrap.Config) {
-	redisClient = redis.NewClient(&redis.Options{
+type RedisDatabase struct {
+	redisClient *redis.Client
+}
+
+func InitRedis(cfg *bootstrap.Config) RedisDatabase {
+	addr := fmt.Sprintf("%s:%s", cfg.Env.Redis.Host, cfg.Env.Redis.Port)
+	fmt.Println("🔍 Redis attempt address:", addr)
+	redisClient := redis.NewClient(&redis.Options{
 		Addr:            fmt.Sprintf("%s:%s", cfg.Env.Redis.Host, cfg.Env.Redis.Port),
 		Password:        cfg.Env.Redis.Password,
 		DB:              0,
@@ -25,41 +33,27 @@ func InitRedis(cfg *bootstrap.Config) {
 		ConnMaxIdleTime: cfg.Env.Redis.ConnMaxIdleTime * time.Millisecond,
 		ConnMaxLifetime: cfg.Env.Redis.ConnMaxLifetime * time.Millisecond,
 	})
+
+	return RedisDatabase{redisClient: redisClient}
 }
 
-func GetRedis() *redis.Client {
-	return redisClient
-}
+// func (rb *RedisDatabase) GetRedis() *redis.Client {
+// 	return rb.redisClient
+// }
 
-func CloseRedis() {
-	if redisClient != nil {
-		redisClient.Close()
-	}
-}
-
-func Set[T any](ctx context.Context, c *redis.Client, key string, value T, duration time.Duration) error {
-	v, err := json.Marshal(value)
-
+func (rb *RedisDatabase) GetRedis() *redis.Client {
+	// یک تست پینگ سریع برای اطمینان از زنده بودن اتصال
+	err := rb.redisClient.Ping(context.Background()).Err()
 	if err != nil {
-		return err
+		fmt.Printf("❌ Redis Connection Error: %v\n", err)
+	} else {
+		fmt.Println("✅ Redis is alive and connected!")
 	}
-
-	return c.Set(ctx, key, v, duration).Err()
+	return rb.redisClient
 }
 
-func Get[T any](ctx context.Context, c *redis.Client, key string) (T, error) {
-	var dest = *new(T)
-	v, err := c.Get(ctx, key).Result()
-
-	if err != nil {
-		return dest, err
+func (rb *RedisDatabase) CloseRedis() {
+	if rb.redisClient != nil {
+		rb.redisClient.Close()
 	}
-
-	err = json.Unmarshal([]byte(v), dest)
-
-	if err != nil {
-		return dest, err
-	}
-
-	return dest, nil
 }

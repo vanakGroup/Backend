@@ -8,11 +8,14 @@ package wire
 
 import (
 	"github.com/Vanak/Backend/bootstrap"
+	"github.com/Vanak/Backend/internal/application/service"
 	"github.com/Vanak/Backend/internal/application/service/math"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	localization2 "github.com/Vanak/Backend/internal/domain/localization"
+	redis2 "github.com/Vanak/Backend/internal/domain/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
+	"github.com/Vanak/Backend/internal/infrastructure/repository/redis"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -31,8 +34,11 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	constants := ProvideConstants(config)
 	customerMathController := math.NewCustomerMathController(mathServiceMathService, constants)
 	translationService := localization.NewTranslationService()
-	recoveryMiddleware := middleware.NewRecoveryMiddleware()
-	application := NewApplication(wireDatabase, customerMathController, translationService, recoveryMiddleware, constants)
+	recoveryMiddleware := middleware.NewRecoveryMiddleware(constants)
+	cache := ProvideRedisCache(config)
+	userCacheRepository := redis.NewUserCacheRepository(cache)
+	otpService := service.NewOtpService(config, userCacheRepository)
+	application := NewApplication(wireDatabase, customerMathController, translationService, recoveryMiddleware, constants, otpService)
 	return application, nil
 }
 
@@ -44,10 +50,11 @@ type Database struct {
 
 type Application struct {
 	Database       *Database
-	MathController *math.CustomerMathController // اضافه شده برای استفاده در روت‌ها
+	MathController *math.CustomerMathController
 	Translator     localization2.Translator
 	Recovery       *middleware.RecoveryMiddleware
 	Constants      *bootstrap.Constants
+	OtpService     *service.OtpService
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -58,14 +65,18 @@ func ProvideConstants(cfg *bootstrap.Config) *bootstrap.Constants {
 	return cfg.Constant
 }
 
-// تغییر در پکیج متد
+func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
+	db := database.InitRedis(cfg)
+	return &db
+}
+
 var MathProviderSet = wire.NewSet(math.NewCustomerMathController)
 
-var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, wire.Struct(new(Database), "*"))
+var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Struct(new(Database), "*"))
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware)
 
-var ServiceSet = wire.NewSet(mathService.NewMathService, localization.NewTranslationService, wire.Bind(new(usecase.MathService), new(*mathService.MathService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)))
+var ServiceSet = wire.NewSet(mathService.NewMathService, localization.NewTranslationService, service.NewOtpService, wire.Bind(new(usecase.MathService), new(*mathService.MathService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)))
 
 func NewApplication(
 	db *Database,
@@ -73,6 +84,7 @@ func NewApplication(
 	trans localization2.Translator,
 	rec *middleware.RecoveryMiddleware,
 	cons *bootstrap.Constants,
+	otpService *service.OtpService,
 ) *Application {
 	return &Application{
 		Database:       db,
@@ -80,5 +92,6 @@ func NewApplication(
 		Translator:     trans,
 		Recovery:       rec,
 		Constants:      cons,
+		OtpService:     otpService,
 	}
 }
