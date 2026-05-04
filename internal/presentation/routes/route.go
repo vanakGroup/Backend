@@ -10,7 +10,7 @@ import (
 func Run(ginEngine *gin.Engine, app *wire.Application) {
 	v1 := ginEngine.Group("/v1")
 	{
-		http.SetupGeneralRoutes(v1)
+		http.SetupGeneralRoutes(v1, app)
 		http.SetupCustomerRoutes(v1, app)
 	}
 }

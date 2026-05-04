@@ -180,6 +180,7 @@ var Persian = map[string]interface{}{
 		"editStaff":                 "مسئول مورد نظر شما با موفقیت به روزرسانی شد.",
 		"addStaff":                  "مسئول مورد نظر شما با موفقیت اضافه شد.",
 		"addNumber":                 " اعداد با موفقیت جمع شدند.",
+		"SendOtp":                   "کد یکبار مصرف با موفقیت ارسال شد.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",

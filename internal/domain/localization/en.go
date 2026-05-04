@@ -179,6 +179,7 @@ var English = map[string]interface{}{
 		"editStaff":                  "Staff credential has been updated successfully.",
 		"addStaff":                   "New staff has been added successfully.",
 		"addNumber":                  "Add Number has been successfully.",
+		"SendOtp":                    "Send Otp has been successfully.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",

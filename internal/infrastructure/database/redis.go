@@ -30,8 +30,8 @@ func InitRedis(cfg *bootstrap.Config) RedisDatabase {
 		WriteTimeout:    cfg.Env.Redis.WriteTimeout * time.Second,
 		PoolSize:        cfg.Env.Redis.PoolSize,
 		PoolTimeout:     cfg.Env.Redis.PoolTimeout,
-		ConnMaxIdleTime: cfg.Env.Redis.ConnMaxIdleTime * time.Millisecond,
-		ConnMaxLifetime: cfg.Env.Redis.ConnMaxLifetime * time.Millisecond,
+		ConnMaxIdleTime: cfg.Env.Redis.ConnMaxIdleTime * time.Second,
+		ConnMaxLifetime: cfg.Env.Redis.ConnMaxLifetime * time.Second,
 	})
 
 	return RedisDatabase{redisClient: redisClient}

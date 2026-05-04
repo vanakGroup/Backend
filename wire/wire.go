@@ -14,6 +14,7 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/repository/redis"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
 	"gorm.io/gorm"
@@ -24,12 +25,14 @@ type Database struct {
 }
 
 type Application struct {
-	Database       *Database
-	MathController *math.CustomerMathController
-	Translator     domainLocalization.Translator
-	Recovery       *middleware.RecoveryMiddleware
-	Constants      *bootstrap.Constants
-	OtpService     *service.OtpService
+	Database              *Database
+	MathController        *math.CustomerMathController
+	Translator            domainLocalization.Translator
+	Recovery              *middleware.RecoveryMiddleware
+	Constants             *bootstrap.Constants
+	OtpService            *service.OtpService
+	UserService           *service.UserService
+	GeneralUserController *user.GeneralUserController
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -65,8 +68,15 @@ var ServiceSet = wire.NewSet(
 	mathService.NewMathService,
 	localization.NewTranslationService,
 	service.NewOtpService,
+	service.NewUserService,
 	wire.Bind(new(usecase.MathService), new(*mathService.MathService)),
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
+	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
+	wire.Bind(new(usecase.UserService), new(*service.UserService)),
+)
+
+var ControllerSet = wire.NewSet(
+	user.NewGeneralUserController,
 )
 
 func NewApplication(
@@ -76,14 +86,18 @@ func NewApplication(
 	rec *middleware.RecoveryMiddleware,
 	cons *bootstrap.Constants,
 	otpService *service.OtpService,
+	userService *service.UserService,
+	generalUserController *user.GeneralUserController,
 ) *Application {
 	return &Application{
-		Database:       db,
-		MathController: mathCtrl,
-		Translator:     trans,
-		Recovery:       rec,
-		Constants:      cons,
-		OtpService:     otpService,
+		Database:              db,
+		MathController:        mathCtrl,
+		Translator:            trans,
+		Recovery:              rec,
+		Constants:             cons,
+		OtpService:            otpService,
+		UserService:           userService,
+		GeneralUserController: generalUserController,
 	}
 }
 
@@ -96,6 +110,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		ProvideDBConfig,
 		ProvideConstants,
 		NewApplication,
+		ControllerSet,
 	)
 	return nil, nil
 }
