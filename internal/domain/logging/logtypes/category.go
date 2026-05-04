@@ -11,6 +11,7 @@ const (
 	Redis           Category = "Redis"
 	Validation      Category = "Validation"
 	RequestResponse Category = "RequestResponse"
+	Auth            Category = "Auth"
 )
 
 const (
@@ -30,6 +31,8 @@ const (
 	// Validation
 	MobileValidation   SubCategory = "MobileValidation"
 	PasswordValidation SubCategory = "PasswordValidation"
+	// Auth
+	Otp SubCategory = "Otp"
 )
 
 const (
@@ -46,4 +49,5 @@ const (
 	ErrorMessage ExtraKey = "ErrorMessage"
 	RequestBody  ExtraKey = "RequestBody"
 	ResponseBody ExtraKey = "ResponseBody"
+	OtpDetail    ExtraKey = "Otp"
 )
