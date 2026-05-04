@@ -20,10 +20,10 @@ func NewUserCacheRepository(rdb database.Cache) *UserCacheRepository {
 	}
 }
 
-func (userCache *UserCacheRepository) Set(ctx context.Context, key string, otp string, duration time.Duration) error {
+func (userCache *UserCacheRepository) Set(ctx context.Context, key string, otp string, duration time.Duration, used bool) error {
 	otpData := userdto.OTPData{
 		OTP:  otp,
-		Used: false,
+		Used: used,
 	}
 
 	v, err := json.Marshal(otpData)

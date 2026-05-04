@@ -54,7 +54,7 @@ func (os *OtpService) SetOTp(ctx context.Context, mobileNumber string, otp strin
 		}
 	}
 
-	err = os.UserCacheRepository.Set(ctx, key, otp, time.Duration(os.cfg.Env.OTP.ExpiryMinute)*time.Minute)
+	err = os.UserCacheRepository.Set(ctx, key, otp, time.Duration(os.cfg.Env.OTP.ExpiryMinute)*time.Minute, false)
 	return nil
 }
 
@@ -69,11 +69,10 @@ func (os *OtpService) ValidateOtp(ctx context.Context, mobileNumber string, otp 
 		return &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.AlreadyUsed)}
 	} else if !res.Used && res.OTP != otp {
 		return &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", os.cfg.Constant.ErrorField.OTP, os.cfg.Constant.ErrorTag.Invalid)}
+	} else if !res.Used && res.OTP == otp {
+		res.Used = true
+		err = os.UserCacheRepository.Set(ctx, key, otp, time.Duration(os.cfg.Env.OTP.ExpiryMinute)*time.Minute, true)
 	}
-	// else if !res.Used && res.OTP == otp {
-	// 	res.Used = true
-	// 	err = os.UserCacheRepository.rdb.GetRedis().Set(ctx, key, res, time.Duration(os.cfg.Env.OTP.ExpiryMinute)*time.Minute).Err()
-	// }
 
 	return nil
 }

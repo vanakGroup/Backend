@@ -39,7 +39,7 @@ func (userService *UserService) SendOtp(phone string) error {
 		return err
 	}
 
-	err = userService.userCacheRepository.Set(context.Background(), phone, otp, time.Duration(userService.cfg.Env.OTP.ExpiryMinute)*time.Minute)
+	err = userService.userCacheRepository.Set(context.Background(), phone, otp, time.Duration(userService.cfg.Env.OTP.ExpiryMinute)*time.Minute, false)
 
 	if err != nil {
 		return err
