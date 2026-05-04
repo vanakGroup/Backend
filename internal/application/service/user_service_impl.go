@@ -45,7 +45,7 @@ func (userService *UserService) SendOtp(phone string) error {
 		return err
 	}
 
-	userService.logger.Info(logtypes.Auth, logtypes.Otp, "otp generated", map[logtypes.ExtraKey]interface{}{
+	userService.logger.Info(logtypes.Auth, logtypes.Otp, "otp generated and send", map[logtypes.ExtraKey]interface{}{
 		"phone": phone,
 		"otp":   otp,
 	})
