@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/Vanak/Backend/internal/domain/exception"
@@ -9,12 +8,15 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var val = validator.New()
+var Val = validator.New()
+
+func init() {
+	Val.RegisterValidation("ir_phone", IranianMobileValidator, true)
+}
 
 func ValidatedField[T any](params T) {
 
-	if err := val.Struct(params); err != nil {
-		fmt.Println(err)
+	if err := Val.Struct(params); err != nil {
 		validationError, _ := err.(validator.ValidationErrors)
 		customValidationError := exception.NewValidationErrors()
 

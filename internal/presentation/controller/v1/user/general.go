@@ -29,7 +29,7 @@ func NewGeneralUserController(
 
 func (userController *GeneralUserController) SendOtp(ctx *gin.Context) {
 	type sendOtpParams struct {
-		Phone string `json:"phone"`
+		Phone string `json:"phone" validate:"required,ir_phone"`
 	}
 
 	params := base.Validated[sendOtpParams](ctx)
