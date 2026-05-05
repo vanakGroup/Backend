@@ -46,6 +46,7 @@ var English = map[string]interface{}{
 	"like":                "like",
 	"unlike":              "unlike",
 	"corporationReview":   "corporation review",
+	"redis":               "redis",
 	"errors": map[string]interface{}{
 		"generic":                "an error occurred, please try again.",
 		"numeric":                "The {0} should be a numeric value.",
@@ -180,6 +181,7 @@ var English = map[string]interface{}{
 		"addStaff":                   "New staff has been added successfully.",
 		"addNumber":                  "Add Number has been successfully.",
 		"SendOtp":                    "Send Otp has been successfully.",
+		"VerifyOtp":                  "Otp is Verify successfully.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",

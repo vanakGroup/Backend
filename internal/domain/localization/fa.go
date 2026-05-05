@@ -46,6 +46,7 @@ var Persian = map[string]interface{}{
 	"like":                "لایک",
 	"unlike":              "حذف لایک",
 	"corporationReview":   "بازبینی شرکت",
+	"redis":               "ردیس",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
 		"numeric":                "`{0}` باید عدد باشد.",
@@ -181,6 +182,7 @@ var Persian = map[string]interface{}{
 		"addStaff":                  "مسئول مورد نظر شما با موفقیت اضافه شد.",
 		"addNumber":                 " اعداد با موفقیت جمع شدند.",
 		"SendOtp":                   "کد یکبار مصرف با موفقیت ارسال شد.",
+		"VerifyOtp":                 "کد یکبار مصرف با موفقیت تایید شد.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",

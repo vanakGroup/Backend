@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/Vanak/Backend/bootstrap"
+	userdto "github.com/Vanak/Backend/internal/application/dto/user"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	"github.com/Vanak/Backend/internal/domain/logging"
 	"github.com/Vanak/Backend/internal/domain/logging/logtypes"
@@ -39,7 +39,8 @@ func (userService *UserService) SendOtp(phone string) error {
 		return err
 	}
 
-	err = userService.userCacheRepository.Set(context.Background(), phone, otp, time.Duration(userService.cfg.Env.OTP.ExpiryMinute)*time.Minute, false)
+	err = userService.otpService.SetOTp(context.Background(), phone, otp)
+	// Set(context.Background(), phone, otp, time.Duration(userService.cfg.Env.OTP.ExpiryMinute)*time.Minute, false)
 
 	if err != nil {
 		return err
@@ -50,5 +51,14 @@ func (userService *UserService) SendOtp(phone string) error {
 		"otp":   otp,
 	})
 
+	return nil
+}
+
+func (userService *UserService) VerifyOTP(verifyInfo userdto.VerifyPhoneOtp) error {
+	err := userService.otpService.ValidateOtp(context.Background(), verifyInfo.Phone, verifyInfo.Otp)
+
+	if err != nil {
+		return err
+	}
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	userdto "github.com/Vanak/Backend/internal/application/dto/user"
+	"github.com/Vanak/Backend/internal/domain/exception"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/redis/go-redis/v9"
 )
@@ -41,7 +42,7 @@ func (userCache *UserCacheRepository) Get(ctx context.Context, key string) (*use
 
 	if err != nil {
 		if err == redis.Nil {
-			return nil, nil
+			return nil, exception.NewNotFoundError("redis")
 		}
 	}
 

@@ -11,4 +11,5 @@ func SetupGeneralRoutes(router *gin.RouterGroup, app *wire.Application) {
 
 	router.GET("/ping", general.Pong)
 	router.GET("/send-otp", app.GeneralUserController.SendOtp)
+	router.GET("/verify-otp", app.GeneralUserController.VerifyOTP)
 }

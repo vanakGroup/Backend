@@ -45,9 +45,19 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleBindingError(ctx, *BindingErrors, rm.constants.Context.Translator)
 	} else if AppErrors, ok := err.(*exception.UnauthorizedError); ok {
 		handleUnauthorizedError(ctx, *AppErrors, rm.constants.Context.Translator)
+	} else if NotFoundError, ok := err.(*exception.NotFoundError); ok {
+		handleNotFoundError(ctx, *NotFoundError, rm.constants.Context.Translator)
 	} else {
 		handleDefaultError(ctx, err)
 	}
+}
+
+func handleNotFoundError(ctx *gin.Context, notFoundError exception.NotFoundError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	itemName, _ := trans.Translate(notFoundError.Item)
+	message, _ := trans.Translate("errors.notFound", itemName)
+
+	base.Response(ctx, 404, message, nil)
 }
 
 func handleDefaultError(ctx *gin.Context, err error) {
