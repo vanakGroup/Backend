@@ -9,7 +9,12 @@ import (
 
 func SetupGeneralRoutes(router *gin.RouterGroup, app *wire.Application) {
 
-	router.GET("/ping", general.Pong)
-	router.GET("/send-otp", app.GeneralUserController.SendOtp)
-	router.GET("/verify-otp", app.GeneralUserController.VerifyOTP)
+	authGroup := router.Group("/auth")
+	{
+		authGroup.POST("/send-otp", app.GeneralUserController.SendOtp)
+		authGroup.POST("/verify-otp", app.GeneralUserController.VerifyOTP)
+		authGroup.POST("/login", app.GeneralUserController.Login)
+	}
+	router.GET("/ping", app.Middlewares.Authentication.AuthMiddleware(), general.Pong)
+
 }

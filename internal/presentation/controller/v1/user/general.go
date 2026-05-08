@@ -65,3 +65,21 @@ func (userController *GeneralUserController) VerifyOTP(ctx *gin.Context) {
 	base.Response(ctx, 200, message, nil)
 
 }
+
+func (userController *GeneralUserController) Login(ctx *gin.Context) {
+	type LoginWithPhone struct {
+		Phone string `json:"phone" validate:"required,ir_phone"`
+	}
+
+	params := base.Validated[LoginWithPhone](ctx)
+
+	userInfo, err := userController.userService.Login(params.Phone)
+
+	if err != nil {
+		panic(err)
+	}
+
+	trans := base.GetTranslator(ctx, userController.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.login")
+	base.Response(ctx, 200, message, userInfo)
+}

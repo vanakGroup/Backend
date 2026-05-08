@@ -37,15 +37,20 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	constants := ProvideConstants(config)
 	customerMathController := math.NewCustomerMathController(mathServiceMathService, constants)
 	translationService := localization.NewTranslationService()
+	jwtService := service.NewJwtService(config)
+	authMiddleware := middleware.NewAuthMiddleWare(config, jwtService)
 	recoveryMiddleware := middleware.NewRecoveryMiddleware(constants)
+	middlewares := &Middlewares{
+		Authentication: authMiddleware,
+		Recovery:       recoveryMiddleware,
+	}
 	cache := ProvideRedisCache(config)
 	userCacheRepository := redis.NewUserCacheRepository(cache)
 	otpService := service.NewOtpService(config, userCacheRepository)
 	userRepository := postgres.NewUserRepository(config, db)
-	jwtService := service.NewJwtService(config)
 	userService := service.NewUserService(config, otpService, userCacheRepository, userRepository, jwtService)
 	generalUserController := user.NewGeneralUserController(userService, config)
-	application := NewApplication(wireDatabase, customerMathController, translationService, recoveryMiddleware, constants, otpService, userService, generalUserController)
+	application := NewApplication(wireDatabase, customerMathController, translationService, middlewares, constants, otpService, userService, generalUserController)
 	return application, nil
 }
 
@@ -55,11 +60,17 @@ type Database struct {
 	DB *gorm.DB
 }
 
+// استراکت Middlewares برای تجمیع میدل‌ویرها
+type Middlewares struct {
+	Authentication *middleware.AuthMiddleware
+	Recovery       *middleware.RecoveryMiddleware
+}
+
 type Application struct {
 	Database              *Database
 	MathController        *math.CustomerMathController
 	Translator            localization2.Translator
-	Recovery              *middleware.RecoveryMiddleware
+	Middlewares           *Middlewares // جایگزین فیلدهای تکی شد
 	Constants             *bootstrap.Constants
 	OtpService            *service.OtpService
 	UserService           *service.UserService
@@ -83,7 +94,7 @@ var MathProviderSet = wire.NewSet(math.NewCustomerMathController)
 
 var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Struct(new(Database), "*"))
 
-var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare)
+var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
 var ServiceSet = wire.NewSet(mathService.NewMathService, localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, wire.Bind(new(usecase.MathService), new(*mathService.MathService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
 
@@ -93,7 +104,7 @@ func NewApplication(
 	db *Database,
 	mathCtrl *math.CustomerMathController,
 	trans localization2.Translator,
-	rec *middleware.RecoveryMiddleware,
+	mid *Middlewares,
 	cons *bootstrap.Constants,
 	otpService *service.OtpService,
 	userService *service.UserService,
@@ -103,7 +114,7 @@ func NewApplication(
 		Database:              db,
 		MathController:        mathCtrl,
 		Translator:            trans,
-		Recovery:              rec,
+		Middlewares:           mid,
 		Constants:             cons,
 		OtpService:            otpService,
 		UserService:           userService,

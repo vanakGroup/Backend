@@ -27,11 +27,11 @@ func Validated[T any](ctx *gin.Context) T {
 		panic(BindingError)
 	}
 
-	if err := ctx.ShouldBindJSON(&params); err != nil {
-		NewBindingError := exception.NewBinding(err)
-		BindingError := NewBindingError.Error()
-		panic(BindingError)
-	}
+	// if err := ctx.ShouldBindJSON(&params); err != nil {
+	// 	NewBindingError := exception.NewBinding(err)
+	// 	BindingError := NewBindingError.Error()
+	// 	panic(BindingError)
+	// }
 
 	validation.ValidatedField(params)
 

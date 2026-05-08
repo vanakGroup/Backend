@@ -36,7 +36,9 @@ func NewPostgresDataBase(dbConfig *bootstrap.Database) *gorm.DB {
 		dbInstance = db
 
 		err = dbInstance.AutoMigrate(
-			&entities.AddTwoNumber{},
+			&entities.User{},
+			&entities.Role{},
+			&entities.Permission{},
 		)
 		fmt.Println("Migration completed!")
 

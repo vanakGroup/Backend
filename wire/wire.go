@@ -26,11 +26,17 @@ type Database struct {
 	DB *gorm.DB
 }
 
+// استراکت Middlewares برای تجمیع میدل‌ویرها
+type Middlewares struct {
+	Authentication *middleware.AuthMiddleware
+	Recovery       *middleware.RecoveryMiddleware
+}
+
 type Application struct {
 	Database              *Database
 	MathController        *math.CustomerMathController
 	Translator            domainLocalization.Translator
-	Recovery              *middleware.RecoveryMiddleware
+	Middlewares           *Middlewares // جایگزین فیلدهای تکی شد
 	Constants             *bootstrap.Constants
 	OtpService            *service.OtpService
 	UserService           *service.UserService
@@ -67,6 +73,8 @@ var DatabaseProviderSet = wire.NewSet(
 var MiddlewareSet = wire.NewSet(
 	middleware.NewRecoveryMiddleware,
 	middleware.NewAuthMiddleWare,
+	// اضافه کردن ساختار Middlewares به مجموعه
+	wire.Struct(new(Middlewares), "*"),
 )
 
 var ServiceSet = wire.NewSet(
@@ -90,7 +98,7 @@ func NewApplication(
 	db *Database,
 	mathCtrl *math.CustomerMathController,
 	trans domainLocalization.Translator,
-	rec *middleware.RecoveryMiddleware,
+	mid *Middlewares, // استفاده از استراکت تجمیعی
 	cons *bootstrap.Constants,
 	otpService *service.OtpService,
 	userService *service.UserService,
@@ -100,7 +108,7 @@ func NewApplication(
 		Database:              db,
 		MathController:        mathCtrl,
 		Translator:            trans,
-		Recovery:              rec,
+		Middlewares:           mid,
 		Constants:             cons,
 		OtpService:            otpService,
 		UserService:           userService,
