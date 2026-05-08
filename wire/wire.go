@@ -9,9 +9,11 @@ import (
 	mathService "github.com/Vanak/Backend/internal/application/service/math"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	domainLocalization "github.com/Vanak/Backend/internal/domain/localization"
+	postgresDomain "github.com/Vanak/Backend/internal/domain/repository/postgres"
 	redisDomain "github.com/Vanak/Backend/internal/domain/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
+	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/repository/postgres"
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/repository/redis"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
@@ -56,7 +58,9 @@ var DatabaseProviderSet = wire.NewSet(
 	database.NewPostgresDataBase,
 	ProvideRedisCache,
 	redisRepo.NewUserCacheRepository,
+	postgresRepo.NewUserRepository,
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
+	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -74,6 +78,7 @@ var ServiceSet = wire.NewSet(
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
+	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
 )
 
 var ControllerSet = wire.NewSet(
