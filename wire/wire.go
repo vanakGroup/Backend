@@ -69,6 +69,7 @@ var ServiceSet = wire.NewSet(
 	localization.NewTranslationService,
 	service.NewOtpService,
 	service.NewUserService,
+	service.NewJwtService,
 	wire.Bind(new(usecase.MathService), new(*mathService.MathService)),
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),

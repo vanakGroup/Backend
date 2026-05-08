@@ -13,6 +13,11 @@ type Env struct {
 	Logger    Logger
 	Redis     Redis
 	OTP       OTP
+	Jwt       Jwt
+}
+
+type Jwt struct {
+	SecretKey string
 }
 
 type OTP struct {
@@ -86,6 +91,9 @@ func NewEnv() *Env {
 			Length:       getEnvInt("OTP_LENGTH", 6),
 			ExpiryMinute: getEnvInt("OTP_EXPIRY_MINUTES", 2),
 			MaxAttempts:  getEnvInt("OTP_MAX_ATTEMPTS", 3),
+		},
+		Jwt{
+			SecretKey: os.Getenv("SECRET_KEY"),
 		},
 	}
 }

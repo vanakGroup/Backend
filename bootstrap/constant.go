@@ -23,6 +23,7 @@ type ErrorTag struct {
 	InvalidAuthCredentials string
 	ExpiredAuthToken       string
 	InvalidAuthToken       string
+	InvalidSignedToken     string
 	Unauthorized           string
 	AwaitingApproval       string
 	Rejected               string
@@ -45,6 +46,7 @@ type ErrorTag struct {
 	Required               string
 	InvalidNumber          string
 	AlreadyUsed            string
+	ClaimReject            string
 }
 
 type ErrorField struct {
@@ -89,6 +91,7 @@ type ErrorField struct {
 	Like                string
 	CorporationReview   string
 	CorporationStaff    string
+	Jwt                 string
 }
 
 type RedisKey struct {
@@ -156,6 +159,7 @@ func NewConstant() *Constants {
 			Like:                "like",
 			CorporationReview:   "corporationReview",
 			CorporationStaff:    "corporationStaff",
+			Jwt:                 "jwt",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyRegistered:      "alreadyRegistered",
@@ -172,6 +176,7 @@ func NewConstant() *Constants {
 			InvalidAuthCredentials: "invalidAuthCredentials",
 			ExpiredAuthToken:       "expiredAuthToken",
 			InvalidAuthToken:       "invalidAuthToken",
+			InvalidSignedToken:     "invalidSignedToken",
 			Unauthorized:           "unauthorized",
 			AwaitingApproval:       "awaitingApproval",
 			Rejected:               "rejected",
@@ -194,6 +199,7 @@ func NewConstant() *Constants {
 			Required:               "required",
 			InvalidNumber:          "invalidNumber",
 			AlreadyUsed:            "alreadyUsed",
+			ClaimReject:            "claimReject",
 		},
 	}
 }

@@ -190,4 +190,9 @@ var English = map[string]interface{}{
 		"invalid":     " the otp is invalid.",
 		"alreadyUsed": "the otp is already used.",
 	},
+	"jwt": map[string]interface{}{
+		"invalidSignedToken": "the Jwt Token is invalid Signed",
+		"invalidAuthToken":   "the Jwt Token is invalid",
+		"claimReject":        "the Claim is Reject.",
+	},
 }

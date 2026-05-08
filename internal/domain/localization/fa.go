@@ -191,6 +191,11 @@ var Persian = map[string]interface{}{
 		"invalid":     " کد ارسال شده برای او تی پی معتبر نمیباشد.",
 		"alreadyUsed": "کد ارسال شده قبلا استفاده شده.",
 	},
+	"jwt": map[string]interface{}{
+		"invalidSignedToken": "امضا توکن اشتباه است.",
+		"invalidAuthToken":   "توکتن معتبر نیست.",
+		"claimReject":        "ادعا توکن رد شد.",
+	},
 	"lte":    "کوچکتر باید باشد.",
 	"second": "دومین عدد",
 }

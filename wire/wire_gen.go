@@ -81,7 +81,7 @@ var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedis
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware)
 
-var ServiceSet = wire.NewSet(mathService.NewMathService, localization.NewTranslationService, service.NewOtpService, service.NewUserService, wire.Bind(new(usecase.MathService), new(*mathService.MathService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)))
+var ServiceSet = wire.NewSet(mathService.NewMathService, localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, wire.Bind(new(usecase.MathService), new(*mathService.MathService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)))
 
 var ControllerSet = wire.NewSet(user.NewGeneralUserController)
 
