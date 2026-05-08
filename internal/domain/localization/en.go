@@ -194,5 +194,10 @@ var English = map[string]interface{}{
 		"invalidSignedToken": "the Jwt Token is invalid Signed",
 		"invalidAuthToken":   "the Jwt Token is invalid",
 		"claimReject":        "the Claim is Reject.",
+		"emptyToken":         "the token is empty.",
+	},
+	"auth": map[string]interface{}{
+		"emptyHeader":   "the Header is empty",
+		"invalidHeader": "the header format is invalid.",
 	},
 }

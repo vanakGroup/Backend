@@ -83,7 +83,7 @@ var MathProviderSet = wire.NewSet(math.NewCustomerMathController)
 
 var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Struct(new(Database), "*"))
 
-var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware)
+var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare)
 
 var ServiceSet = wire.NewSet(mathService.NewMathService, localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, wire.Bind(new(usecase.MathService), new(*mathService.MathService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
 

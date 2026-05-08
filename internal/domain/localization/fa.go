@@ -195,6 +195,11 @@ var Persian = map[string]interface{}{
 		"invalidSignedToken": "امضا توکن اشتباه است.",
 		"invalidAuthToken":   "توکتن معتبر نیست.",
 		"claimReject":        "ادعا توکن رد شد.",
+		"emptyToken":         "توکن خالی است.",
+	},
+	"auth": map[string]interface{}{
+		"emptyHeader":   "هدر خالی است.",
+		"invalidHeader": "فرمت هدر معتبر نیست.",
 	},
 	"lte":    "کوچکتر باید باشد.",
 	"second": "دومین عدد",

@@ -66,6 +66,7 @@ var DatabaseProviderSet = wire.NewSet(
 
 var MiddlewareSet = wire.NewSet(
 	middleware.NewRecoveryMiddleware,
+	middleware.NewAuthMiddleWare,
 )
 
 var ServiceSet = wire.NewSet(

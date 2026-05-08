@@ -47,6 +47,9 @@ type ErrorTag struct {
 	InvalidNumber          string
 	AlreadyUsed            string
 	ClaimReject            string
+	EmptyToken             string
+	EmptyHeader            string
+	InvalidHeader          string
 }
 
 type ErrorField struct {
@@ -92,6 +95,7 @@ type ErrorField struct {
 	CorporationReview   string
 	CorporationStaff    string
 	Jwt                 string
+	Auth                string
 }
 
 type RedisKey struct {
@@ -100,6 +104,7 @@ type RedisKey struct {
 
 type Context struct {
 	Translator string
+	UserID     string
 }
 
 type Role struct {
@@ -110,6 +115,7 @@ func NewConstant() *Constants {
 	return &Constants{
 		Context: Context{
 			Translator: "translator",
+			UserID:     "userID",
 		},
 		Role: Role{
 			DefaultType: "customer",
@@ -160,6 +166,7 @@ func NewConstant() *Constants {
 			CorporationReview:   "corporationReview",
 			CorporationStaff:    "corporationStaff",
 			Jwt:                 "jwt",
+			Auth:                "auth",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyRegistered:      "alreadyRegistered",
@@ -200,6 +207,9 @@ func NewConstant() *Constants {
 			InvalidNumber:          "invalidNumber",
 			AlreadyUsed:            "alreadyUsed",
 			ClaimReject:            "claimReject",
+			EmptyToken:             "emptyToken",
+			EmptyHeader:            "emptyHeader",
+			InvalidHeader:          "invalidHeader",
 		},
 	}
 }
