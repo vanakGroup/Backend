@@ -31,9 +31,9 @@ func (jwtService *JwtService) GenerateToken(userID uint) (string, string, error)
 		"iat":    time.Now().Unix(),
 	}
 
-	accsessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
 
-	accessTokenString, err := accsessToken.SignedString([]byte(jwtService.cfg.Env.Jwt.SecretKey))
+	accessTokenString, err := accessToken.SignedString([]byte(jwtService.cfg.Env.Jwt.SecretKey))
 
 	if err != nil {
 		return "", "", err
