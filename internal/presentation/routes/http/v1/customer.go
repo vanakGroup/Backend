@@ -7,8 +7,4 @@ import (
 )
 
 func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
-	AddGroup := router.Group("/math")
-	{
-		AddGroup.POST("add/:first/:second", app.MathController.Adder)
-	}
 }

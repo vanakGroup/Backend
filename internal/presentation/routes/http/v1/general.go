@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/Vanak/Backend/internal/presentation/controller/v1/general"
 	"github.com/Vanak/Backend/wire"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +14,5 @@ func SetupGeneralRoutes(router *gin.RouterGroup, app *wire.Application) {
 		authGroup.POST("/verify-otp", app.GeneralUserController.VerifyOTP)
 		authGroup.POST("/login", app.GeneralUserController.Login)
 	}
-	router.GET("/ping", app.Middlewares.Authentication.AuthMiddleware(), general.Pong)
 
 }

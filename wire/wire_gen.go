@@ -9,7 +9,6 @@ package wire
 import (
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/application/service"
-	"github.com/Vanak/Backend/internal/application/service/math"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	localization2 "github.com/Vanak/Backend/internal/domain/localization"
 	"github.com/Vanak/Backend/internal/domain/ports"
@@ -20,7 +19,6 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
-	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -35,12 +33,10 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	wireDatabase := &Database{
 		DB: db,
 	}
-	mathServiceMathService := mathService.NewMathService()
-	constants := ProvideConstants(config)
-	customerMathController := math.NewCustomerMathController(mathServiceMathService, constants)
 	translationService := localization.NewTranslationService()
 	jwtService := service.NewJwtService(config)
 	authMiddleware := middleware.NewAuthMiddleWare(config, jwtService)
+	constants := ProvideConstants(config)
 	recoveryMiddleware := middleware.NewRecoveryMiddleware(constants)
 	middlewares := &Middlewares{
 		Authentication: authMiddleware,
@@ -52,7 +48,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	unitOfWork := persistance.NewUnitOfWork(db)
 	userService := service.NewUserService(config, otpService, userCacheRepository, unitOfWork, jwtService)
 	generalUserController := user.NewGeneralUserController(userService, config)
-	application := NewApplication(wireDatabase, customerMathController, translationService, middlewares, constants, otpService, userService, generalUserController)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController)
 	return application, nil
 }
 
@@ -69,9 +65,8 @@ type Middlewares struct {
 
 type Application struct {
 	Database              *Database
-	MathController        *math.CustomerMathController
 	Translator            localization2.Translator
-	Middlewares           *Middlewares // جایگزین فیلدهای تکی شد
+	Middlewares           *Middlewares
 	Constants             *bootstrap.Constants
 	OtpService            *service.OtpService
 	UserService           *service.UserService
@@ -91,19 +86,16 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 	return &db
 }
 
-var MathProviderSet = wire.NewSet(math.NewCustomerMathController)
-
 var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Struct(new(Database), "*"))
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
-var ServiceSet = wire.NewSet(mathService.NewMathService, localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, wire.Bind(new(usecase.MathService), new(*mathService.MathService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
+var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
 
 var ControllerSet = wire.NewSet(user.NewGeneralUserController)
 
 func NewApplication(
 	db *Database,
-	mathCtrl *math.CustomerMathController,
 	trans localization2.Translator,
 	mid *Middlewares,
 	cons *bootstrap.Constants,
@@ -113,7 +105,6 @@ func NewApplication(
 ) *Application {
 	return &Application{
 		Database:              db,
-		MathController:        mathCtrl,
 		Translator:            trans,
 		Middlewares:           mid,
 		Constants:             cons,

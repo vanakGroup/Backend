@@ -6,7 +6,6 @@ package wire
 import (
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/application/service"
-	mathService "github.com/Vanak/Backend/internal/application/service/math"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	domainLocalization "github.com/Vanak/Backend/internal/domain/localization"
 	"github.com/Vanak/Backend/internal/domain/ports"
@@ -17,7 +16,6 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
-	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -35,9 +33,8 @@ type Middlewares struct {
 
 type Application struct {
 	Database              *Database
-	MathController        *math.CustomerMathController
 	Translator            domainLocalization.Translator
-	Middlewares           *Middlewares // جایگزین فیلدهای تکی شد
+	Middlewares           *Middlewares
 	Constants             *bootstrap.Constants
 	OtpService            *service.OtpService
 	UserService           *service.UserService
@@ -57,10 +54,6 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 	return &db
 }
 
-var MathProviderSet = wire.NewSet(
-	math.NewCustomerMathController,
-)
-
 var DatabaseProviderSet = wire.NewSet(
 	database.NewPostgresDataBase,
 	ProvideRedisCache,
@@ -78,17 +71,14 @@ var DatabaseProviderSet = wire.NewSet(
 var MiddlewareSet = wire.NewSet(
 	middleware.NewRecoveryMiddleware,
 	middleware.NewAuthMiddleWare,
-	// اضافه کردن ساختار Middlewares به مجموعه
 	wire.Struct(new(Middlewares), "*"),
 )
 
 var ServiceSet = wire.NewSet(
-	mathService.NewMathService,
 	localization.NewTranslationService,
 	service.NewOtpService,
 	service.NewUserService,
 	service.NewJwtService,
-	wire.Bind(new(usecase.MathService), new(*mathService.MathService)),
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
@@ -101,9 +91,8 @@ var ControllerSet = wire.NewSet(
 
 func NewApplication(
 	db *Database,
-	mathCtrl *math.CustomerMathController,
 	trans domainLocalization.Translator,
-	mid *Middlewares, // استفاده از استراکت تجمیعی
+	mid *Middlewares,
 	cons *bootstrap.Constants,
 	otpService *service.OtpService,
 	userService *service.UserService,
@@ -111,7 +100,6 @@ func NewApplication(
 ) *Application {
 	return &Application{
 		Database:              db,
-		MathController:        mathCtrl,
 		Translator:            trans,
 		Middlewares:           mid,
 		Constants:             cons,
@@ -126,7 +114,6 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		DatabaseProviderSet,
 		MiddlewareSet,
 		ServiceSet,
-		MathProviderSet,
 		ProvideDBConfig,
 		ProvideConstants,
 		NewApplication,
