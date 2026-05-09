@@ -10,7 +10,7 @@ import (
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/exception"
 	"github.com/Vanak/Backend/internal/domain/logging"
-	"github.com/Vanak/Backend/internal/domain/repository/redis"
+	"github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 )
 
 type OtpService struct {

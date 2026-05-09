@@ -3,23 +3,19 @@ package postgres
 import (
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/entities"
-	"github.com/Vanak/Backend/internal/domain/logging"
 	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	cfg    *bootstrap.Config
-	logger logging.Logger
-	db     *gorm.DB
+	cfg *bootstrap.Config
+	db  *gorm.DB
 }
 
 func NewUserRepository(cfg *bootstrap.Config, db *gorm.DB) *UserRepository {
-	logger := logging.NewLogger(cfg)
 
 	return &UserRepository{
-		logger: logger,
-		cfg:    cfg,
-		db:     db,
+		cfg: cfg,
+		db:  db,
 	}
 }
 

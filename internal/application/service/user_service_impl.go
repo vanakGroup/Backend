@@ -9,8 +9,8 @@ import (
 	"github.com/Vanak/Backend/internal/domain/entities"
 	"github.com/Vanak/Backend/internal/domain/logging"
 	"github.com/Vanak/Backend/internal/domain/logging/logtypes"
-	"github.com/Vanak/Backend/internal/domain/repository/postgres"
-	"github.com/Vanak/Backend/internal/domain/repository/redis"
+	"github.com/Vanak/Backend/internal/domain/ports"
+	"github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 )
 
 type UserService struct {
@@ -18,7 +18,7 @@ type UserService struct {
 	otpService          usecase.OtpService
 	cfg                 *bootstrap.Config
 	userCacheRepository redis.UserCacheRepository
-	userRepository      postgres.UserRepository
+	unitOfWork          ports.UnitOfWork
 	jwtService          usecase.JwtService
 }
 
@@ -26,7 +26,7 @@ func NewUserService(
 	cfg *bootstrap.Config,
 	otpService usecase.OtpService,
 	userCacheRepository redis.UserCacheRepository,
-	userRepository postgres.UserRepository,
+	unitOfWork ports.UnitOfWork,
 	jwtService usecase.JwtService,
 ) *UserService {
 	logger := logging.NewLogger(cfg)
@@ -36,7 +36,7 @@ func NewUserService(
 		cfg:                 cfg,
 		otpService:          otpService,
 		userCacheRepository: userCacheRepository,
-		userRepository:      userRepository,
+		unitOfWork:          unitOfWork,
 		jwtService:          jwtService,
 	}
 }
@@ -72,31 +72,45 @@ func (userService *UserService) VerifyOTP(verifyInfo userdto.VerifyPhoneOtp) err
 }
 
 func (userService *UserService) Login(phone string) (userdto.UserLoginResponse, error) {
-	user, err := userService.userRepository.FindUserByPhone(phone)
+	var user *entities.User
+
+	err := userService.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		userRepo := rf.UserRepository()
+
+		var err error
+		user, err = userRepo.FindUserByPhone(phone)
+
+		if err != nil {
+			return err
+		}
+
+		if user == nil {
+			newUser := &entities.User{
+				Phone: phone,
+			}
+			err := userRepo.Create(newUser)
+			if err != nil {
+				return err
+			}
+			user = newUser
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		return userdto.UserLoginResponse{}, err
 	}
 
-	if user == nil {
-		newUser := &entities.User{
-			Phone: phone,
-		}
-		err := userService.userRepository.Create(newUser)
-		if err != nil {
-			return userdto.UserLoginResponse{}, err
-		}
-		user = newUser
-	}
-
 	accessToken, refreshToken, err := userService.jwtService.GenerateToken(user.ID)
+
 	if err != nil {
 		return userdto.UserLoginResponse{}, err
 	}
 
 	return userdto.UserLoginResponse{
-		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
 		Phone:        phone,
 	}, nil
 }

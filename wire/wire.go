@@ -9,12 +9,14 @@ import (
 	mathService "github.com/Vanak/Backend/internal/application/service/math"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	domainLocalization "github.com/Vanak/Backend/internal/domain/localization"
-	postgresDomain "github.com/Vanak/Backend/internal/domain/repository/postgres"
-	redisDomain "github.com/Vanak/Backend/internal/domain/repository/redis"
+	"github.com/Vanak/Backend/internal/domain/ports"
+	postgresDomain "github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
+	redisDomain "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
-	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/repository/postgres"
-	redisRepo "github.com/Vanak/Backend/internal/infrastructure/repository/redis"
+	"github.com/Vanak/Backend/internal/infrastructure/persistance"
+	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
+	redisRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
@@ -26,7 +28,6 @@ type Database struct {
 	DB *gorm.DB
 }
 
-// استراکت Middlewares برای تجمیع میدل‌ویرها
 type Middlewares struct {
 	Authentication *middleware.AuthMiddleware
 	Recovery       *middleware.RecoveryMiddleware
@@ -65,6 +66,10 @@ var DatabaseProviderSet = wire.NewSet(
 	ProvideRedisCache,
 	redisRepo.NewUserCacheRepository,
 	postgresRepo.NewUserRepository,
+	persistance.NewUnitOfWork,
+	persistance.NewRepositoryFactory,
+	wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)),
+	wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)),
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
 	wire.Struct(new(Database), "*"),

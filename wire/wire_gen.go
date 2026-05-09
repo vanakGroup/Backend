@@ -12,12 +12,14 @@ import (
 	"github.com/Vanak/Backend/internal/application/service/math"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	localization2 "github.com/Vanak/Backend/internal/domain/localization"
-	postgres2 "github.com/Vanak/Backend/internal/domain/repository/postgres"
-	redis2 "github.com/Vanak/Backend/internal/domain/repository/redis"
+	"github.com/Vanak/Backend/internal/domain/ports"
+	postgres2 "github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
+	redis2 "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
-	"github.com/Vanak/Backend/internal/infrastructure/repository/postgres"
-	"github.com/Vanak/Backend/internal/infrastructure/repository/redis"
+	"github.com/Vanak/Backend/internal/infrastructure/persistance"
+	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
+	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/math"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
@@ -47,8 +49,8 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	cache := ProvideRedisCache(config)
 	userCacheRepository := redis.NewUserCacheRepository(cache)
 	otpService := service.NewOtpService(config, userCacheRepository)
-	userRepository := postgres.NewUserRepository(config, db)
-	userService := service.NewUserService(config, otpService, userCacheRepository, userRepository, jwtService)
+	unitOfWork := persistance.NewUnitOfWork(db)
+	userService := service.NewUserService(config, otpService, userCacheRepository, unitOfWork, jwtService)
 	generalUserController := user.NewGeneralUserController(userService, config)
 	application := NewApplication(wireDatabase, customerMathController, translationService, middlewares, constants, otpService, userService, generalUserController)
 	return application, nil
@@ -60,7 +62,6 @@ type Database struct {
 	DB *gorm.DB
 }
 
-// استراکت Middlewares برای تجمیع میدل‌ویرها
 type Middlewares struct {
 	Authentication *middleware.AuthMiddleware
 	Recovery       *middleware.RecoveryMiddleware
@@ -92,7 +93,7 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 
 var MathProviderSet = wire.NewSet(math.NewCustomerMathController)
 
-var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Struct(new(Database), "*"))
+var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Struct(new(Database), "*"))
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
