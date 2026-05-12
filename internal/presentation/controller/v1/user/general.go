@@ -49,7 +49,7 @@ func (userController *GeneralUserController) SendOtp(ctx *gin.Context) {
 func (userController *GeneralUserController) VerifyOTP(ctx *gin.Context) {
 	type VerifyPhoneOtp struct {
 		Phone string `json:"phone" validate:"required,ir_phone"`
-		Otp   string `json:"otp"`
+		Otp   string `json:"otp" validate:"required"`
 	}
 
 	params := base.Validated[VerifyPhoneOtp](ctx)

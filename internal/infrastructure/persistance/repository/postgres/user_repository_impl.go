@@ -19,9 +19,9 @@ func NewUserRepository(cfg *bootstrap.Config, db *gorm.DB) *UserRepository {
 	}
 }
 
-func (userRepository *UserRepository) FindUserByPhone(phone string) (*entities.User, error) {
+func (ur *UserRepository) FindUserByPhone(phone string) (*entities.User, error) {
 	var foundUser entities.User
-	result := userRepository.db.Where("phone = ?", phone).First(&foundUser)
+	result := ur.db.Where("phone = ?", phone).First(&foundUser)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -33,6 +33,6 @@ func (userRepository *UserRepository) FindUserByPhone(phone string) (*entities.U
 	return &foundUser, nil
 }
 
-func (userRepository *UserRepository) Create(user *entities.User) error {
-	return userRepository.db.Create(user).Error
+func (ur *UserRepository) Create(user *entities.User) error {
+	return ur.db.Create(user).Error
 }

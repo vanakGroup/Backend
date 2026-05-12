@@ -24,7 +24,7 @@ func NewJwtService(cfg *bootstrap.Config) *JwtService {
 	}
 }
 
-func (jwtService *JwtService) GenerateToken(userID uint) (string, string, error) {
+func (js *JwtService) GenerateToken(userID uint) (string, string, error) {
 	accessTokenClaims := jwt.MapClaims{
 		"userID": userID,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),
@@ -33,7 +33,7 @@ func (jwtService *JwtService) GenerateToken(userID uint) (string, string, error)
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
 
-	accessTokenString, err := accessToken.SignedString([]byte(jwtService.cfg.Env.Jwt.SecretKey))
+	accessTokenString, err := accessToken.SignedString([]byte(js.cfg.Env.Jwt.SecretKey))
 
 	if err != nil {
 		return "", "", err
@@ -47,7 +47,7 @@ func (jwtService *JwtService) GenerateToken(userID uint) (string, string, error)
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
 
-	refreshTokenString, err := refreshToken.SignedString([]byte(jwtService.cfg.Env.Jwt.SecretKey))
+	refreshTokenString, err := refreshToken.SignedString([]byte(js.cfg.Env.Jwt.SecretKey))
 
 	if err != nil {
 		return "", "", err
@@ -56,12 +56,12 @@ func (jwtService *JwtService) GenerateToken(userID uint) (string, string, error)
 	return accessTokenString, refreshTokenString, nil
 }
 
-func (jwtService *JwtService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
+func (js *JwtService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", jwtService.cfg.Constant.ErrorField.Jwt, jwtService.cfg.Constant.ErrorTag.InvalidSignedToken)}
+			return nil, &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", js.cfg.Constant.ErrorField.Jwt, js.cfg.Constant.ErrorTag.InvalidSignedToken)}
 		}
-		return []byte(jwtService.cfg.Env.Jwt.SecretKey), nil
+		return []byte(js.cfg.Env.Jwt.SecretKey), nil
 	})
 
 	if err != nil {
@@ -69,12 +69,12 @@ func (jwtService *JwtService) ValidateToken(tokenString string) (jwt.MapClaims, 
 	}
 
 	if !token.Valid {
-		return nil, &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", jwtService.cfg.Constant.ErrorField.Jwt, jwtService.cfg.Constant.ErrorTag.InvalidAuthToken)}
+		return nil, &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", js.cfg.Constant.ErrorField.Jwt, js.cfg.Constant.ErrorTag.InvalidAuthToken)}
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", jwtService.cfg.Constant.ErrorField.Jwt, jwtService.cfg.Constant.ErrorTag.ClaimReject)}
+		return nil, &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", js.cfg.Constant.ErrorField.Jwt, js.cfg.Constant.ErrorTag.ClaimReject)}
 	}
 
 	return claims, nil

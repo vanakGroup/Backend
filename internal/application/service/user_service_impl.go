@@ -41,20 +41,20 @@ func NewUserService(
 	}
 }
 
-func (userService *UserService) SendOtp(phone string) error {
-	otp, err := userService.otpService.GenerateOtp()
+func (us *UserService) SendOtp(phone string) error {
+	otp, err := us.otpService.GenerateOtp()
 	if err != nil {
 		return err
 	}
 
-	err = userService.otpService.SetOTp(context.Background(), phone, otp)
+	err = us.otpService.SetOTp(context.Background(), phone, otp)
 	// Set(context.Background(), phone, otp, time.Duration(userService.cfg.Env.OTP.ExpiryMinute)*time.Minute, false)
 
 	if err != nil {
 		return err
 	}
 
-	userService.logger.Info(logtypes.Auth, logtypes.Otp, "otp generated and send", map[logtypes.ExtraKey]interface{}{
+	us.logger.Info(logtypes.Auth, logtypes.Otp, "otp generated and send", map[logtypes.ExtraKey]interface{}{
 		"phone": phone,
 		"otp":   otp,
 	})
@@ -62,8 +62,8 @@ func (userService *UserService) SendOtp(phone string) error {
 	return nil
 }
 
-func (userService *UserService) VerifyOTP(verifyInfo userdto.VerifyPhoneOtp) error {
-	err := userService.otpService.ValidateOtp(context.Background(), verifyInfo.Phone, verifyInfo.Otp)
+func (us *UserService) VerifyOTP(verifyInfo userdto.VerifyPhoneOtp) error {
+	err := us.otpService.ValidateOtp(context.Background(), verifyInfo.Phone, verifyInfo.Otp)
 
 	if err != nil {
 		return err
@@ -71,10 +71,10 @@ func (userService *UserService) VerifyOTP(verifyInfo userdto.VerifyPhoneOtp) err
 	return nil
 }
 
-func (userService *UserService) Login(phone string) (userdto.UserLoginResponse, error) {
+func (us *UserService) Login(phone string) (userdto.UserLoginResponse, error) {
 	var user *entities.User
 
-	err := userService.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+	err := us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		userRepo := rf.UserRepository()
 
 		var err error
@@ -102,7 +102,7 @@ func (userService *UserService) Login(phone string) (userdto.UserLoginResponse, 
 		return userdto.UserLoginResponse{}, err
 	}
 
-	accessToken, refreshToken, err := userService.jwtService.GenerateToken(user.ID)
+	accessToken, refreshToken, err := us.jwtService.GenerateToken(user.ID)
 
 	if err != nil {
 		return userdto.UserLoginResponse{}, err
