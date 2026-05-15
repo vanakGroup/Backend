@@ -6,7 +6,7 @@ type OTPData struct {
 }
 
 type UserLoginResponse struct {
-	AccessToken  string
-	RefreshToken string
-	Phone        string
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	Phone        string `json:"phone"`
 }
