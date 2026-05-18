@@ -187,8 +187,9 @@ var English = map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",
 	},
 	"otp": map[string]interface{}{
-		"invalid":     " the otp is invalid.",
-		"alreadyUsed": "the otp is already used.",
+		"invalid":      " the otp is invalid.",
+		"alreadyUsed":  "the otp is already used.",
+		"alreadyExist": "the otp is exist.",
 	},
 	"jwt": map[string]interface{}{
 		"invalidSignedToken": "the Jwt Token is invalid Signed",

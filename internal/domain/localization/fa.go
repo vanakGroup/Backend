@@ -188,8 +188,9 @@ var Persian = map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",
 	},
 	"otp": map[string]interface{}{
-		"invalid":     " کد ارسال شده برای او تی پی معتبر نمیباشد.",
-		"alreadyUsed": "کد ارسال شده قبلا استفاده شده.",
+		"invalid":      " کد ارسال شده برای او تی پی معتبر نمیباشد.",
+		"alreadyUsed":  "کد ارسال شده قبلا استفاده شده.",
+		"alreadyExist": "کد قبلی هنوز استفاده نشده.",
 	},
 	"jwt": map[string]interface{}{
 		"invalidSignedToken": "امضا توکن اشتباه است.",
