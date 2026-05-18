@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: hub.megan.ir/postgres:latest
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - vanak_network
+    restart: unless-stopped
+
+  pgadmin:
+    image: hub.megan.ir/dpage/pgadmin4
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "8090:80"
+    networks:
+      - vanak_network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  redis:
+    image: hub.megan.ir/redis:latest
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vanak_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  redis_data:
+
+networks:
+  vanak_network:
+    driver: bridge

@@ -1,0 +1,1 @@
+{"level":"info","ts":"2026-05-18T14:47:03.091+0330","caller":"service/user_service_impl.go:57","msg":"otp generated and send","Category":"Auth","SubCategory":"Otp","phone":"09966304410","otp":"398868"}

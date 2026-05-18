@@ -1,0 +1,51 @@
+# === Binaries & Executables ===
+bin/
+out/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+# فایل‌های بیلد شده توسط سیستم‌عامل
+
+
+# === Go Specific ===
+# وابستگی‌های لود شده
+vendor/
+# فایل‌های کش تست و پوشش کد
+*.test
+*.out
+coverage.txt
+
+# === Wire (Dependency Injection) ===
+# معمولاً wire_gen.go باید کامیت شود، اما اگر ترجیح می‌دهی هر بار تولید شود:
+# wire_gen.go
+
+# === Secrets & Configs ===
+# بسیار مهم: فایل‌های محیطی هرگز نباید در گیت باشند
+.env
+*.env
+# اگر فایل‌های کلید خصوصی داری
+*.pem
+*.key
+
+# === Docker ===
+# داده‌های دیتابیس (اگر در پوشه محلی مپ شده باشند)
+docker/postgres_data/
+docker/redis_data/
+docker/pgadmin_data/
+
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# === IDEs ===
+# VS Code
+.vscode/
+# GoLand / IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
