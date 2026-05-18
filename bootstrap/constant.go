@@ -1,11 +1,12 @@
 package bootstrap
 
 type Constants struct {
-	Context    Context
-	Role       Role
-	RedisKey   RedisKey
-	ErrorTag   ErrorTag
-	ErrorField ErrorField
+	Context     Context
+	Role        Role
+	RedisKey    RedisKey
+	ErrorTag    ErrorTag
+	ErrorField  ErrorField
+	JWTKeysPath JWTKeysPath
 }
 
 type ErrorTag struct {
@@ -102,6 +103,11 @@ type RedisKey struct {
 	OtpKey string
 }
 
+type JWTKeysPath struct {
+	PublicKey  string
+	PrivateKey string
+}
+
 type Context struct {
 	Translator string
 	UserID     string
@@ -116,6 +122,10 @@ func NewConstant() *Constants {
 		Context: Context{
 			Translator: "translator",
 			UserID:     "userID",
+		},
+		JWTKeysPath: JWTKeysPath{
+			PublicKey:  "./internal/infrastructure/jwt/public.pem",
+			PrivateKey: "./internal/infrastructure/jwt/private.pem",
 		},
 		Role: Role{
 			DefaultType: "customer",

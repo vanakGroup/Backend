@@ -6,21 +6,23 @@ import (
 
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/exception"
+	domainJWT "github.com/Vanak/Backend/internal/domain/jwt"
 	"github.com/Vanak/Backend/internal/domain/logging"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type JwtService struct {
-	logger logging.Logger
-	cfg    *bootstrap.Config
+	logger     logging.Logger
+	cfg        *bootstrap.Config
+	keyManager domainJWT.KeyManager
 }
 
-func NewJwtService(cfg *bootstrap.Config) *JwtService {
+func NewJwtService(cfg *bootstrap.Config, keyManager domainJWT.KeyManager) *JwtService {
 	logger := logging.NewLogger(cfg)
-
 	return &JwtService{
-		logger: logger,
-		cfg:    cfg,
+		keyManager: keyManager,
+		cfg:        cfg,
+		logger:     logger,
 	}
 }
 
@@ -31,9 +33,9 @@ func (js *JwtService) GenerateToken(userID uint) (string, string, error) {
 		"iat":    time.Now().Unix(),
 	}
 
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, accessTokenClaims)
 
-	accessTokenString, err := accessToken.SignedString([]byte(js.cfg.Env.Jwt.SecretKey))
+	accessTokenString, err := accessToken.SignedString(js.keyManager.GetPrivateKey())
 
 	if err != nil {
 		return "", "", err
@@ -45,9 +47,9 @@ func (js *JwtService) GenerateToken(userID uint) (string, string, error) {
 		"iat":    time.Now().Unix(),
 	}
 
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodRS256, refreshTokenClaims)
 
-	refreshTokenString, err := refreshToken.SignedString([]byte(js.cfg.Env.Jwt.SecretKey))
+	refreshTokenString, err := refreshToken.SignedString(js.keyManager.GetPrivateKey())
 
 	if err != nil {
 		return "", "", err
@@ -58,10 +60,10 @@ func (js *JwtService) GenerateToken(userID uint) (string, string, error) {
 
 func (js *JwtService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, &exception.UnauthorizedError{Message: fmt.Sprintf("%s.%s", js.cfg.Constant.ErrorField.Jwt, js.cfg.Constant.ErrorTag.InvalidSignedToken)}
 		}
-		return []byte(js.cfg.Env.Jwt.SecretKey), nil
+		return js.keyManager.GetPublicKey(), nil
 	})
 
 	if err != nil {

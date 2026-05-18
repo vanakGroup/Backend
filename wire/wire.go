@@ -7,11 +7,13 @@ import (
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/application/service"
 	"github.com/Vanak/Backend/internal/application/usecase"
+	jwtDomain "github.com/Vanak/Backend/internal/domain/jwt"
 	domainLocalization "github.com/Vanak/Backend/internal/domain/localization"
 	"github.com/Vanak/Backend/internal/domain/ports"
 	postgresDomain "github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
 	redisDomain "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
+	"github.com/Vanak/Backend/internal/infrastructure/jwt"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
@@ -79,7 +81,9 @@ var ServiceSet = wire.NewSet(
 	service.NewOtpService,
 	service.NewUserService,
 	service.NewJwtService,
+	jwt.NewJwtKeyManager,
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
+	wire.Bind(new(jwtDomain.KeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),

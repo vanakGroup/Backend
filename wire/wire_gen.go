@@ -10,11 +10,13 @@ import (
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/application/service"
 	"github.com/Vanak/Backend/internal/application/usecase"
+	jwt2 "github.com/Vanak/Backend/internal/domain/jwt"
 	localization2 "github.com/Vanak/Backend/internal/domain/localization"
 	"github.com/Vanak/Backend/internal/domain/ports"
 	postgres2 "github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
 	redis2 "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
+	"github.com/Vanak/Backend/internal/infrastructure/jwt"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
@@ -34,7 +36,8 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		DB: db,
 	}
 	translationService := localization.NewTranslationService()
-	jwtService := service.NewJwtService(config)
+	jwtKeyManager := jwt.NewJwtKeyManager(config)
+	jwtService := service.NewJwtService(config, jwtKeyManager)
 	authMiddleware := middleware.NewAuthMiddleWare(config, jwtService)
 	constants := ProvideConstants(config)
 	recoveryMiddleware := middleware.NewRecoveryMiddleware(constants)
@@ -90,7 +93,7 @@ var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedis
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
-var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
+var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, jwt.NewJwtKeyManager, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
 
 var ControllerSet = wire.NewSet(user.NewGeneralUserController)
 

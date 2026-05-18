@@ -56,7 +56,7 @@ type Redis struct {
 }
 
 func NewEnv() *Env {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("./.env")
 	if err != nil {
 		panic("fail to load env...")
 	}
