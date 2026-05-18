@@ -39,6 +39,5 @@ func main() {
 
 	routes.Run(ginEngine, app)
 
-	log.Println("🚀 Server is running on port 8080...")
 	ginEngine.Run()
 }

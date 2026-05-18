@@ -37,12 +37,7 @@ func InitRedis(cfg *bootstrap.Config) RedisDatabase {
 	return RedisDatabase{redisClient: redisClient}
 }
 
-// func (rb *RedisDatabase) GetRedis() *redis.Client {
-// 	return rb.redisClient
-// }
-
 func (rb *RedisDatabase) GetRedis() *redis.Client {
-	// یک تست پینگ سریع برای اطمینان از زنده بودن اتصال
 	err := rb.redisClient.Ping(context.Background()).Err()
 	if err != nil {
 		fmt.Printf("❌ Redis Connection Error: %v\n", err)
