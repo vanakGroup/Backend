@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/Vanak/Backend/bootstrap"
+	"github.com/Vanak/Backend/internal/infrastructure/swagger"
 	"github.com/Vanak/Backend/internal/infrastructure/validation"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/Vanak/Backend/internal/presentation/routes"
@@ -36,7 +37,7 @@ func main() {
 	if app.Database.DB == nil {
 		log.Fatal("Database instance is nil")
 	}
-
+	swagger.RegisterSwagger(ginEngine, cfg)
 	routes.Run(ginEngine, app)
 
 	ginEngine.Run()

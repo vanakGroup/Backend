@@ -1,0 +1,83 @@
+definitions:
+  base.SingleMessageResponse:
+    properties:
+      data: {}
+      message:
+        example: Successfully
+        type: string
+      statusCode:
+        example: 200
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/login:
+    post:
+      description: Authenticate user into the Vanak Parking System using phone number
+        and returns user session info
+      parameters:
+      - description: User's mobile phone number
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            phone:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: Successfully logged in and session created
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      summary: User Login with Phone
+      tags:
+      - Authentication
+  /auth/send-otp:
+    post:
+      description: Validates the Iranian phone number and sends a temporary verification
+        SMS
+      parameters:
+      - description: User's mobile phone number
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            phone:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      summary: Send OTP Verification Code
+      tags:
+      - Authentication
+  /auth/verify-otp:
+    post:
+      description: Verifies the temporary OTP code sent to the user's mobile phone
+        number
+      parameters:
+      - description: Phone number and received OTP code
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            otp:
+              type: string
+            phone:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: Phone number verified successfully
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      summary: Verify OTP Code
+      tags:
+      - Authentication
+swagger: "2.0"
