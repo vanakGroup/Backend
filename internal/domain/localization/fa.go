@@ -95,6 +95,7 @@ var Persian = map[string]interface{}{
 		"alreadyDraft":           "این {0} قبلا در حالت پیش نویس قرار گرفته است.",
 		"bannedUser":             "حساب شما مسدود شده است. شما مجاز به انجام این عمل نیستید.",
 		"lte":                    "عدد باید کوچکتر باشد.",
+		"ir_phone":               "این {0} معتبر نمی باشد",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":              "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",
@@ -188,8 +189,9 @@ var Persian = map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",
 	},
 	"otp": map[string]interface{}{
-		"invalid":     " کد ارسال شده برای او تی پی معتبر نمیباشد.",
-		"alreadyUsed": "کد ارسال شده قبلا استفاده شده.",
+		"invalid":      " کد ارسال شده برای او تی پی معتبر نمیباشد.",
+		"alreadyUsed":  "کد ارسال شده قبلا استفاده شده.",
+		"alreadyExist": "کد قبلی هنوز استفاده نشده.",
 	},
 	"jwt": map[string]interface{}{
 		"invalidSignedToken": "امضا توکن اشتباه است.",

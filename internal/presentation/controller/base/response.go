@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type singleMessageResponse struct {
-	Status  int         `json:"statusCode"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+type SingleMessageResponse struct {
+	Status  int         `json:"statusCode" example:"200"`
+	Message string      `json:"message" example:"Successfully"`
+	Data    interface{} `json:"data,omitempty" swaggertype:"object"`
 }
 
-type multipleMessageResponse struct {
-	Status  int                          `json:"statusCode"`
-	Message map[string]map[string]string `json:"message"`
-	Data    interface{}                  `json:"data"`
+type MultipleMessageResponse struct {
+	Status  int                          `json:"statusCode" example:"422"`
+	Message map[string]map[string]string `json:"message" swaggertype:"object,string"`
+	Data    interface{}                  `json:"data" swaggertype:"object"`
 }
 
 func Response[T string | map[string]map[string]string](ctx *gin.Context, statusCode int, msg T, data interface{}) {
@@ -33,7 +33,7 @@ func Response[T string | map[string]map[string]string](ctx *gin.Context, statusC
 		}
 		ctx.JSON(
 			statusCode,
-			singleMessageResponse{
+			SingleMessageResponse{
 				Status:  statusCode,
 				Message: msgType,
 				Data:    data,
@@ -42,7 +42,7 @@ func Response[T string | map[string]map[string]string](ctx *gin.Context, statusC
 	case map[string]map[string]string:
 		ctx.JSON(
 			statusCode,
-			multipleMessageResponse{
+			MultipleMessageResponse{
 				Status:  statusCode,
 				Message: msgType,
 				Data:    data,

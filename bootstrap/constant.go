@@ -7,6 +7,11 @@ type Constants struct {
 	ErrorTag    ErrorTag
 	ErrorField  ErrorField
 	JWTKeysPath JWTKeysPath
+	Server      Server
+}
+
+type Server struct {
+	Port string
 }
 
 type ErrorTag struct {
@@ -119,6 +124,9 @@ type Role struct {
 
 func NewConstant() *Constants {
 	return &Constants{
+		Server: Server{
+			Port: "8080",
+		},
 		Context: Context{
 			Translator: "translator",
 			UserID:     "userID",

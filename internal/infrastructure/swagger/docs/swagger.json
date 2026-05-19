@@ -1,0 +1,164 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Authenticate user into the Vanak Parking System using phone number and returns user session info",
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User Login with Phone",
+                "parameters": [
+                    {
+                        "description": "User's mobile phone number",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "phone": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged in and session created",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/send-otp": {
+            "post": {
+                "description": "Validates the Iranian phone number and sends a temporary verification SMS",
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Send OTP Verification Code",
+                "parameters": [
+                    {
+                        "description": "User's mobile phone number",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "phone": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify-otp": {
+            "post": {
+                "description": "Verifies the temporary OTP code sent to the user's mobile phone number",
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify OTP Code",
+                "parameters": [
+                    {
+                        "description": "Phone number and received OTP code",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "otp": {
+                                    "type": "string"
+                                },
+                                "phone": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Phone number verified successfully",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "base.MultipleMessageResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 422
+                }
+            }
+        },
+        "base.SingleMessageResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Successfully"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 200
+                }
+            }
+        }
+    }
+}
