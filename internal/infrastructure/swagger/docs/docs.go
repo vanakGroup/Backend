@@ -44,6 +44,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
                     }
                 }
             }
@@ -76,6 +82,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
                         }
                     }
                 }
@@ -113,12 +125,36 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
+        "base.MultipleMessageResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 422
+                }
+            }
+        },
         "base.SingleMessageResponse": {
             "type": "object",
             "properties": {

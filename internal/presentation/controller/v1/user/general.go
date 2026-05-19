@@ -34,6 +34,7 @@ func NewGeneralUserController(
 // @Tags         Authentication
 // @Param        request  body      object{phone=string}  true  "User's mobile phone number"  example(object{phone="09123456789"})
 // @Success      200      {object}  base.SingleMessageResponse
+// @Failure      400      {object}  base.MultipleMessageResponse
 // @Router       /auth/send-otp [post]
 func (userController *GeneralUserController) SendOtp(ctx *gin.Context) {
 	type sendOtpParams struct {
@@ -59,6 +60,7 @@ func (userController *GeneralUserController) SendOtp(ctx *gin.Context) {
 // @Tags         Authentication
 // @Param        request  body      object{phone=string,otp=string}  true  "Phone number and received OTP code"  example(object{phone="09123456789",otp="123456"})
 // @Success      200      {object}  base.SingleMessageResponse   "Phone number verified successfully"
+// @Failure      400      {object}  base.MultipleMessageResponse
 // @Router       /auth/verify-otp [post]
 func (userController *GeneralUserController) VerifyOTP(ctx *gin.Context) {
 	type VerifyPhoneOtp struct {
@@ -86,6 +88,7 @@ func (userController *GeneralUserController) VerifyOTP(ctx *gin.Context) {
 // @Tags         Authentication
 // @Param        request  body      object{phone=string}  true  "User's mobile phone number"  example(object{phone="09123456789"})
 // @Success      200      {object}  base.SingleMessageResponse "Successfully logged in and session created"
+// @Failure      400      {object}  base.MultipleMessageResponse
 // @Router       /auth/login [post]
 func (userController *GeneralUserController) Login(ctx *gin.Context) {
 	type LoginWithPhone struct {

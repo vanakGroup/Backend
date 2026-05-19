@@ -1,4 +1,16 @@
 definitions:
+  base.MultipleMessageResponse:
+    properties:
+      data:
+        type: object
+      message:
+        additionalProperties:
+          type: string
+        type: object
+      statusCode:
+        example: 422
+        type: integer
+    type: object
   base.SingleMessageResponse:
     properties:
       data:
@@ -32,6 +44,10 @@ paths:
           description: Successfully logged in and session created
           schema:
             $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
       summary: User Login with Phone
       tags:
       - Authentication
@@ -54,6 +70,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
       summary: Send OTP Verification Code
       tags:
       - Authentication
@@ -78,6 +98,10 @@ paths:
           description: Phone number verified successfully
           schema:
             $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
       summary: Verify OTP Code
       tags:
       - Authentication
