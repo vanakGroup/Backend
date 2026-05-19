@@ -1,7 +1,8 @@
 definitions:
   base.SingleMessageResponse:
     properties:
-      data: {}
+      data:
+        type: object
       message:
         example: Successfully
         type: string

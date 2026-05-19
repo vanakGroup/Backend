@@ -122,7 +122,9 @@ const docTemplate = `{
         "base.SingleMessageResponse": {
             "type": "object",
             "properties": {
-                "data": {},
+                "data": {
+                    "type": "object"
+                },
                 "message": {
                     "type": "string",
                     "example": "Successfully"

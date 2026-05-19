@@ -10,7 +10,7 @@ import (
 type SingleMessageResponse struct {
 	Status  int         `json:"statusCode" example:"200"`
 	Message string      `json:"message" example:"Successfully"`
-	Data    interface{} `json:"data"`
+	Data    interface{} `json:"data" swaggertype:"object"`
 }
 
 type MultipleMessageResponse struct {

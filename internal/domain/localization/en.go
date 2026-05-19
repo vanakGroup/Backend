@@ -94,6 +94,7 @@ var English = map[string]interface{}{
 		"alreadyAccepted":        "This {0} has been already accepted.",
 		"alreadyDraft":           "This {0} has been already drafted.",
 		"bannedUser":             "Your account is currently banned. You are not allowed to perform this action.",
+		"ir_phone":               "The {0} is Not correct.",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":               "Registration Successful! Please check your messages to verify your account and complete the registration process.",
