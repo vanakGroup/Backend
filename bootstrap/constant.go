@@ -102,6 +102,7 @@ type ErrorField struct {
 	CorporationStaff    string
 	Jwt                 string
 	Auth                string
+	Attribute           string
 }
 
 type RedisKey struct {
@@ -185,6 +186,7 @@ func NewConstant() *Constants {
 			CorporationStaff:    "corporationStaff",
 			Jwt:                 "jwt",
 			Auth:                "auth",
+			Attribute:           "attribute",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyRegistered:      "alreadyRegistered",

@@ -34,3 +34,20 @@ func (ps *ParkingRepository) GetAttributeByName(name string) (*entities.ParkingA
 func (ps *ParkingRepository) CreateAttribute(parkingAttribute *entities.ParkingAttribute) error {
 	return ps.db.Create(parkingAttribute).Error
 }
+
+func (ps *ParkingRepository) CreateParking(parking *entities.Parking) error {
+	return ps.db.Create(parking).Error
+}
+
+func (ps *ParkingRepository) GetAttributesByIDs(ids []uint) ([]*entities.ParkingAttribute, error) {
+	var attributes []*entities.ParkingAttribute
+	result := ps.db.Where("id IN ?", ids).Find(&attributes)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return attributes, nil
+}
+
+func (ps *ParkingRepository) AddAttributes(parking *entities.Parking, attributes []*entities.ParkingAttribute) error {
+	return ps.db.Model(parking).Association("Attributes").Append(attributes)
+}

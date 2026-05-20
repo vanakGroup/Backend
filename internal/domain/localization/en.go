@@ -1,6 +1,7 @@
 package localization
 
 var English = map[string]interface{}{
+	"attribute":           "attribute",
 	"firstName":           "first name",
 	"lastName":            "last name",
 	"phone":               "phone",

@@ -7,4 +7,6 @@ type AddressRepository interface {
 	CreateCity(city *entities.City) error
 	GetProvinceByName(name string) (*entities.Province, error)
 	GetCityByName(name string) (*entities.City, error)
+	GetCityByID(id uint) (*entities.City, error)
+	CreateAddress(address *entities.Address) error
 }

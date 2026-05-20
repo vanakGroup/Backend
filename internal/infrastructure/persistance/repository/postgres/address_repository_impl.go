@@ -53,3 +53,23 @@ func (ar *AddressRepository) GetCityByName(name string) (*entities.City, error) 
 
 	return &city, nil
 }
+
+func (ar *AddressRepository) GetCityByID(id uint) (*entities.City, error) {
+	var city entities.City
+
+	result := ar.db.First(&city, id)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+
+		return nil, result.Error
+	}
+
+	return &city, nil
+}
+
+func (ar *AddressRepository) CreateAddress(address *entities.Address) error {
+	return ar.db.Create(address).Error
+}

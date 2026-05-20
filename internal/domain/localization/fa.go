@@ -1,6 +1,7 @@
 package localization
 
 var Persian = map[string]interface{}{
+	"attribute":           "ویژگی",
 	"firstName":           "نام",
 	"lastName":            "نام خانوادگی",
 	"phone":               "شماره تماس",
