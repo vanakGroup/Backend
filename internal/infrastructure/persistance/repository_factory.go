@@ -26,3 +26,7 @@ func (rf *RepositoryFactory) UserRepository() postgresDomain.UserRepository {
 func (rf *RepositoryFactory) AddressRepository() postgresDomain.AddressRepository {
 	return postgres.NewAddressRepository(rf.cfg, rf.db)
 }
+
+func (rf *RepositoryFactory) ParkingRepository() postgresDomain.ParkingRepository {
+	return postgres.NewParkingRepository(rf.cfg, rf.db)
+}

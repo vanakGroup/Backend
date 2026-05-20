@@ -34,6 +34,11 @@ type Middlewares struct {
 	Recovery       *middleware.RecoveryMiddleware
 }
 
+type Seeds struct {
+	Address   *seeder.AddressSeeder
+	Attribute *seeder.AttributeTypeSeeder
+}
+
 type Application struct {
 	Database              *Database
 	Translator            domainLocalization.Translator
@@ -42,7 +47,7 @@ type Application struct {
 	OtpService            *service.OtpService
 	UserService           *service.UserService
 	GeneralUserController *user.GeneralUserController
-	ProvinceCitySeeder    *seeder.AddressSeeder
+	Seeds                 *Seeds
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -64,6 +69,7 @@ var DatabaseProviderSet = wire.NewSet(
 	redisRepo.NewUserCacheRepository,
 	postgresRepo.NewUserRepository,
 	postgresRepo.NewAddressRepository,
+	postgresRepo.NewParkingRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
 	wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)),
@@ -71,6 +77,7 @@ var DatabaseProviderSet = wire.NewSet(
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
 	wire.Bind(new(postgresDomain.AddressRepository), new(*postgresRepo.AddressRepository)),
+	wire.Bind(new(postgresDomain.ParkingRepository), new(*postgresRepo.ParkingRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -95,6 +102,8 @@ var ServiceSet = wire.NewSet(
 
 var SeederSet = wire.NewSet(
 	seeder.NewAddressSeeder,
+	seeder.NewAttributeTypeSeeder,
+	wire.Struct(new(Seeds), "*"),
 )
 
 var ControllerSet = wire.NewSet(
@@ -109,7 +118,7 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
-	provinceCitySeeder *seeder.AddressSeeder,
+	seeds *Seeds,
 ) *Application {
 	return &Application{
 		Database:              db,
@@ -119,7 +128,7 @@ func NewApplication(
 		OtpService:            otpService,
 		UserService:           userService,
 		GeneralUserController: generalUserController,
-		ProvinceCitySeeder:    provinceCitySeeder,
+		Seeds:                 seeds,
 	}
 }
 

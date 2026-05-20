@@ -5,4 +5,5 @@ import postgresDomain "github.com/Vanak/Backend/internal/domain/ports/repository
 type RepositoryFactory interface {
 	UserRepository() postgresDomain.UserRepository
 	AddressRepository() postgresDomain.AddressRepository
+	ParkingRepository() postgresDomain.ParkingRepository
 }

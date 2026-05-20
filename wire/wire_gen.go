@@ -53,7 +53,12 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	userService := service.NewUserService(config, otpService, userCacheRepository, unitOfWork, jwtService)
 	generalUserController := user.NewGeneralUserController(userService, config)
 	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, addressSeeder)
+	attributeTypeSeeder := seeder.NewAttributeTypeSeeder(unitOfWork)
+	seeds := &Seeds{
+		Address:   addressSeeder,
+		Attribute: attributeTypeSeeder,
+	}
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, seeds)
 	return application, nil
 }
 
@@ -68,6 +73,11 @@ type Middlewares struct {
 	Recovery       *middleware.RecoveryMiddleware
 }
 
+type Seeds struct {
+	Address   *seeder.AddressSeeder
+	Attribute *seeder.AttributeTypeSeeder
+}
+
 type Application struct {
 	Database              *Database
 	Translator            localization2.Translator
@@ -76,7 +86,7 @@ type Application struct {
 	OtpService            *service.OtpService
 	UserService           *service.UserService
 	GeneralUserController *user.GeneralUserController
-	ProvinceCitySeeder    *seeder.AddressSeeder
+	Seeds                 *Seeds
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -92,13 +102,13 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 	return &db
 }
 
-var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Struct(new(Database), "*"))
+var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, postgres.NewParkingRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Bind(new(postgres2.ParkingRepository), new(*postgres.ParkingRepository)), wire.Struct(new(Database), "*"))
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
 var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, jwt.NewJwtKeyManager, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
 
-var SeederSet = wire.NewSet(seeder.NewAddressSeeder)
+var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, wire.Struct(new(Seeds), "*"))
 
 var ControllerSet = wire.NewSet(user.NewGeneralUserController)
 
@@ -110,7 +120,7 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
-	provinceCitySeeder *seeder.AddressSeeder,
+	seeds *Seeds,
 ) *Application {
 	return &Application{
 		Database:              db,
@@ -120,6 +130,6 @@ func NewApplication(
 		OtpService:            otpService,
 		UserService:           userService,
 		GeneralUserController: generalUserController,
-		ProvinceCitySeeder:    provinceCitySeeder,
+		Seeds:                 seeds,
 	}
 }
