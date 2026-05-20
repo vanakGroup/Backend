@@ -18,6 +18,7 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
+	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -41,6 +42,7 @@ type Application struct {
 	OtpService            *service.OtpService
 	UserService           *service.UserService
 	GeneralUserController *user.GeneralUserController
+	ProvinceCitySeeder    *seeder.AddressSeeder
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -61,12 +63,14 @@ var DatabaseProviderSet = wire.NewSet(
 	ProvideRedisCache,
 	redisRepo.NewUserCacheRepository,
 	postgresRepo.NewUserRepository,
+	postgresRepo.NewAddressRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
 	wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)),
 	wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)),
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
+	wire.Bind(new(postgresDomain.AddressRepository), new(*postgresRepo.AddressRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -89,6 +93,10 @@ var ServiceSet = wire.NewSet(
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
 )
 
+var SeederSet = wire.NewSet(
+	seeder.NewAddressSeeder,
+)
+
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
 )
@@ -101,6 +109,7 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
+	provinceCitySeeder *seeder.AddressSeeder,
 ) *Application {
 	return &Application{
 		Database:              db,
@@ -110,6 +119,7 @@ func NewApplication(
 		OtpService:            otpService,
 		UserService:           userService,
 		GeneralUserController: generalUserController,
+		ProvinceCitySeeder:    provinceCitySeeder,
 	}
 }
 
@@ -122,6 +132,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		ProvideConstants,
 		NewApplication,
 		ControllerSet,
+		SeederSet,
 	)
 	return nil, nil
 }

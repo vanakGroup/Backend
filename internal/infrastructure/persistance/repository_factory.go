@@ -19,6 +19,10 @@ func NewRepositoryFactory(db *gorm.DB, cfg *bootstrap.Config) *RepositoryFactory
 	}
 }
 
-func (f *RepositoryFactory) UserRepository() postgresDomain.UserRepository {
-	return postgres.NewUserRepository(f.cfg, f.db)
+func (rf *RepositoryFactory) UserRepository() postgresDomain.UserRepository {
+	return postgres.NewUserRepository(rf.cfg, rf.db)
+}
+
+func (rf *RepositoryFactory) AddressRepository() postgresDomain.AddressRepository {
+	return postgres.NewAddressRepository(rf.cfg, rf.db)
 }

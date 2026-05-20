@@ -21,6 +21,7 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
+	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -51,7 +52,8 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	unitOfWork := persistance.NewUnitOfWork(db)
 	userService := service.NewUserService(config, otpService, userCacheRepository, unitOfWork, jwtService)
 	generalUserController := user.NewGeneralUserController(userService, config)
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController)
+	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, addressSeeder)
 	return application, nil
 }
 
@@ -74,6 +76,7 @@ type Application struct {
 	OtpService            *service.OtpService
 	UserService           *service.UserService
 	GeneralUserController *user.GeneralUserController
+	ProvinceCitySeeder    *seeder.AddressSeeder
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -89,11 +92,13 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 	return &db
 }
 
-var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Struct(new(Database), "*"))
+var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Struct(new(Database), "*"))
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
 var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, jwt.NewJwtKeyManager, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
+
+var SeederSet = wire.NewSet(seeder.NewAddressSeeder)
 
 var ControllerSet = wire.NewSet(user.NewGeneralUserController)
 
@@ -105,6 +110,7 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
+	provinceCitySeeder *seeder.AddressSeeder,
 ) *Application {
 	return &Application{
 		Database:              db,
@@ -114,5 +120,6 @@ func NewApplication(
 		OtpService:            otpService,
 		UserService:           userService,
 		GeneralUserController: generalUserController,
+		ProvinceCitySeeder:    provinceCitySeeder,
 	}
 }

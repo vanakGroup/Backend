@@ -1,3 +1,5 @@
+// this file not use because need the RBAC then we should fix that
+
 package seeder
 
 import (
@@ -15,7 +17,7 @@ func NewUserSeeder(db *gorm.DB) *UserSeeder {
 	return &UserSeeder{db: db}
 }
 
-func (userSeeder *UserSeeder) SeedRoles() {
+func (us *UserSeeder) SeedRoles() {
 	roles := []entities.Role{
 		{Name: "customer"},
 		{Name: "admin"},
@@ -23,10 +25,10 @@ func (userSeeder *UserSeeder) SeedRoles() {
 
 	for _, role := range roles {
 		var existingRole entities.Role
-		result := userSeeder.db.Where("type = ?", role.Name).First(&existingRole)
+		result := us.db.Where("type = ?", role.Name).First(&existingRole)
 
 		if result.Error == gorm.ErrRecordNotFound {
-			if err := userSeeder.db.Create(&role).Error; err != nil {
+			if err := us.db.Create(&role).Error; err != nil {
 				log.Printf("Error creating role %s: %v", role.Name, err)
 			} else {
 				log.Printf("Role '%s' created successfully", role.Name)

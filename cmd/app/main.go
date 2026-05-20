@@ -37,6 +37,7 @@ func main() {
 	if app.Database.DB == nil {
 		log.Fatal("Database instance is nil")
 	}
+	app.ProvinceCitySeeder.SeedProvincesAndCities()
 	swagger.RegisterSwagger(ginEngine, cfg)
 	routes.Run(ginEngine, app)
 

@@ -16,5 +16,6 @@ type Parking struct {
 	UserID     uint               `gorm:"not null;index"`
 	User       User               `gorm:"foreignKey:UserID"`
 	Address    Address            `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
-	Attributes []ParkingAttribute `gorm:"many2many:parking_attributes;constraint:OnDelete:CASCADE"`
+	Attributes []ParkingAttribute `gorm:"many2many:parking_attribute_relations;constraint:OnDelete:CASCADE"`
+	Slots      []AvailabilitySlot `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
 }

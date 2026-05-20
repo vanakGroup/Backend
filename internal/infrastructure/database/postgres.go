@@ -39,6 +39,12 @@ func NewPostgresDataBase(dbConfig *bootstrap.Database) *gorm.DB {
 			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},
+			&entities.Parking{},
+			&entities.Address{},
+			&entities.Province{},
+			&entities.City{},
+			&entities.ParkingAttribute{},
+			&entities.AvailabilitySlot{},
 		)
 		fmt.Println("Migration completed!")
 
