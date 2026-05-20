@@ -14,5 +14,6 @@ type User struct {
 
 	Roles []Role `gorm:"many2many:user_roles;constraint:OnDelete:CASCADE;"`
 
-	Contacts []*User `gorm:"many2many:user_contacts;constraint:OnDelete:CASCADE;"`
+	Contacts []*User   `gorm:"many2many:user_contacts;constraint:OnDelete:CASCADE;"`
+	Parkings []Parking `gorm:"foreignKey:UserID"`
 }
