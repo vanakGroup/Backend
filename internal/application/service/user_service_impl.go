@@ -203,3 +203,22 @@ func (us *UserService) UpdateInformation(ctx context.Context, info userdto.UserF
 
 	return nil
 }
+
+func (us *UserService) GetInformation(userId uint) (*userdto.ProfileDTO, error) {
+	user, err := us.userRepo.FindUserById(userId)
+	if err != nil {
+		unauthorizedError := exception.NewUnauthorizedError(fmt.Sprintf("%s.%s", us.cfg.Constant.ErrorField.User, us.cfg.Constant.ErrorTag.Unauthorized))
+		return nil, unauthorizedError
+	}
+
+	userProfile := userdto.ProfileDTO{
+		Phone:        user.Phone,
+		FirstName:    utils.SafeString(user.FirstName),
+		LastName:     utils.SafeString(user.LastName),
+		NationalCode: utils.SafeString(user.NationalCode),
+		ShabaNumber:  utils.SafeString(user.ShabaNumber),
+	}
+
+	return &userProfile, nil
+
+}

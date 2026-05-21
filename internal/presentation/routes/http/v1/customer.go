@@ -12,5 +12,6 @@ func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
 	profileGroup.Use(app.Middlewares.Authentication.AuthMiddleware())
 	{
 		profileGroup.PUT("", app.CustomerUserController.UpdateProfile)
+		profileGroup.GET("", app.CustomerUserController.GetProfile)
 	}
 }

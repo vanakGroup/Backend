@@ -185,6 +185,7 @@ var English = map[string]interface{}{
 		"addNumber":                  "Add Number has been successfully.",
 		"SendOtp":                    "Send Otp has been successfully.",
 		"VerifyOtp":                  "Otp is Verify successfully.",
+		"getProfile":                 "User profile fetched successfully.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",

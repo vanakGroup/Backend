@@ -14,4 +14,5 @@ type UserService interface {
 
 type UserProfileUseCase interface {
 	UpdateInformation(ctx context.Context, info userdto.UserFilled) error
+	GetInformation(userId uint) (*userdto.ProfileDTO,error)
 }

@@ -11,3 +11,10 @@ func IsNumeric(s string) bool {
 	}
 	return true
 }
+
+func SafeString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
