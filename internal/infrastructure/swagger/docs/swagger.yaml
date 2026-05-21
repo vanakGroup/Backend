@@ -105,4 +105,51 @@ paths:
       summary: Verify OTP Code
       tags:
       - Authentication
+  /profile:
+    put:
+      consumes:
+      - application/json
+      description: Updates the user's profile information. Phone number cannot be
+        changed here. Requires Bearer Token.
+      parameters:
+      - description: Profile update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            firstname:
+              type: string
+            lastname:
+              type: string
+            national_code:
+              type: string
+            shaba_number:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile updated successfully
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+        "401":
+          description: Unauthorized - Missing or invalid token
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Customer Profile
+      tags:
+      - Profile
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

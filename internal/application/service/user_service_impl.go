@@ -2,15 +2,19 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Vanak/Backend/bootstrap"
 	userdto "github.com/Vanak/Backend/internal/application/dto/user"
 	"github.com/Vanak/Backend/internal/application/usecase"
 	"github.com/Vanak/Backend/internal/domain/entities"
+	"github.com/Vanak/Backend/internal/domain/exception"
 	"github.com/Vanak/Backend/internal/domain/logging"
 	"github.com/Vanak/Backend/internal/domain/logging/logtypes"
 	"github.com/Vanak/Backend/internal/domain/ports"
+	"github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
 	"github.com/Vanak/Backend/internal/domain/ports/repository/redis"
+	"github.com/Vanak/Backend/internal/domain/utils"
 )
 
 type UserService struct {
@@ -20,6 +24,7 @@ type UserService struct {
 	userCacheRepository redis.UserCacheRepository
 	unitOfWork          ports.UnitOfWork
 	jwtService          usecase.JwtService
+	userRepo            postgres.UserProfileRepository
 }
 
 func NewUserService(
@@ -28,6 +33,7 @@ func NewUserService(
 	userCacheRepository redis.UserCacheRepository,
 	unitOfWork ports.UnitOfWork,
 	jwtService usecase.JwtService,
+	userRepo postgres.UserProfileRepository,
 ) *UserService {
 	logger := logging.NewLogger(cfg)
 
@@ -38,6 +44,7 @@ func NewUserService(
 		userCacheRepository: userCacheRepository,
 		unitOfWork:          unitOfWork,
 		jwtService:          jwtService,
+		userRepo:            userRepo,
 	}
 }
 
@@ -113,4 +120,86 @@ func (us *UserService) Login(phone string) (userdto.UserLoginResponse, error) {
 		AccessToken:  accessToken,
 		Phone:        phone,
 	}, nil
+}
+
+func (us *UserService) UpdateInformation(ctx context.Context, info userdto.UserFilled) error {
+	alreadyExistsErrors := exception.NewAlreadyExistsError()
+	validationErrs := exception.NewValidationErrors()
+
+	updateData := make(map[string]interface{})
+
+	if info.FirstName != nil {
+		updateData[us.cfg.Constant.ProfileFilleds.Firstname] = *info.FirstName
+	}
+	if info.LastName != nil {
+		updateData[us.cfg.Constant.ProfileFilleds.Lastname] = *info.LastName
+	}
+	if info.NationalCode != nil {
+		code := *info.NationalCode
+
+		if code == "" {
+			updateData[us.cfg.Constant.ProfileFilleds.NationalCode] = nil
+		} else {
+			if len(code) != 10 {
+				validationErrs.Add(us.cfg.Constant.ErrorField.NationalID, us.cfg.Constant.ErrorTag.NationalCodeLength)
+			}
+
+			if !utils.IsNumeric(code) {
+				validationErrs.Add(us.cfg.Constant.ErrorField.NationalID, us.cfg.Constant.ErrorTag.Numeric)
+			}
+
+			if !validationErrs.HasErrors() {
+				isDuplicated := us.userRepo.CheckNationalCodeExists(ctx, *info.NationalCode, info.UserID)
+				if isDuplicated {
+					alreadyExistsErrors.Add(us.cfg.Constant.ProfileFilleds.NationalCode, us.cfg.Constant.ErrorTag.AlreadyExist, us.cfg.Constant.ErrorField.NationalID)
+				}
+			}
+
+			updateData[us.cfg.Constant.ProfileFilleds.NationalCode] = *info.NationalCode
+		}
+	}
+
+	if info.ShabaNumber != nil {
+		shaba := *info.ShabaNumber
+		if shaba == "" {
+			updateData[us.cfg.Constant.ProfileFilleds.ShabaNumber] = nil
+		} else {
+			if len(shaba) != 24 {
+				validationErrs.Add(us.cfg.Constant.ErrorField.IBAN, us.cfg.Constant.ErrorTag.ShabaLength)
+			}
+
+			if !utils.IsNumeric(shaba) {
+				validationErrs.Add(us.cfg.Constant.ErrorField.IBAN, us.cfg.Constant.ErrorTag.Numeric)
+			}
+
+			if !validationErrs.HasErrors() {
+				isDuplicated := us.userRepo.CheckShabaExists(ctx, shaba, info.UserID)
+				if isDuplicated {
+					alreadyExistsErrors.Add(us.cfg.Constant.ProfileFilleds.ShabaNumber, us.cfg.Constant.ErrorTag.AlreadyExist, us.cfg.Constant.ErrorField.IBAN)
+				}
+			}
+			updateData[us.cfg.Constant.ProfileFilleds.ShabaNumber] = shaba
+		}
+	}
+
+	if validationErrs.HasErrors() {
+		panic(validationErrs)
+	}
+
+	if alreadyExistsErrors.HasErrors() {
+		panic(alreadyExistsErrors)
+	}
+
+	if _, err := us.userRepo.FindUserById(info.UserID); err != nil {
+		unauthorizedError := exception.NewUnauthorizedError(fmt.Sprintf("%s.%s", us.cfg.Constant.ErrorField.User, us.cfg.Constant.ErrorTag.Unauthorized))
+		panic(unauthorizedError)
+	}
+
+	if len(updateData) != 0 {
+		if err := us.userRepo.UpdateProfile(ctx, info.UserID, updateData); err != nil {
+			panic(err)
+		}
+	}
+
+	return nil
 }

@@ -34,13 +34,14 @@ type Middlewares struct {
 }
 
 type Application struct {
-	Database              *Database
-	Translator            domainLocalization.Translator
-	Middlewares           *Middlewares
-	Constants             *bootstrap.Constants
-	OtpService            *service.OtpService
-	UserService           *service.UserService
-	GeneralUserController *user.GeneralUserController
+	Database               *Database
+	Translator             domainLocalization.Translator
+	Middlewares            *Middlewares
+	Constants              *bootstrap.Constants
+	OtpService             *service.OtpService
+	UserService            *service.UserService
+	GeneralUserController  *user.GeneralUserController
+	CustomerUserController *user.CustomerUserController
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -67,6 +68,7 @@ var DatabaseProviderSet = wire.NewSet(
 	wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)),
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
+	wire.Bind(new(postgresDomain.UserProfileRepository), new(*postgresRepo.UserRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -87,10 +89,12 @@ var ServiceSet = wire.NewSet(
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
+	wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)),
 )
 
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
+	user.NewCustomerUserController,
 )
 
 func NewApplication(
@@ -101,15 +105,17 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
+	customerUserController *user.CustomerUserController,
 ) *Application {
 	return &Application{
-		Database:              db,
-		Translator:            trans,
-		Middlewares:           mid,
-		Constants:             cons,
-		OtpService:            otpService,
-		UserService:           userService,
-		GeneralUserController: generalUserController,
+		Database:               db,
+		Translator:             trans,
+		Middlewares:            mid,
+		Constants:              cons,
+		OtpService:             otpService,
+		UserService:            userService,
+		GeneralUserController:  generalUserController,
+		CustomerUserController: customerUserController,
 	}
 }
 
