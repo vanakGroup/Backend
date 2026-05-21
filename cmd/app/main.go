@@ -15,6 +15,9 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := bootstrap.Run()
 

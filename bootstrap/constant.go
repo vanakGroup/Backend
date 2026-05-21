@@ -1,13 +1,14 @@
 package bootstrap
 
 type Constants struct {
-	Context     Context
-	Role        Role
-	RedisKey    RedisKey
-	ErrorTag    ErrorTag
-	ErrorField  ErrorField
-	JWTKeysPath JWTKeysPath
-	Server      Server
+	Context        Context
+	Role           Role
+	RedisKey       RedisKey
+	ErrorTag       ErrorTag
+	ErrorField     ErrorField
+	JWTKeysPath    JWTKeysPath
+	Server         Server
+	ProfileFilleds ProfileFilled
 }
 
 type Server struct {
@@ -56,6 +57,9 @@ type ErrorTag struct {
 	EmptyToken             string
 	EmptyHeader            string
 	InvalidHeader          string
+	NationalCodeLength     string
+	Numeric                string
+	ShabaLength            string
 }
 
 type ErrorField struct {
@@ -104,6 +108,13 @@ type ErrorField struct {
 	Auth                string
 }
 
+type ProfileFilled struct {
+	Firstname    string
+	Lastname     string
+	NationalCode string
+	ShabaNumber  string
+}
+
 type RedisKey struct {
 	OtpKey string
 }
@@ -130,6 +141,12 @@ func NewConstant() *Constants {
 		Context: Context{
 			Translator: "translator",
 			UserID:     "userID",
+		},
+		ProfileFilleds: ProfileFilled{
+			Firstname:    "first_name",
+			Lastname:     "last_name",
+			NationalCode: "national_code",
+			ShabaNumber:  "shaba_number",
 		},
 		JWTKeysPath: JWTKeysPath{
 			PublicKey:  "./internal/infrastructure/jwt/public.pem",
@@ -228,6 +245,9 @@ func NewConstant() *Constants {
 			EmptyToken:             "emptyToken",
 			EmptyHeader:            "emptyHeader",
 			InvalidHeader:          "invalidHeader",
+			NationalCodeLength:     "nationalCodeLength",
+			Numeric:                "numeric",
+			ShabaLength:            "shabaLength",
 		},
 	}
 }

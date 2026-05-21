@@ -26,3 +26,7 @@ func (ve ValidationError) Error() string {
 func (ve *ValidationError) Add(field, tag string) {
 	ve.FieldErros = append(ve.FieldErros, *NewFieldError(field, tag))
 }
+
+func (ve *ValidationError) HasErrors() bool {
+	return len(ve.FieldErros) > 0
+}

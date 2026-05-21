@@ -47,6 +47,8 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleUnauthorizedError(ctx, *AppErrors, rm.constants.Context.Translator)
 	} else if NotFoundError, ok := err.(*exception.NotFoundError); ok {
 		handleNotFoundError(ctx, *NotFoundError, rm.constants.Context.Translator)
+	} else if AlreadyExistsError, ok := err.(*exception.AlreadyExistsError); ok {
+		handleAlreadyExistsError(ctx, *AlreadyExistsError, rm.constants.Context.Translator)
 	} else {
 		handleDefaultError(ctx, err)
 	}
@@ -103,4 +105,22 @@ func handleUnauthorizedError(ctx *gin.Context, AppError exception.UnauthorizedEr
 	message, _ := trans.Translate(AppError.Message)
 
 	base.Response(ctx, 401, message, nil)
+}
+
+func handleAlreadyExistsError(ctx *gin.Context, bError exception.AlreadyExistsError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	errorMessages := make(map[string]map[string]string)
+
+	for _, errDetail := range bError.FieldErrors {
+		if _, ok := errorMessages[errDetail.Field]; !ok {
+			errorMessages[errDetail.Field] = make(map[string]string)
+		}
+
+		fieldName, _ := trans.Translate(errDetail.TransKey)
+
+		message, _ := trans.Translate(fmt.Sprintf("errors.%s", errDetail.Tag), fieldName)
+
+		errorMessages[errDetail.Field][errDetail.Tag] = message
+	}
+	base.Response(ctx, 422, errorMessages, nil)
 }

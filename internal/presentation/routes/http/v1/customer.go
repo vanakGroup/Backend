@@ -7,4 +7,10 @@ import (
 )
 
 func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
+	profileGroup := router.Group("/profile")
+
+	profileGroup.Use(app.Middlewares.Authentication.AuthMiddleware())
+	{
+		profileGroup.PUT("", app.CustomerUserController.UpdateProfile)
+	}
 }

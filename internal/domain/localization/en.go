@@ -95,6 +95,8 @@ var English = map[string]interface{}{
 		"alreadyDraft":           "This {0} has been already drafted.",
 		"bannedUser":             "Your account is currently banned. You are not allowed to perform this action.",
 		"ir_phone":               "The {0} is Not correct.",
+		"nationalCodeLength":     "The national ID must be exactly 10 digits.",
+		"shabaLength":            "The iban must be exactly 24 digits.",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":               "Registration Successful! Please check your messages to verify your account and complete the registration process.",
