@@ -186,6 +186,7 @@ var Persian = map[string]interface{}{
 		"addNumber":                 " اعداد با موفقیت جمع شدند.",
 		"SendOtp":                   "کد یکبار مصرف با موفقیت ارسال شد.",
 		"VerifyOtp":                 "کد یکبار مصرف با موفقیت تایید شد.",
+		"getProfile":                "اطلاعات حساب کاربری با موفقیت دریافت شد.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",

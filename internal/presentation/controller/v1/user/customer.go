@@ -54,7 +54,7 @@ func (cuc *CustomerUserController) UpdateProfile(ctx *gin.Context) {
 	userID := userIDAny.(uint)
 
 	userInfo := userdto.UserFilled{
-		UserID: userID,
+		UserID:       userID,
 		FirstName:    params.FirstName,
 		LastName:     params.LastName,
 		NationalCode: params.NationalCode,
@@ -69,4 +69,31 @@ func (cuc *CustomerUserController) UpdateProfile(ctx *gin.Context) {
 	trans := base.GetTranslator(ctx, cuc.cfg.Constant.Context.Translator)
 	message, _ := trans.Translate("successMessage.updateProfile")
 	base.Response(ctx, 200, message, nil)
+}
+
+// GetProfile    godoc
+// @Summary      Get User Profile
+// @Description  Retrieves current authenticated user's profile info. Requires Bearer Token.
+// @Tags         Profile
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} base.SingleMessageResponse{data=userdto.ProfileDTO}
+// @Router       /profile [get]
+func (cuc *CustomerUserController) GetProfile(ctx *gin.Context) {
+	userIDAny, exists := ctx.Get(cuc.cfg.Constant.Context.UserID)
+	if !exists {
+		unauthorizedError := exception.NewUnauthorizedError(fmt.Sprintf("%s.%s", cuc.cfg.Constant.ErrorField.User, cuc.cfg.Constant.ErrorTag.Unauthorized))
+		panic(unauthorizedError)
+	}
+
+	userID := userIDAny.(uint)
+
+	userProfile, err := cuc.useCase.GetInformation(userID)
+	if err != nil {
+		panic(err)
+	}
+
+	trans := base.GetTranslator(ctx, cuc.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.getProfile")
+	base.Response(ctx, 200, message, userProfile)
 }

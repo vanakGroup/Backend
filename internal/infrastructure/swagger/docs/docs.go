@@ -136,6 +136,41 @@ const docTemplate = `{
             }
         },
         "/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves current authenticated user's profile info. Requires Bearer Token.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get User Profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/base.SingleMessageResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/userdto.ProfileDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -233,6 +268,26 @@ const docTemplate = `{
                 "statusCode": {
                     "type": "integer",
                     "example": 200
+                }
+            }
+        },
+        "userdto.ProfileDTO": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "national_code": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "shaba_number": {
+                    "type": "string"
                 }
             }
         }
