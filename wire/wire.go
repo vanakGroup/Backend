@@ -12,6 +12,7 @@ import (
 	"github.com/Vanak/Backend/internal/domain/ports"
 	postgresDomain "github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
 	redisDomain "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
+	storageDomain "github.com/Vanak/Backend/internal/domain/storage"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/Vanak/Backend/internal/infrastructure/jwt"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
@@ -19,6 +20,7 @@ import (
 	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/seeder"
+	storage "github.com/Vanak/Backend/internal/infrastructure/storage"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -72,6 +74,8 @@ var DatabaseProviderSet = wire.NewSet(
 	postgresRepo.NewParkingRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
+	storage.NewS3Storage,
+	wire.Bind(new(storageDomain.S3Storage), new(*storage.S3Storage)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)),
 	wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)),
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
