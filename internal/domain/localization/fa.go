@@ -116,6 +116,7 @@ var Persian = map[string]interface{}{
 		"addAddress":                "آدرس با موفقیت اضافه شد.",
 		"editAddress":               "آدرس با موفقیت ویرایش شد.",
 		"deleteAddress":             "آدرس با موفقیت حذف شد.",
+		"deleteParking":             "پارکینگ با موفقیت حذف شد.",
 		"changePassword":            "رمز عبور با موفقیت تغییر کرد.",
 		"forgotPassword":            "لطفا پیامک های خود را بررسی کنید تا تلفن خود را تایید نمایید .",
 		"resetPassword":             "گذرواژه با موفقیت تغییر کرد.",

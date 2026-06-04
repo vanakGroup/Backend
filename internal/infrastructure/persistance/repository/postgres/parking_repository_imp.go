@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"time"
+
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/entities"
 	"gorm.io/gorm"
@@ -70,7 +72,6 @@ func (r *ParkingRepository) CreateParkingImages(images []entities.ParkingImage) 
 
 func (r *ParkingRepository) FindByIDAndUserID(id uint, userID uint) (*entities.Parking, error) {
 	var parking entities.Parking
-	// Preload کردن Images برای اینکه موقع حذف بتوانیم کلیدهای تصاویر را هم داشته باشیم
 	err := r.db.Preload("Images").Where("id = ? AND user_id = ?", id, userID).First(&parking).Error
 	if err != nil {
 		return nil, err
@@ -79,18 +80,52 @@ func (r *ParkingRepository) FindByIDAndUserID(id uint, userID uint) (*entities.P
 }
 
 func (r *ParkingRepository) Delete(parking *entities.Parking) error {
-	// اگر از gorm.Model استفاده می‌کنی این دستور به صورت خودکار Soft Delete انجام می‌دهد
-	return r.db.Delete(parking).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Where("parking_id = ?", parking.ID).Delete(&entities.AvailabilitySlot{}).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Delete(parking).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (r *ParkingRepository) GetByUserID(userID uint) ([]entities.Parking, error) {
 	var parkings []entities.Parking
 
-	// لود کردن همزمان آدرس و تصاویر مربوط به هر پارکینگ برای کاربر خاص
 	err := r.db.Preload("Address").Preload("Images").Where("user_id = ?", userID).Find(&parkings).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return parkings, nil
+}
+
+func (r *ParkingRepository) HasActiveReservations(parkingID uint) (bool, error) {
+	var count int64
+	now := time.Now()
+
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	currentHour := uint(now.Hour())
+
+	err := r.db.Model(&entities.AvailabilitySlot{}).
+		Where("parking_id = ? AND is_booked = ? AND (date > ? OR (date = ? AND hour >= ?))",
+			parkingID,
+			true,
+			today,
+			today,
+			currentHour,
+		).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

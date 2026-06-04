@@ -115,6 +115,7 @@ var English = map[string]interface{}{
 		"addAddress":                 "Address added successfully.",
 		"editAddress":                "Address edited successfully.",
 		"deleteAddress":              "Address deleted successfully.",
+		"deleteParking":              "Parking deleted successfully.",
 		"changePassword":             "Password changed successfully.",
 		"forgotPassword":             "Please check your messages to verify your phone number.",
 		"resetPassword":              "Password reset successfully.",

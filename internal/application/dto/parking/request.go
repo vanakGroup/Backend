@@ -17,7 +17,7 @@ type CreateParkingRequest struct {
 	AttributeIDs []uint
 	Slots        []SlotRequest
 
-	DocumentFile *multipart.FileHeader // سند اجباری
+	DocumentFile *multipart.FileHeader 
 	Images       []*multipart.FileHeader
 }
 

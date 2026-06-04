@@ -144,7 +144,7 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 		}
 
 		parkingImages = append(parkingImages, entities.ParkingImage{
-			ImageURL:  imageKey, // ذخیره کلید اس۳
+			ImageURL:  imageKey, 
 			ParkingID: createdParking.ID,
 		})
 	}
@@ -208,16 +208,22 @@ func (ps *ParkingService) createFirstSlotsForParking(id uint, slotRequests []par
 	return allSlots, nil
 }
 
-// internal/application/service/parking_service_impl.go
-
 func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
-
 	parking, err := ps.unitOfWork.Factory().ParkingRepository().FindByIDAndUserID(parkingID, userID)
 	if err != nil {
-		return err // اگر رکورد پیدا نشد یا متعلق به این کاربر نبود
+		return err
 	}
 
-	// ۲. حذف سند اصلی پارکینگ از S3 (در صورت وجود)
+	hasReservations, err := ps.unitOfWork.Factory().ParkingRepository().HasActiveReservations(parkingID)
+	if err != nil {
+		return err
+	}
+	if hasReservations {
+		return &exception.DuplicateError{
+			Message: "امکان حذف پارکینگ وجود ندارد؛ زیرا اسلات‌های رزرو شده فعال برای روزهای آینده وجود دارد",
+		}
+	}
+
 	if parking.DocumentURL != "" {
 		err := ps.s3Storage.DeleteObject(enums.ParkingDoc, parking.DocumentURL)
 		if err != nil {
@@ -225,10 +231,9 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 		}
 	}
 
-	// ۳. حذف تک‌تک تصاویر پارکینگ از S3
 	if len(parking.Images) > 0 {
 		for _, img := range parking.Images {
-			if img.ImageURL != "" {
+			if img.ImageURL != "" { 
 				err := ps.s3Storage.DeleteObject(enums.ParkingPic, img.ImageURL)
 				if err != nil {
 					return fmt.Errorf("خطا در حذف تصویر از S3")
@@ -237,13 +242,12 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 		}
 	}
 
+	
 	return ps.unitOfWork.Factory().ParkingRepository().Delete(parking)
 }
 
-// internal/application/service/parking_service_impl.go
 
 func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResponse, error) {
-	// ۱. گرفتن دیتای خام از دیتابیس
 	parkings, err := ps.unitOfWork.Factory().ParkingRepository().GetByUserID(userID)
 	if err != nil {
 		return nil, err
@@ -251,10 +255,8 @@ func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResp
 
 	var response []parkingdto.ParkingResponse
 
-	// ۲. پیمایش پارکینگ‌ها برای تولید لینک‌های S3
 	for _, p := range parkings {
 		docURL := ""
-		// تولید لینک موقت برای سند پارکینگ (انقضا ۱ ساعت)
 		if p.DocumentURL != "" {
 			url, err := ps.s3Storage.GetPresignedURL(enums.ParkingDoc, p.DocumentURL, time.Hour)
 			if err == nil {
@@ -262,7 +264,6 @@ func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResp
 			}
 		}
 
-		// تولید لینک موقت برای تک‌تک تصاویر
 		var imageUrls []string
 		for _, img := range p.Images {
 			if img.ImageURL != "" {
@@ -273,7 +274,6 @@ func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResp
 			}
 		}
 
-		// مپ کردن انتیتی به DTO ریسپانس
 		parkingDTO := parkingdto.ParkingResponse{
 			ID:           p.ID,
 			Title:        p.Title,

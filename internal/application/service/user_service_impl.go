@@ -48,7 +48,6 @@ func (us *UserService) SendOtp(phone string) error {
 	}
 
 	err = us.otpService.SetOTp(context.Background(), phone, otp)
-	// Set(context.Background(), phone, otp, time.Duration(userService.cfg.Env.OTP.ExpiryMinute)*time.Minute, false)
 
 	if err != nil {
 		return err

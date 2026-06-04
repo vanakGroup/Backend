@@ -95,7 +95,6 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 }
 
 func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
-	// ۱. استخراج ID پارکینگ از پارامتر URL
 	parkingIDStr := ctx.Param("id")
 	var parkingID uint
 	_, err := fmt.Sscanf(parkingIDStr, "%d", &parkingID)
@@ -104,7 +103,6 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 		return
 	}
 
-	// ۲. استخراج امن userID از کانتکست (پر شده توسط میدل‌ور احراز هویت)
 	userContextValue, exists := ctx.Get(cpc.cfg.Constant.Context.UserID)
 	if !exists || userContextValue == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "کاربر احراز هویت نشده است"})
@@ -112,14 +110,11 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 	}
 	userID := userContextValue.(uint)
 
-	// ۳. صدا زدن بیزینس لاجیک حذف
 	err = cpc.parkingService.DeleteParking(userID, parkingID)
 	if err != nil {
-		// مدیریت خطاهای احتمالی دیتابیس (مثلا Record Not Found)
 		panic(err)
 	}
 
-	// ۴. ترجمه و بازگرداندن ریسپانس موفقیت آمیز متناسب با کلینت
 	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
 	message, _ := trans.Translate("successMessage.deleteParking")
 	base.Response(ctx, http.StatusOK, message, nil)
@@ -133,7 +128,6 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 // @Failure      401  {object}  base.MultipleMessageResponse
 // @Router       /v1/parking/crud/list [get]
 func (cpc *CustomerParkingController) GetUserParkings(ctx *gin.Context) {
-	// ۱. استخراج امن userID از کانتکست (پر شده توسط میدل‌ور Auth)
 	userContextValue, exists := ctx.Get(cpc.cfg.Constant.Context.UserID)
 	if !exists || userContextValue == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "کاربر احراز هویت نشده است"})
@@ -141,12 +135,10 @@ func (cpc *CustomerParkingController) GetUserParkings(ctx *gin.Context) {
 	}
 	userID := userContextValue.(uint)
 
-	// ۲. صدا زدن بیزینس لاجیک برای دریافت لیست
 	parkings, err := cpc.parkingService.GetUserParkings(userID)
 	if err != nil {
 		panic(err)
 	}
 
-	// ۳. بازگرداندن پاسخ
 	base.Response(ctx, http.StatusOK, "لیست پارکینگ‌ها با موفقیت دریافت شد", parkings)
 }
