@@ -134,6 +134,45 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/parking/crud/create": {
+            "post": {
+                "description": "Create the parking for user",
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Creating Parking",
+                "parameters": [
+                    {
+                        "description": "User's mobile phone number",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "phone": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

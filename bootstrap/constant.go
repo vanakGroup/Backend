@@ -103,6 +103,7 @@ type ErrorField struct {
 	Jwt                 string
 	Auth                string
 	Attribute           string
+	Slot                string
 }
 
 type RedisKey struct {
@@ -143,6 +144,7 @@ func NewConstant() *Constants {
 			OtpKey: "otp",
 		},
 		ErrorField: ErrorField{
+			Slot:                "slot",
 			Recaptcha:           "recaptcha",
 			User:                "user",
 			Phone:               "phone",

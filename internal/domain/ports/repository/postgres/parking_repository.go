@@ -8,4 +8,9 @@ type ParkingRepository interface {
 	CreateParking(parking *entities.Parking) error
 	GetAttributesByIDs(ids []uint) ([]*entities.ParkingAttribute, error)
 	AddAttributes(parking *entities.Parking, attributes []*entities.ParkingAttribute) error
+	CreateSlots(slots []entities.AvailabilitySlot) error
+	UpdateParking(parking *entities.Parking) error
+	CreateParkingImages(images []entities.ParkingImage) error
+	FindByIDAndUserID(id uint, userID uint) (*entities.Parking, error)
+	Delete(parking *entities.Parking) error
 }

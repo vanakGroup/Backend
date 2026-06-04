@@ -8,9 +8,9 @@ import (
 
 type AvailabilitySlot struct {
 	gorm.Model
-	StartTime time.Time `gorm:"not null;index"`
-	EndTime   time.Time `gorm:"not null;index"`
-	IsBooked  bool      `gorm:"default:false;index"`
+	Date     time.Time `gorm:"not null"`
+	Hour     uint      `gorm:"not null"`
+	IsBooked bool      `gorm:"default:false"`
 
 	ParkingID uint    `gorm:"not null"`
 	Parking   Parking `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`

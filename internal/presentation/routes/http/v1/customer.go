@@ -7,4 +7,10 @@ import (
 )
 
 func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
+	parkingCrudGroup := router.Group("/parking/crud")
+	parkingCrudGroup.Use(app.Middlewares.Authentication.AuthMiddleware())
+	{
+		parkingCrudGroup.POST("/create", app.CustomerParkingController.CreateParking)
+		parkingCrudGroup.DELETE("/delete/:id", app.CustomerParkingController.DeleteParking)
+	}
 }

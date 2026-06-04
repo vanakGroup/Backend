@@ -1,6 +1,7 @@
 package parkingdto
 
 import (
+	"mime/multipart"
 	"time"
 
 	addressdto "github.com/Vanak/Backend/internal/application/dto/address"
@@ -15,9 +16,13 @@ type CreateParkingRequest struct {
 
 	AttributeIDs []uint
 	Slots        []SlotRequest
+
+	DocumentFile *multipart.FileHeader // سند اجباری
+	Images       []*multipart.FileHeader
 }
 
 type SlotRequest struct {
-	StartTime time.Time
-	EndTime   time.Time
+	Date      time.Time
+	StartHour uint
+	EndHour   uint
 }

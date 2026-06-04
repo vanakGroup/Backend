@@ -1,0 +1,8 @@
+package usecase
+
+import parkingdto "github.com/Vanak/Backend/internal/application/dto/parking"
+
+type ParkingService interface {
+	CreateParking(userID uint, parkingInfo parkingdto.CreateParkingRequest) (*parkingdto.CreateParkingResponse, error)
+	DeleteParking(userID uint, parkingID uint) error
+}

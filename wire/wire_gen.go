@@ -24,6 +24,7 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	"github.com/Vanak/Backend/internal/infrastructure/storage"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -54,13 +55,16 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	unitOfWork := persistance.NewUnitOfWork(db)
 	userService := service.NewUserService(config, otpService, userCacheRepository, unitOfWork, jwtService)
 	generalUserController := user.NewGeneralUserController(userService, config)
+	s3Storage := storage.NewS3Storage(config)
+	parkingService := service.NewParkingService(config, unitOfWork, s3Storage)
+	customerParkingController := parking.NewCustomerParkingController(config, parkingService)
 	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
 	attributeTypeSeeder := seeder.NewAttributeTypeSeeder(unitOfWork)
 	seeds := &Seeds{
 		Address:   addressSeeder,
 		Attribute: attributeTypeSeeder,
 	}
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, seeds)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, seeds)
 	return application, nil
 }
 
@@ -81,14 +85,15 @@ type Seeds struct {
 }
 
 type Application struct {
-	Database              *Database
-	Translator            localization2.Translator
-	Middlewares           *Middlewares
-	Constants             *bootstrap.Constants
-	OtpService            *service.OtpService
-	UserService           *service.UserService
-	GeneralUserController *user.GeneralUserController
-	Seeds                 *Seeds
+	Database                  *Database
+	Translator                localization2.Translator
+	Middlewares               *Middlewares
+	Constants                 *bootstrap.Constants
+	OtpService                *service.OtpService
+	UserService               *service.UserService
+	GeneralUserController     *user.GeneralUserController
+	Seeds                     *Seeds
+	CustomerParkingController *parking.CustomerParkingController
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -108,11 +113,11 @@ var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedis
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
-var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, jwt.NewJwtKeyManager, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)))
+var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, service.NewParkingService, jwt.NewJwtKeyManager, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)))
 
 var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, wire.Struct(new(Seeds), "*"))
 
-var ControllerSet = wire.NewSet(user.NewGeneralUserController)
+var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController)
 
 func NewApplication(
 	db *Database,
@@ -122,16 +127,18 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
+	customerParkingController *parking.CustomerParkingController,
 	seeds *Seeds,
 ) *Application {
 	return &Application{
-		Database:              db,
-		Translator:            trans,
-		Middlewares:           mid,
-		Constants:             cons,
-		OtpService:            otpService,
-		UserService:           userService,
-		GeneralUserController: generalUserController,
-		Seeds:                 seeds,
+		Database:                  db,
+		Translator:                trans,
+		Middlewares:               mid,
+		Constants:                 cons,
+		OtpService:                otpService,
+		UserService:               userService,
+		GeneralUserController:     generalUserController,
+		Seeds:                     seeds,
+		CustomerParkingController: customerParkingController,
 	}
 }

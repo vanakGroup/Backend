@@ -21,14 +21,15 @@ type S3Storage struct {
 	buckets map[enums.BucketType]string
 }
 
-func NewS3Storage(storage *bootstrap.S3) *S3Storage {
+func NewS3Storage(cfg *bootstrap.Config) *S3Storage {
 	buckets := make(map[enums.BucketType]string)
+	storage := cfg.Env.Storage
 	buckets[enums.LogoPic] = storage.Buckets.LogoPic
 	buckets[enums.ParkingDoc] = storage.Buckets.ParkingDoc
 	buckets[enums.ParkingPic] = storage.Buckets.ParkingPic
 
 	return &S3Storage{
-		storage: storage,
+		storage: &storage,
 		buckets: buckets,
 	}
 }

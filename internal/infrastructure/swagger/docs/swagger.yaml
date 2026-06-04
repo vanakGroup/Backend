@@ -105,4 +105,29 @@ paths:
       summary: Verify OTP Code
       tags:
       - Authentication
+  /parking/crud/create:
+    post:
+      description: Create the parking for user
+      parameters:
+      - description: User's mobile phone number
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            phone:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Creating Parking
+      tags:
+      - Authentication
 swagger: "2.0"

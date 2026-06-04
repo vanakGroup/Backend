@@ -47,9 +47,19 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleUnauthorizedError(ctx, *AppErrors, rm.constants.Context.Translator)
 	} else if NotFoundError, ok := err.(*exception.NotFoundError); ok {
 		handleNotFoundError(ctx, *NotFoundError, rm.constants.Context.Translator)
+	} else if DuplicateError, ok := err.(*exception.DuplicateError); ok {
+		handleDuplicateError(ctx, *DuplicateError, rm.constants.Context.Translator)
 	} else {
 		handleDefaultError(ctx, err)
 	}
+}
+
+func handleDuplicateError(ctx *gin.Context, duplicateError exception.DuplicateError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	itemName, _ := trans.Translate(duplicateError.Item)
+	message, _ := trans.Translate("errors.duplicate", itemName)
+
+	base.Response(ctx, 409, message, nil)
 }
 
 func handleNotFoundError(ctx *gin.Context, notFoundError exception.NotFoundError, transKey string) {

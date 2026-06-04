@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/Vanak/Backend/bootstrap"
 	parkingdto "github.com/Vanak/Backend/internal/application/dto/parking"
 	"github.com/Vanak/Backend/internal/domain/entities"
@@ -8,25 +11,32 @@ import (
 	"github.com/Vanak/Backend/internal/domain/exception"
 	"github.com/Vanak/Backend/internal/domain/logging"
 	"github.com/Vanak/Backend/internal/domain/ports"
+	"github.com/Vanak/Backend/internal/domain/storage"
 )
 
 type ParkingService struct {
 	unitOfWork ports.UnitOfWork
 	cfg        *bootstrap.Config
 	logger     logging.Logger
+	s3Storage  storage.S3Storage
 }
 
-func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork) *ParkingService {
+func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Storage storage.S3Storage) *ParkingService {
 	logger := logging.NewLogger(cfg)
 
 	return &ParkingService{
 		logger:     logger,
 		cfg:        cfg,
 		unitOfWork: unitOfWork,
+		s3Storage:  s3Storage,
 	}
 }
 
 func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.CreateParkingRequest) (*parkingdto.CreateParkingResponse, error) {
+	var response *parkingdto.CreateParkingResponse
+	var slotCount int
+	var createdParking *entities.Parking
+
 	err := ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		parkingRepo := rf.ParkingRepository()
 		addressRepo := rf.AddressRepository()
@@ -41,20 +51,17 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 		}
 
 		err := parkingRepo.CreateParking(parking)
-
 		if err != nil {
 			return err
 		}
+		createdParking = parking
 
 		city, err := addressRepo.GetCityByID(parkingInfo.Address.CityID)
-
 		if err != nil {
 			return err
 		}
-
 		if city == nil {
-			notFoundError := exception.NotFoundError{Item: ps.cfg.Constant.ErrorField.City}
-			return notFoundError
+			return exception.NotFoundError{Item: ps.cfg.Constant.ErrorField.City}
 		}
 
 		address := &entities.Address{
@@ -66,24 +73,92 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 		}
 
 		err = addressRepo.CreateAddress(address)
-
 		if err != nil {
 			return err
 		}
 
 		if len(parkingInfo.AttributeIDs) > 0 {
 			attributes, err := parkingRepo.GetAttributesByIDs(parkingInfo.AttributeIDs)
+			if err != nil {
+				return err
+			}
+			if len(attributes) == 0 {
+				return exception.NotFoundError{Item: ps.cfg.Constant.ErrorField.Attribute}
+			}
 
+			err = parkingRepo.AddAttributes(parking, attributes)
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(parkingInfo.Slots) > 0 {
+			allSlots, err := ps.createFirstSlotsForParking(parking.ID, parkingInfo.Slots)
 			if err != nil {
 				return err
 			}
 
-			if len(attributes) == 0 {
-				notFoundError := exception.NotFoundError{Item: ps.cfg.Constant.ErrorField.Attribute}
-				return notFoundError
+			if err := parkingRepo.CreateSlots(allSlots); err != nil {
+				return err
 			}
 
-			err = parkingRepo.AddAttributes(parking, attributes)
+			slotCount = len(allSlots)
+		}
+
+		response = &parkingdto.CreateParkingResponse{
+			ID:           parking.ID,
+			Title:        parking.Title,
+			Status:       parking.Status.String(),
+			CreatedAt:    parking.CreatedAt,
+			AddressID:    address.ID,
+			AttributeIDs: parkingInfo.AttributeIDs,
+			SlotCount:    slotCount,
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return &parkingdto.CreateParkingResponse{}, err
+	}
+
+	docKey := fmt.Sprintf("parkings/%d/document_%d_%s", createdParking.ID, time.Now().Unix(), parkingInfo.DocumentFile.Filename)
+
+	err = ps.s3Storage.UploadFile(enums.ParkingDoc, docKey, parkingInfo.DocumentFile)
+	if err != nil {
+		return &parkingdto.CreateParkingResponse{}, err
+	}
+	createdParking.DocumentURL = docKey
+
+	var parkingImages []entities.ParkingImage
+	for idx, fileHeader := range parkingInfo.Images {
+		if fileHeader == nil {
+			continue
+		}
+
+		imageKey := fmt.Sprintf("parkings/%d/images/img_%d_%d_%s", createdParking.ID, idx, time.Now().Unix(), fileHeader.Filename)
+
+		err = ps.s3Storage.UploadFile(enums.ParkingPic, imageKey, fileHeader)
+		if err != nil {
+			return &parkingdto.CreateParkingResponse{}, err
+		}
+
+		parkingImages = append(parkingImages, entities.ParkingImage{
+			ImageURL:  imageKey, // ذخیره کلید اس۳
+			ParkingID: createdParking.ID,
+		})
+	}
+
+	err = ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		parkingRepo := rf.ParkingRepository()
+
+		err = parkingRepo.UpdateParking(createdParking)
+		if err != nil {
+			return err
+		}
+
+		if len(parkingImages) > 0 {
+			err = parkingRepo.CreateParkingImages(parkingImages)
 			if err != nil {
 				return err
 			}
@@ -96,5 +171,71 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 		return &parkingdto.CreateParkingResponse{}, err
 	}
 
-	return &parkingdto.CreateParkingResponse{}, nil
+	response.DocumentURL = createdParking.DocumentURL
+
+	var imgKeys []string
+	for _, img := range parkingImages {
+		imgKeys = append(imgKeys, img.ImageURL)
+	}
+	response.ImageURLs = imgKeys
+
+	return response, nil
+}
+
+func (ps *ParkingService) createFirstSlotsForParking(id uint, slotRequests []parkingdto.SlotRequest) ([]entities.AvailabilitySlot, error) {
+	var allSlots []entities.AvailabilitySlot
+	existingMap := make(map[string]bool)
+
+	for _, slot := range slotRequests {
+		for hour := slot.StartHour; hour < slot.EndHour; hour++ {
+			key := fmt.Sprintf("%s:%d", slot.Date.Format("2006-01-02"), hour)
+			if existingMap[key] {
+				return nil, &exception.DuplicateError{Item: ps.cfg.Constant.ErrorField.Slot}
+			}
+			existingMap[key] = true
+
+			newSlot := entities.AvailabilitySlot{
+				Date:      slot.Date,
+				Hour:      hour,
+				IsBooked:  false,
+				ParkingID: id,
+			}
+
+			allSlots = append(allSlots, newSlot)
+		}
+	}
+
+	return allSlots, nil
+}
+
+// internal/application/service/parking_service_impl.go
+
+func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
+
+	parking, err := ps.unitOfWork.Factory().ParkingRepository().FindByIDAndUserID(parkingID, userID)
+	if err != nil {
+		return err // اگر رکورد پیدا نشد یا متعلق به این کاربر نبود
+	}
+
+	// ۲. حذف سند اصلی پارکینگ از S3 (در صورت وجود)
+	if parking.DocumentURL != "" {
+		err := ps.s3Storage.DeleteObject(enums.ParkingDoc, parking.DocumentURL)
+		if err != nil {
+			return fmt.Errorf("خطا در حذف سند پارکینگ از S3")
+		}
+	}
+
+	// ۳. حذف تک‌تک تصاویر پارکینگ از S3
+	if len(parking.Images) > 0 {
+		for _, img := range parking.Images {
+			if img.ImageURL != "" {
+				err := ps.s3Storage.DeleteObject(enums.ParkingPic, img.ImageURL)
+				if err != nil {
+					return fmt.Errorf("خطا در حذف تصویر از S3")
+				}
+			}
+		}
+	}
+
+	return ps.unitOfWork.Factory().ParkingRepository().Delete(parking)
 }

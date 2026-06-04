@@ -1,6 +1,8 @@
 package localization
 
 var English = map[string]interface{}{
+	"slot":                "slot",
+	"duplicate":           "duplicate",
 	"attribute":           "attribute",
 	"firstName":           "first name",
 	"lastName":            "last name",
@@ -96,6 +98,7 @@ var English = map[string]interface{}{
 		"alreadyDraft":           "This {0} has been already drafted.",
 		"bannedUser":             "Your account is currently banned. You are not allowed to perform this action.",
 		"ir_phone":               "The {0} is Not correct.",
+		"duplicate":              "The {0} has duplicate.",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":               "Registration Successful! Please check your messages to verify your account and complete the registration process.",

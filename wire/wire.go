@@ -21,6 +21,7 @@ import (
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
 	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	storage "github.com/Vanak/Backend/internal/infrastructure/storage"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
@@ -42,14 +43,15 @@ type Seeds struct {
 }
 
 type Application struct {
-	Database              *Database
-	Translator            domainLocalization.Translator
-	Middlewares           *Middlewares
-	Constants             *bootstrap.Constants
-	OtpService            *service.OtpService
-	UserService           *service.UserService
-	GeneralUserController *user.GeneralUserController
-	Seeds                 *Seeds
+	Database                  *Database
+	Translator                domainLocalization.Translator
+	Middlewares               *Middlewares
+	Constants                 *bootstrap.Constants
+	OtpService                *service.OtpService
+	UserService               *service.UserService
+	GeneralUserController     *user.GeneralUserController
+	Seeds                     *Seeds
+	CustomerParkingController *parking.CustomerParkingController
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -96,12 +98,14 @@ var ServiceSet = wire.NewSet(
 	service.NewOtpService,
 	service.NewUserService,
 	service.NewJwtService,
+	service.NewParkingService,
 	jwt.NewJwtKeyManager,
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 	wire.Bind(new(jwtDomain.KeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
+	wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)),
 )
 
 var SeederSet = wire.NewSet(
@@ -112,6 +116,7 @@ var SeederSet = wire.NewSet(
 
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
+	parking.NewCustomerParkingController,
 )
 
 func NewApplication(
@@ -122,17 +127,19 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
+	customerParkingController *parking.CustomerParkingController,
 	seeds *Seeds,
 ) *Application {
 	return &Application{
-		Database:              db,
-		Translator:            trans,
-		Middlewares:           mid,
-		Constants:             cons,
-		OtpService:            otpService,
-		UserService:           userService,
-		GeneralUserController: generalUserController,
-		Seeds:                 seeds,
+		Database:                  db,
+		Translator:                trans,
+		Middlewares:               mid,
+		Constants:                 cons,
+		OtpService:                otpService,
+		UserService:               userService,
+		GeneralUserController:     generalUserController,
+		Seeds:                     seeds,
+		CustomerParkingController: customerParkingController,
 	}
 }
 
