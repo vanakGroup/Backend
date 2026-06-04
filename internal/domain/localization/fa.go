@@ -1,6 +1,7 @@
 package localization
 
 var Persian = map[string]interface{}{
+	"reserve":             "رزرو",
 	"slot":                "شکاف(بازه)",
 	"duplicate":           "تکراری",
 	"attribute":           "ویژگی",
@@ -98,8 +99,10 @@ var Persian = map[string]interface{}{
 		"alreadyDraft":           "این {0} قبلا در حالت پیش نویس قرار گرفته است.",
 		"bannedUser":             "حساب شما مسدود شده است. شما مجاز به انجام این عمل نیستید.",
 		"lte":                    "عدد باید کوچکتر باشد.",
+		"gt":                     "عدد باید بزگتر باشد.",
 		"ir_phone":               "این {0} معتبر نمی باشد",
 		"duplicate":              "این {0} تکراری می باشد",
+		"conflict":               "این {0} تداخل دارد.",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":              "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",

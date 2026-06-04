@@ -35,7 +35,6 @@ func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Sto
 func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.CreateParkingRequest) (*parkingdto.CreateParkingResponse, error) {
 	var response *parkingdto.CreateParkingResponse
 	var slotCount int
-	var createdParking *entities.Parking
 
 	err := ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		parkingRepo := rf.ParkingRepository()
@@ -54,7 +53,6 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 		if err != nil {
 			return err
 		}
-		createdParking = parking
 
 		city, err := addressRepo.GetCityByID(parkingInfo.Address.CityID)
 		if err != nil {
@@ -105,54 +103,33 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 			slotCount = len(allSlots)
 		}
 
-		response = &parkingdto.CreateParkingResponse{
-			ID:           parking.ID,
-			Title:        parking.Title,
-			Status:       parking.Status.String(),
-			CreatedAt:    parking.CreatedAt,
-			AddressID:    address.ID,
-			AttributeIDs: parkingInfo.AttributeIDs,
-			SlotCount:    slotCount,
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return &parkingdto.CreateParkingResponse{}, err
-	}
-
-	docKey := ps.cfg.Constant.S3BucketPath.GetParkingDocPath(createdParking.ID, parkingInfo.DocumentFile.Filename)
-
-	err = ps.s3Storage.UploadFile(enums.ParkingDoc, docKey, parkingInfo.DocumentFile)
-	if err != nil {
-		return &parkingdto.CreateParkingResponse{}, err
-	}
-	createdParking.DocumentURL = docKey
-
-	var parkingImages []entities.ParkingImage
-	for idx, fileHeader := range parkingInfo.Images {
-		if fileHeader == nil {
-			continue
-		}
-
-		imageKey := ps.cfg.Constant.S3BucketPath.GetParkingImagePath(createdParking.ID, idx, fileHeader.Filename)
-
-		err = ps.s3Storage.UploadFile(enums.ParkingPic, imageKey, fileHeader)
+		docKey := ps.cfg.Constant.S3BucketPath.GetParkingDocPath(parking.ID, parkingInfo.DocumentFile.Filename)
+		err = ps.s3Storage.UploadFile(enums.ParkingDoc, docKey, parkingInfo.DocumentFile)
 		if err != nil {
-			return &parkingdto.CreateParkingResponse{}, err
+			return err
+		}
+		parking.DocumentURL = docKey
+
+		var parkingImages []entities.ParkingImage
+		for idx, fileHeader := range parkingInfo.Images {
+			if fileHeader == nil {
+				continue
+			}
+
+			imageKey := ps.cfg.Constant.S3BucketPath.GetParkingImagePath(parking.ID, idx, fileHeader.Filename)
+
+			err = ps.s3Storage.UploadFile(enums.ParkingPic, imageKey, fileHeader)
+			if err != nil {
+				return err
+			}
+
+			parkingImages = append(parkingImages, entities.ParkingImage{
+				ImageURL:  imageKey,
+				ParkingID: parking.ID,
+			})
 		}
 
-		parkingImages = append(parkingImages, entities.ParkingImage{
-			ImageURL:  imageKey,
-			ParkingID: createdParking.ID,
-		})
-	}
-
-	err = ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
-		parkingRepo := rf.ParkingRepository()
-
-		err = parkingRepo.UpdateParking(createdParking)
+		err = parkingRepo.UpdateParking(parking)
 		if err != nil {
 			return err
 		}
@@ -164,20 +141,28 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 			}
 		}
 
+		var imgKeys []string
+		for _, img := range parkingImages {
+			imgKeys = append(imgKeys, img.ImageURL)
+		}
+
+		response = &parkingdto.CreateParkingResponse{
+			ID:          parking.ID,
+			Title:       parking.Title,
+			Status:      parking.Status.String(),
+			CreatedAt:   parking.CreatedAt,
+			AddressID:   address.ID,
+			SlotCount:   slotCount,
+			DocumentURL: parking.DocumentURL,
+			ImageURLs:   imgKeys,
+		}
+
 		return nil
 	})
 
 	if err != nil {
 		return &parkingdto.CreateParkingResponse{}, err
 	}
-
-	response.DocumentURL = createdParking.DocumentURL
-
-	var imgKeys []string
-	for _, img := range parkingImages {
-		imgKeys = append(imgKeys, img.ImageURL)
-	}
-	response.ImageURLs = imgKeys
 
 	return response, nil
 }
@@ -219,15 +204,15 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 		return err
 	}
 	if hasReservations {
-		return &exception.DuplicateError{
-			Message: "امکان حذف پارکینگ وجود ندارد؛ زیرا اسلات‌های رزرو شده فعال برای روزهای آینده وجود دارد",
+		return &exception.ConflictError{
+			Item: ps.cfg.Constant.ErrorField.Reserve,
 		}
 	}
 
 	if parking.DocumentURL != "" {
 		err := ps.s3Storage.DeleteObject(enums.ParkingDoc, parking.DocumentURL)
 		if err != nil {
-			return fmt.Errorf("خطا در حذف سند پارکینگ از S3")
+			return err
 		}
 	}
 
@@ -236,7 +221,7 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 			if img.ImageURL != "" {
 				err := ps.s3Storage.DeleteObject(enums.ParkingPic, img.ImageURL)
 				if err != nil {
-					return fmt.Errorf("خطا در حذف تصویر از S3")
+					return err
 				}
 			}
 		}

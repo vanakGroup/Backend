@@ -1,6 +1,7 @@
 package localization
 
 var English = map[string]interface{}{
+	"reserve":             "reserve",
 	"slot":                "slot",
 	"duplicate":           "duplicate",
 	"attribute":           "attribute",
@@ -99,6 +100,9 @@ var English = map[string]interface{}{
 		"bannedUser":             "Your account is currently banned. You are not allowed to perform this action.",
 		"ir_phone":               "The {0} is Not correct.",
 		"duplicate":              "The {0} has duplicate.",
+		"conflict":               "The {0} has Conflict.",
+		"lte":                    "The item should be smaller.",
+		"gt":                     "The item should be bigger",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":               "Registration Successful! Please check your messages to verify your account and complete the registration process.",
