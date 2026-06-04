@@ -82,3 +82,15 @@ func (r *ParkingRepository) Delete(parking *entities.Parking) error {
 	// اگر از gorm.Model استفاده می‌کنی این دستور به صورت خودکار Soft Delete انجام می‌دهد
 	return r.db.Delete(parking).Error
 }
+
+func (r *ParkingRepository) GetByUserID(userID uint) ([]entities.Parking, error) {
+	var parkings []entities.Parking
+
+	// لود کردن همزمان آدرس و تصاویر مربوط به هر پارکینگ برای کاربر خاص
+	err := r.db.Preload("Address").Preload("Images").Where("user_id = ?", userID).Find(&parkings).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return parkings, nil
+}

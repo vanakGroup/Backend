@@ -239,3 +239,55 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 
 	return ps.unitOfWork.Factory().ParkingRepository().Delete(parking)
 }
+
+// internal/application/service/parking_service_impl.go
+
+func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResponse, error) {
+	// ۱. گرفتن دیتای خام از دیتابیس
+	parkings, err := ps.unitOfWork.Factory().ParkingRepository().GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []parkingdto.ParkingResponse
+
+	// ۲. پیمایش پارکینگ‌ها برای تولید لینک‌های S3
+	for _, p := range parkings {
+		docURL := ""
+		// تولید لینک موقت برای سند پارکینگ (انقضا ۱ ساعت)
+		if p.DocumentURL != "" {
+			url, err := ps.s3Storage.GetPresignedURL(enums.ParkingDoc, p.DocumentURL, time.Hour)
+			if err == nil {
+				docURL = url
+			}
+		}
+
+		// تولید لینک موقت برای تک‌تک تصاویر
+		var imageUrls []string
+		for _, img := range p.Images {
+			if img.ImageURL != "" {
+				url, err := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
+				if err == nil {
+					imageUrls = append(imageUrls, url)
+				}
+			}
+		}
+
+		// مپ کردن انتیتی به DTO ریسپانس
+		parkingDTO := parkingdto.ParkingResponse{
+			ID:           p.ID,
+			Title:        p.Title,
+			Latitude:     p.Latitude,
+			Longitude:    p.Longitude,
+			BasePrice:    uint(p.BasePrice),
+			DocumentURL:  docURL,
+			ImageURLs:    imageUrls,
+			ExactAddress: p.Address.ExactAddress,
+			PostalCode:   p.Address.PostalCode,
+		}
+
+		response = append(response, parkingDTO)
+	}
+
+	return response, nil
+}

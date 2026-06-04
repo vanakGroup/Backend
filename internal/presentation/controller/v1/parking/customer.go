@@ -94,34 +94,59 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 	base.Response(ctx, http.StatusCreated, message, response)
 }
 
-
 func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
-    // ۱. استخراج ID پارکینگ از پارامتر URL
-    parkingIDStr := ctx.Param("id")
-    var parkingID uint
-    _, err := fmt.Sscanf(parkingIDStr, "%d", &parkingID)
-    if err != nil || parkingID == 0 {
-        ctx.JSON(http.StatusBadRequest, gin.H{"error": "شناسه پارکینگ معتبر نیست"})
-        return
-    }
+	// ۱. استخراج ID پارکینگ از پارامتر URL
+	parkingIDStr := ctx.Param("id")
+	var parkingID uint
+	_, err := fmt.Sscanf(parkingIDStr, "%d", &parkingID)
+	if err != nil || parkingID == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "شناسه پارکینگ معتبر نیست"})
+		return
+	}
 
-    // ۲. استخراج امن userID از کانتکست (پر شده توسط میدل‌ور احراز هویت)
-    userContextValue, exists := ctx.Get(cpc.cfg.Constant.Context.UserID)
-    if !exists || userContextValue == nil {
-        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "کاربر احراز هویت نشده است"})
-        return
-    }
-    userID := userContextValue.(uint)
+	// ۲. استخراج امن userID از کانتکست (پر شده توسط میدل‌ور احراز هویت)
+	userContextValue, exists := ctx.Get(cpc.cfg.Constant.Context.UserID)
+	if !exists || userContextValue == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "کاربر احراز هویت نشده است"})
+		return
+	}
+	userID := userContextValue.(uint)
 
-    // ۳. صدا زدن بیزینس لاجیک حذف
-    err = cpc.parkingService.DeleteParking(userID, parkingID)
-    if err != nil {
-        // مدیریت خطاهای احتمالی دیتابیس (مثلا Record Not Found)
-        panic(err) 
-    }
+	// ۳. صدا زدن بیزینس لاجیک حذف
+	err = cpc.parkingService.DeleteParking(userID, parkingID)
+	if err != nil {
+		// مدیریت خطاهای احتمالی دیتابیس (مثلا Record Not Found)
+		panic(err)
+	}
 
-    // ۴. ترجمه و بازگرداندن ریسپانس موفقیت آمیز متناسب با کلینت
-    trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
-    message, _ := trans.Translate("successMessage.deleteParking")
-    base.Response(ctx, http.StatusOK, message, nil)
+	// ۴. ترجمه و بازگرداندن ریسپانس موفقیت آمیز متناسب با کلینت
+	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.deleteParking")
+	base.Response(ctx, http.StatusOK, message, nil)
+}
+
+// GetUserParkings godoc
+// @Summary      Get Owner Parkings
+// @Description  Retrieve all parkings belonging to the authenticated user with presigned asset URLs
+// @Tags         Authentication
+// @Success      200  {array}   parkingdto.ParkingResponse
+// @Failure      401  {object}  base.MultipleMessageResponse
+// @Router       /v1/parking/crud/list [get]
+func (cpc *CustomerParkingController) GetUserParkings(ctx *gin.Context) {
+	// ۱. استخراج امن userID از کانتکست (پر شده توسط میدل‌ور Auth)
+	userContextValue, exists := ctx.Get(cpc.cfg.Constant.Context.UserID)
+	if !exists || userContextValue == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "کاربر احراز هویت نشده است"})
+		return
+	}
+	userID := userContextValue.(uint)
+
+	// ۲. صدا زدن بیزینس لاجیک برای دریافت لیست
+	parkings, err := cpc.parkingService.GetUserParkings(userID)
+	if err != nil {
+		panic(err)
+	}
+
+	// ۳. بازگرداندن پاسخ
+	base.Response(ctx, http.StatusOK, "لیست پارکینگ‌ها با موفقیت دریافت شد", parkings)
 }

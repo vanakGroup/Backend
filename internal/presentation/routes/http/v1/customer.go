@@ -12,5 +12,6 @@ func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
 	{
 		parkingCrudGroup.POST("/create", app.CustomerParkingController.CreateParking)
 		parkingCrudGroup.DELETE("/delete/:id", app.CustomerParkingController.DeleteParking)
+		parkingCrudGroup.GET("/list", app.CustomerParkingController.GetUserParkings)
 	}
 }

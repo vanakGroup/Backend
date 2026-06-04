@@ -13,4 +13,5 @@ type ParkingRepository interface {
 	CreateParkingImages(images []entities.ParkingImage) error
 	FindByIDAndUserID(id uint, userID uint) (*entities.Parking, error)
 	Delete(parking *entities.Parking) error
+	GetByUserID(userID uint) ([]entities.Parking, error)
 }

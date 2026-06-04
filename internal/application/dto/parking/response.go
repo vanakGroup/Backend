@@ -14,3 +14,15 @@ type CreateParkingResponse struct {
 	DocumentURL  string    `json:"documentUrl" example:"https://s3.ir-thr-at1.arvanstorage.ir/vanak/parkings/1/document.pdf"`
 	ImageURLs    []string  `json:"imageUrls,omitempty" example:"[\"https://s3.ir-thr-at1.arvanstorage.ir/vanak/parkings/1/images/image_0.jpg\",\"https://s3.ir-thr-at1.arvanstorage.ir/vanak/parkings/1/images/image_1.jpg\"]"`
 }
+
+type ParkingResponse struct {
+	ID           uint     `json:"id"`
+	Title        string   `json:"title"`
+	Latitude     float64  `json:"latitude"`
+	Longitude    float64  `json:"longitude"`
+	BasePrice    uint     `json:"basePrice"`
+	DocumentURL  string   `json:"documentUrl,omitempty"`  
+	ImageURLs    []string `json:"imageUrls,omitempty"`    
+	PostalCode   string   `json:"postalCode"`
+	ExactAddress string   `json:"exactAddress"`
+}
