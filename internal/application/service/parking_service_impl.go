@@ -122,7 +122,7 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 		return &parkingdto.CreateParkingResponse{}, err
 	}
 
-	docKey := fmt.Sprintf("parkings/%d/document_%d_%s", createdParking.ID, time.Now().Unix(), parkingInfo.DocumentFile.Filename)
+	docKey := ps.cfg.Constant.S3BucketPath.GetParkingDocPath(createdParking.ID, parkingInfo.DocumentFile.Filename)
 
 	err = ps.s3Storage.UploadFile(enums.ParkingDoc, docKey, parkingInfo.DocumentFile)
 	if err != nil {
@@ -136,7 +136,7 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 			continue
 		}
 
-		imageKey := fmt.Sprintf("parkings/%d/images/img_%d_%d_%s", createdParking.ID, idx, time.Now().Unix(), fileHeader.Filename)
+		imageKey := ps.cfg.Constant.S3BucketPath.GetParkingImagePath(createdParking.ID, idx, fileHeader.Filename)
 
 		err = ps.s3Storage.UploadFile(enums.ParkingPic, imageKey, fileHeader)
 		if err != nil {
@@ -144,7 +144,7 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 		}
 
 		parkingImages = append(parkingImages, entities.ParkingImage{
-			ImageURL:  imageKey, 
+			ImageURL:  imageKey,
 			ParkingID: createdParking.ID,
 		})
 	}
@@ -233,7 +233,7 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 
 	if len(parking.Images) > 0 {
 		for _, img := range parking.Images {
-			if img.ImageURL != "" { 
+			if img.ImageURL != "" {
 				err := ps.s3Storage.DeleteObject(enums.ParkingPic, img.ImageURL)
 				if err != nil {
 					return fmt.Errorf("خطا در حذف تصویر از S3")
@@ -242,10 +242,8 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 		}
 	}
 
-	
 	return ps.unitOfWork.Factory().ParkingRepository().Delete(parking)
 }
-
 
 func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResponse, error) {
 	parkings, err := ps.unitOfWork.Factory().ParkingRepository().GetByUserID(userID)

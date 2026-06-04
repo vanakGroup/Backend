@@ -1,13 +1,19 @@
 package bootstrap
 
+import (
+	"fmt"
+	"time"
+)
+
 type Constants struct {
-	Context     Context
-	Role        Role
-	RedisKey    RedisKey
-	ErrorTag    ErrorTag
-	ErrorField  ErrorField
-	JWTKeysPath JWTKeysPath
-	Server      Server
+	Context      Context
+	Role         Role
+	RedisKey     RedisKey
+	ErrorTag     ErrorTag
+	ErrorField   ErrorField
+	JWTKeysPath  JWTKeysPath
+	Server       Server
+	S3BucketPath BucketPath
 }
 
 type Server struct {
@@ -124,6 +130,9 @@ type Role struct {
 	DefaultType string
 }
 
+type BucketPath struct {
+}
+
 func NewConstant() *Constants {
 	return &Constants{
 		Server: Server{
@@ -234,4 +243,12 @@ func NewConstant() *Constants {
 			InvalidHeader:          "invalidHeader",
 		},
 	}
+}
+
+func (path *BucketPath) GetParkingDocPath(parkingID uint, fileName string) string {
+	return fmt.Sprintf("parkings/%d/document_%d_%s", parkingID, time.Now().Unix(), fileName)
+}
+
+func (path *BucketPath) GetParkingImagePath(parkingID uint, index int, fileName string) string {
+	return fmt.Sprintf("parkings/%d/images/img_%d_%d_%s", parkingID, index, time.Now().Unix(), fileName)
 }
