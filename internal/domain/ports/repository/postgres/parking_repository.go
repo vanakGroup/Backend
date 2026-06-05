@@ -15,4 +15,8 @@ type ParkingRepository interface {
 	Delete(parking *entities.Parking) error
 	GetByUserID(userID uint) ([]entities.Parking, error)
 	HasActiveReservations(parkingID uint) (bool, error)
+	GetSlotsByParkingID(parkingID uint) ([]entities.AvailabilitySlot, error)
+    DeleteSlotsWithIDs(slotIDs []uint) error
+    DeleteParkingImagesWithIDs(imageIDs []uint) error
+	UpdateAttributes(parking *entities.Parking, attributes []entities.ParkingAttribute) error
 }

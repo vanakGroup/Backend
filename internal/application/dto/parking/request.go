@@ -17,7 +17,7 @@ type CreateParkingRequest struct {
 	AttributeIDs []uint
 	Slots        []SlotRequest
 
-	DocumentFile *multipart.FileHeader 
+	DocumentFile *multipart.FileHeader
 	Images       []*multipart.FileHeader
 }
 
@@ -25,4 +25,19 @@ type SlotRequest struct {
 	Date      time.Time
 	StartHour uint
 	EndHour   uint
+}
+
+type UpdateParkingRequest struct {
+	ParkingID uint
+	Title     string                          
+	Latitude  float64                         
+	Longitude float64                         
+	BasePrice float64                         
+	Address   addressdto.UpdateAddressRequest 
+
+	AttributeIDs []uint
+	Slots        []SlotRequest 
+
+	DocumentFile *multipart.FileHeader   
+	Images       []*multipart.FileHeader 
 }

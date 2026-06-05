@@ -9,4 +9,6 @@ type AddressRepository interface {
 	GetCityByName(name string) (*entities.City, error)
 	GetCityByID(id uint) (*entities.City, error)
 	CreateAddress(address *entities.Address) error
+	GetAddressByParkingID(parkingID uint) (*entities.Address, error)
+	UpdateAddress(address *entities.Address) error
 }

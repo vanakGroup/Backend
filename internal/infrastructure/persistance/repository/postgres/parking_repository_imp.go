@@ -129,3 +129,33 @@ func (r *ParkingRepository) HasActiveReservations(parkingID uint) (bool, error) 
 
 	return count > 0, nil
 }
+
+
+func (r *ParkingRepository) GetSlotsByParkingID(parkingID uint) ([]entities.AvailabilitySlot, error) {
+	var slots []entities.AvailabilitySlot
+	err := r.db.Where("parking_id = ?", parkingID).Find(&slots).Error
+	if err != nil {
+		return nil, err
+	}
+	return slots, nil
+}
+
+func (r *ParkingRepository) DeleteSlotsWithIDs(slotIDs []uint) error {
+	if len(slotIDs) == 0 {
+		return nil
+	}
+
+	return r.db.Where("id IN ?", slotIDs).Delete(&entities.AvailabilitySlot{}).Error
+}
+
+
+func (r *ParkingRepository) DeleteParkingImagesWithIDs(imageIDs []uint) error {
+	if len(imageIDs) == 0 {
+		return nil
+	}
+	return r.db.Where("id IN ?", imageIDs).Delete(&entities.ParkingImage{}).Error
+}
+
+func (r *ParkingRepository) UpdateAttributes(parking *entities.Parking, attributes []entities.ParkingAttribute) error {
+	return r.db.Model(parking).Association("Attributes").Replace(attributes)
+}

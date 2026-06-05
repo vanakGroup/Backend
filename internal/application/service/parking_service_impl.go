@@ -112,7 +112,7 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 
 		var parkingImages []entities.ParkingImage
 		for idx, fileHeader := range parkingInfo.Images {
-			if fileHeader == nil {
+			if fileHeader == nil || fileHeader.Filename == "" || fileHeader.Size == 0 {
 				continue
 			}
 
@@ -273,4 +273,161 @@ func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResp
 	}
 
 	return response, nil
+}
+
+func (ps *ParkingService) UpdateParking(userID uint, parkingInfo parkingdto.UpdateParkingRequest) error {
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	currentHour := uint(now.Hour())
+	parkingID := parkingInfo.ParkingID
+	return ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		parkingRepo := rf.ParkingRepository()
+		addressRepo := rf.AddressRepository()
+
+		parking, err := parkingRepo.FindByIDAndUserID(parkingID, userID)
+		if err != nil {
+			return err
+		}
+
+		parking.Title = parkingInfo.Title
+		parking.Latitude = parkingInfo.Latitude
+		parking.Longitude = parkingInfo.Longitude
+		parking.BasePrice = parkingInfo.BasePrice
+
+		existingSlots, err := parkingRepo.GetSlotsByParkingID(parkingID)
+		if err != nil {
+			return err
+		}
+
+		newSlotsGenerated, err := ps.createFirstSlotsForParking(parkingID, parkingInfo.Slots)
+		if err != nil {
+			return err
+		}
+
+		var slotIDsToDelete []uint
+		for _, exSlot := range existingSlots {
+			found := false
+			for _, newSlot := range newSlotsGenerated {
+				if exSlot.Date.Format("2006-01-02") == newSlot.Date.Format("2006-01-02") && exSlot.Hour == newSlot.Hour {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				isFutureSlot := exSlot.Date.After(today) || (exSlot.Date.Equal(today) && exSlot.Hour >= currentHour)
+				if exSlot.IsBooked && isFutureSlot {
+					return &exception.ConflictError{
+						Item: ps.cfg.Constant.ErrorField.Reserve,
+					}
+				}
+				slotIDsToDelete = append(slotIDsToDelete, exSlot.ID)
+			}
+		}
+
+		if len(slotIDsToDelete) > 0 {
+			if err := parkingRepo.DeleteSlotsWithIDs(slotIDsToDelete); err != nil {
+				return err
+			}
+		}
+
+		var slotsToCreate []entities.AvailabilitySlot
+		for _, newSlot := range newSlotsGenerated {
+			exists := false
+			for _, exSlot := range existingSlots {
+				if exSlot.Date.Format("2006-01-02") == newSlot.Date.Format("2006-01-02") && exSlot.Hour == newSlot.Hour {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				slotsToCreate = append(slotsToCreate, newSlot)
+			}
+		}
+
+		if len(slotsToCreate) > 0 {
+			if err := parkingRepo.CreateSlots(slotsToCreate); err != nil {
+				return err
+			}
+		}
+
+		address, err := addressRepo.GetAddressByParkingID(parkingID)
+		if err == nil && address != nil {
+			address.CityID = parkingInfo.Address.CityID
+			address.PostalCode = parkingInfo.Address.PostalCode
+			address.UnitNumber = parkingInfo.Address.UnitNumber
+			address.ExactAddress = parkingInfo.Address.ExactAddress
+
+			if err := addressRepo.UpdateAddress(address); err != nil {
+				return err
+			}
+		}
+
+		if parkingInfo.DocumentFile != nil && parkingInfo.DocumentFile.Size > 0 {
+			if parking.DocumentURL != "" {
+				_ = ps.s3Storage.DeleteObject(enums.ParkingDoc, parking.DocumentURL)
+			}
+
+			docKey := ps.cfg.Constant.S3BucketPath.GetParkingDocPath(parking.ID, parkingInfo.DocumentFile.Filename)
+			err = ps.s3Storage.UploadFile(enums.ParkingDoc, docKey, parkingInfo.DocumentFile)
+			if err != nil {
+				return err
+			}
+			parking.DocumentURL = docKey
+		}
+
+		if len(parkingInfo.Images) > 0 {
+			for _, exImg := range parking.Images {
+				if exImg.ImageURL != "" {
+					err := ps.s3Storage.DeleteObject(enums.ParkingPic, exImg.ImageURL)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			var oldImageIDs []uint
+			for _, exImg := range parking.Images {
+				oldImageIDs = append(oldImageIDs, exImg.ID)
+			}
+			if len(oldImageIDs) > 0 {
+				if err := parkingRepo.DeleteParkingImagesWithIDs(oldImageIDs); err != nil {
+					return err
+				}
+			}
+
+			var newParkingImages []entities.ParkingImage
+			for idx, fileHeader := range parkingInfo.Images {
+				if fileHeader == nil || fileHeader.Filename == "" || fileHeader.Size == 0 {
+					continue
+				}
+
+				imageKey := ps.cfg.Constant.S3BucketPath.GetParkingImagePath(parking.ID, idx, fileHeader.Filename)
+
+				err = ps.s3Storage.UploadFile(enums.ParkingPic, imageKey, fileHeader)
+				if err != nil {
+					return err
+				}
+
+				newParkingImages = append(newParkingImages, entities.ParkingImage{
+					ImageURL:  imageKey,
+					ParkingID: parking.ID,
+				})
+			}
+
+			if len(newParkingImages) > 0 {
+				err = parkingRepo.CreateParkingImages(newParkingImages)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		err = parkingRepo.UpdateParking(parking)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

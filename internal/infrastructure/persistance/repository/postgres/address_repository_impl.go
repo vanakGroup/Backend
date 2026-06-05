@@ -73,3 +73,16 @@ func (ar *AddressRepository) GetCityByID(id uint) (*entities.City, error) {
 func (ar *AddressRepository) CreateAddress(address *entities.Address) error {
 	return ar.db.Create(address).Error
 }
+
+func (r *AddressRepository) GetAddressByParkingID(parkingID uint) (*entities.Address, error) {
+	var address entities.Address
+	err := r.db.Where("parking_id = ?", parkingID).First(&address).Error
+	if err != nil {
+		return nil, err
+	}
+	return &address, nil
+}
+
+func (r *AddressRepository) UpdateAddress(address *entities.Address) error {
+	return r.db.Save(address).Error
+}
