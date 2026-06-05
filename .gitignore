@@ -49,3 +49,5 @@ Icon
 *.iws
 *.iml
 *.ipr
+
+logs/
