@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 
 	"github.com/Vanak/Backend/bootstrap"
 	addressdto "github.com/Vanak/Backend/internal/application/dto/address"
@@ -186,20 +187,19 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 // @Success      200  {array}   parkingdto.ParkingResponse
 // @Failure      401  {object}  base.MultipleMessageResponse
 // @Router       /v1/parking/crud/list [get]
-func (cpc *CustomerParkingController) GetUserParkings(ctx *gin.Context) {
-	userContextValue, exists := ctx.Get(cpc.cfg.Constant.Context.UserID)
-	if !exists || userContextValue == nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "کاربر احراز هویت نشده است"})
-		return
-	}
-	userID := userContextValue.(uint)
+func (cpc *CustomerParkingController) GetParkingDetail(ctx *gin.Context) {
+	parkingIDStr := ctx.Param("id")
+	parkingID, _ := strconv.Atoi(parkingIDStr)
+	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
 
-	parkings, err := cpc.parkingService.GetUserParkings(userID)
+	parking, err := cpc.parkingService.GetParkingDetail(userID.(uint), uint(parkingID))
 	if err != nil {
 		panic(err)
 	}
 
-	base.Response(ctx, http.StatusOK, "لیست پارکینگ‌ها با موفقیت دریافت شد", parkings)
+	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.detailParking")
+	base.Response(ctx, http.StatusOK, message, parking)
 }
 
 func parseSlotsRaw(slotsRaw string) ([]parkingdto.SlotRequest, error) {

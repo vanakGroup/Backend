@@ -12,7 +12,7 @@ func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
 	{
 		parkingCrudGroup.POST("/create", app.CustomerParkingController.CreateParking)
 		parkingCrudGroup.DELETE("/delete/:id", app.CustomerParkingController.DeleteParking)
-		parkingCrudGroup.GET("/list", app.CustomerParkingController.GetUserParkings)
+		parkingCrudGroup.GET("/parkingDetail/:id", app.CustomerParkingController.GetParkingDetail)
 		parkingCrudGroup.PUT("/update", app.CustomerParkingController.UpdateParking)
 	}
 }

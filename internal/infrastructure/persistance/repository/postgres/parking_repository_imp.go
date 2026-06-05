@@ -130,7 +130,6 @@ func (r *ParkingRepository) HasActiveReservations(parkingID uint) (bool, error) 
 	return count > 0, nil
 }
 
-
 func (r *ParkingRepository) GetSlotsByParkingID(parkingID uint) ([]entities.AvailabilitySlot, error) {
 	var slots []entities.AvailabilitySlot
 	err := r.db.Where("parking_id = ?", parkingID).Find(&slots).Error
@@ -148,7 +147,6 @@ func (r *ParkingRepository) DeleteSlotsWithIDs(slotIDs []uint) error {
 	return r.db.Where("id IN ?", slotIDs).Delete(&entities.AvailabilitySlot{}).Error
 }
 
-
 func (r *ParkingRepository) DeleteParkingImagesWithIDs(imageIDs []uint) error {
 	if len(imageIDs) == 0 {
 		return nil
@@ -158,4 +156,20 @@ func (r *ParkingRepository) DeleteParkingImagesWithIDs(imageIDs []uint) error {
 
 func (r *ParkingRepository) UpdateAttributes(parking *entities.Parking, attributes []entities.ParkingAttribute) error {
 	return r.db.Model(parking).Association("Attributes").Replace(attributes)
+}
+
+func (r *ParkingRepository) GetDetailByIDAndUserID(parkingID uint, userID uint) (*entities.Parking, error) {
+	var parking entities.Parking
+
+	err := r.db.Where("id = ? AND user_id = ?", parkingID, userID).
+		Preload("Address").
+		Preload("Images").
+		Preload("Attributes").
+		Preload("Slots").
+		First(&parking).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return &parking, nil
 }

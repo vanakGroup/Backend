@@ -431,3 +431,65 @@ func (ps *ParkingService) UpdateParking(userID uint, parkingInfo parkingdto.Upda
 		return nil
 	})
 }
+
+func (ps *ParkingService) GetParkingDetail(userID uint, parkingID uint) (*parkingdto.ParkingDetailResponse, error) {
+	parking, err := ps.unitOfWork.Factory().ParkingRepository().GetDetailByIDAndUserID(parkingID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	docURL := ""
+	if parking.DocumentURL != "" {
+		url, err := ps.s3Storage.GetPresignedURL(enums.ParkingDoc, parking.DocumentURL, time.Hour)
+		if err == nil {
+			docURL = url
+		}
+	}
+
+	var imageUrls []string
+	for _, img := range parking.Images {
+		if img.ImageURL != "" {
+			url, err := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
+			if err == nil {
+				imageUrls = append(imageUrls, url)
+			}
+		}
+	}
+
+	var attributeIDs []uint
+	for _, attr := range parking.Attributes {
+		attributeIDs = append(attributeIDs, attr.ID)
+	}
+
+	var slotsDTO []parkingdto.SlotDetailResponse
+	for _, slot := range parking.Slots {
+		slotsDTO = append(slotsDTO, parkingdto.SlotDetailResponse{
+			ID:       slot.ID,
+			Date:     slot.Date,
+			Hour:     slot.Hour,
+			IsBooked: slot.IsBooked,
+		})
+	}
+
+	
+	response := &parkingdto.ParkingDetailResponse{
+		ID:          parking.ID,
+		Title:       parking.Title,
+		Latitude:    parking.Latitude,
+		Longitude:   parking.Longitude,
+		BasePrice:   uint(parking.BasePrice),
+		Status:      parking.Status.String(),
+		DocumentURL: docURL,
+		ImageURLs:   imageUrls,
+		Address: parkingdto.AddressDetailResponse{
+			CityID:       parking.Address.CityID,
+			PostalCode:   parking.Address.PostalCode,
+			UnitNumber:   parking.Address.UnitNumber,
+			ExactAddress: parking.Address.ExactAddress,
+		},
+		Slots:        slotsDTO,
+		AttributeIDs: attributeIDs,
+	}
+
+	return response, nil
+}

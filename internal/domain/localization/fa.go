@@ -194,6 +194,7 @@ var Persian = map[string]interface{}{
 		"VerifyOtp":                 "کد یکبار مصرف با موفقیت تایید شد.",
 		"updateParking":             "پارکینگ با موفقیت بروزرسانی شد.",
 		"createParking":             "پارکینگ با موفقیت ایجاد شد.",
+		"detailParking":             "دریافت اطلاعات پارکینگ با موفقیت انجام شد.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",
