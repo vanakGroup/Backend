@@ -32,11 +32,25 @@ func NewCustomerParkingController(
 }
 
 // CreateParking godoc
-// @Summary      Creating Parking
-// @Description  Create the parking for user
-// @Tags         Authentication
-// @Param        request  body      object{phone=string}  true  "User's mobile phone number"  example(object{phone="09123456789"})
-// @Success      200      {object}  base.SingleMessageResponse
+// @Summary      Create a new parking
+// @Description  Create a parking space with details, document, and images
+// @Tags         Customer Parking
+// @Security     BearerAuth
+// @Accept       mpfd
+// @Produce      json
+// @Param        title                formData  string  true   "Parking Title"
+// @Param        latitude             formData  number  true   "Latitude (25 to 40)"
+// @Param        longitude            formData  number  true   "Longitude (44 to 63)"
+// @Param        basePrice            formData  number  true   "Base Price (Greater than 0)"
+// @Param        address.cityId       formData  int     true   "City ID"
+// @Param        address.postalCode   formData  string  true   "Postal Code"
+// @Param        address.unitNumber   formData  int     true   "Unit Number"
+// @Param        address.exactAddress formData  string  true   "Exact Address"
+// @Param        attributeIds         formData  array   false  "Array of Attribute IDs"
+// @Param        slots                formData  string  false  "JSON string of slots array"
+// @Param        documentFile         formData  file    true   "Parking legal document file"
+// @Param        images               formData  file    false  "Parking gallery images"
+// @Success      201      {object}  base.SingleMessageResponse
 // @Failure      400      {object}  base.MultipleMessageResponse
 // @Router       /parking/crud/create [post]
 func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
@@ -95,6 +109,30 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 	base.Response(ctx, http.StatusCreated, message, response)
 }
 
+
+// UpdateParking godoc
+// @Summary      Update an existing parking
+// @Description  Update parking details, location, slots, document and images
+// @Tags         Customer Parking
+// @Security     BearerAuth
+// @Accept       mpfd
+// @Produce      json
+// @Param        parkingId            formData  int     true   "Parking ID to update"
+// @Param        title                formData  string  true   "Parking Title"
+// @Param        latitude             formData  number  true   "Latitude"
+// @Param        longitude            formData  number  true   "Longitude"
+// @Param        basePrice            formData  number  true   "Base Price"
+// @Param        address.cityId       formData  int     true   "City ID"
+// @Param        address.postalCode   formData  string  true   "Postal Code"
+// @Param        address.unitNumber   formData  int     true   "Unit Number"
+// @Param        address.exactAddress formData  string  true   "Exact Address"
+// @Param        attributeIds         formData  array   false  "Array of Attribute IDs"
+// @Param        slots                formData  string  false  "JSON string of slots array"
+// @Param        documentFile         formData  file    true   "New document file"
+// @Param        images               formData  file    false  "New complete package of gallery images"
+// @Success      201      {object}  base.SingleMessageResponse
+// @Failure      400      {object}  base.MultipleMessageResponse
+// @Router       /parking/crud/update [put] 
 func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 	type updateParkingParams struct {
 		ParkingID uint    `form:"parkingId" validate:"required"`
@@ -121,7 +159,6 @@ func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 	if err != nil {
 		NewBindingError := exception.NewBinding(err)
 		panic(NewBindingError)
-
 	}
 
 	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
@@ -154,23 +191,27 @@ func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 	base.Response(ctx, http.StatusCreated, message, nil)
 }
 
+// DeleteParking godoc
+// @Summary      Delete a parking
+// @Description  Delete a parking by its ID checking ownership
+// @Tags         Customer Parking
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id   path      int  true  "Parking ID"
+// @Success      200  {object}  base.SingleMessageResponse
+// @Failure      400  {object}  base.MultipleMessageResponse
+// @Router       /parking/crud/{id} [delete]
 func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 	parkingIDStr := ctx.Param("id")
-	var parkingID uint
-	_, err := fmt.Sscanf(parkingIDStr, "%d", &parkingID)
-	if err != nil || parkingID == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "شناسه پارکینگ معتبر نیست"})
-		return
+	parkingID, err := strconv.Atoi(parkingIDStr)
+	if err != nil {
+		NewBindingError := exception.NewBinding(err)
+		panic(NewBindingError)
 	}
 
-	userContextValue, exists := ctx.Get(cpc.cfg.Constant.Context.UserID)
-	if !exists || userContextValue == nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "کاربر احراز هویت نشده است"})
-		return
-	}
-	userID := userContextValue.(uint)
+	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
 
-	err = cpc.parkingService.DeleteParking(userID, parkingID)
+	err = cpc.parkingService.DeleteParking(userID.(uint), uint(parkingID))
 	if err != nil {
 		panic(err)
 	}
@@ -180,16 +221,24 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 	base.Response(ctx, http.StatusOK, message, nil)
 }
 
-// GetUserParkings godoc
-// @Summary      Get Owner Parkings
-// @Description  Retrieve all parkings belonging to the authenticated user with presigned asset URLs
-// @Tags         Authentication
-// @Success      200  {array}   parkingdto.ParkingResponse
-// @Failure      401  {object}  base.MultipleMessageResponse
-// @Router       /v1/parking/crud/list [get]
+// GetParkingDetail godoc
+// @Summary      Get parking details for edit form
+// @Description  Retrieve complete parking info with relations and presigned URLs by ID
+// @Tags         Customer Parking
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id   path      int  true  "Parking ID"
+// @Success      200  {object}  parkingdto.ParkingDetailResponse
+// @Failure      400  {object}  base.MultipleMessageResponse
+// @Router       /parking/crud/{id} [get]
 func (cpc *CustomerParkingController) GetParkingDetail(ctx *gin.Context) {
 	parkingIDStr := ctx.Param("id")
-	parkingID, _ := strconv.Atoi(parkingIDStr)
+	parkingID, err := strconv.Atoi(parkingIDStr)
+	if err != nil {
+		NewBindingError := exception.NewBinding(err)
+		panic(NewBindingError)
+	}
+
 	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
 
 	parking, err := cpc.parkingService.GetParkingDetail(userID.(uint), uint(parkingID))

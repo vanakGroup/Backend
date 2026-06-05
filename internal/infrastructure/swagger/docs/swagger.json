@@ -126,25 +126,305 @@
         },
         "/parking/crud/create": {
             "post": {
-                "description": "Create the parking for user",
-                "tags": [
-                    "Authentication"
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
                 ],
-                "summary": "Creating Parking",
+                "description": "Create a parking space with details, document, and images",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Create a new parking",
                 "parameters": [
                     {
-                        "description": "User's mobile phone number",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
+                        "type": "string",
+                        "description": "Parking Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Latitude (25 to 40)",
+                        "name": "latitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude (44 to 63)",
+                        "name": "longitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Base Price (Greater than 0)",
+                        "name": "basePrice",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "City ID",
+                        "name": "address.cityId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Postal Code",
+                        "name": "address.postalCode",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Unit Number",
+                        "name": "address.unitNumber",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exact Address",
+                        "name": "address.exactAddress",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "description": "Array of Attribute IDs",
+                        "name": "attributeIds",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON string of slots array",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Parking legal document file",
+                        "name": "documentFile",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Parking gallery images",
+                        "name": "images",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "phone": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/base.SingleMessageResponse"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/crud/update": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update parking details, location, slots, document and images",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Update an existing parking",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parking ID to update",
+                        "name": "parkingId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Parking Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Latitude",
+                        "name": "latitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude",
+                        "name": "longitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Base Price",
+                        "name": "basePrice",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "City ID",
+                        "name": "address.cityId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Postal Code",
+                        "name": "address.postalCode",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Unit Number",
+                        "name": "address.unitNumber",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exact Address",
+                        "name": "address.exactAddress",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "description": "Array of Attribute IDs",
+                        "name": "attributeIds",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON string of slots array",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "New document file",
+                        "name": "documentFile",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "New complete package of gallery images",
+                        "name": "images",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/crud/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve complete parking info with relations and presigned URLs by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Get parking details for edit form",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a parking by its ID checking ownership",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Delete a parking",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -196,6 +476,87 @@
                 "statusCode": {
                     "type": "integer",
                     "example": 200
+                }
+            }
+        },
+        "parkingdto.AddressDetailResponse": {
+            "type": "object",
+            "properties": {
+                "cityId": {
+                    "type": "integer"
+                },
+                "exactAddress": {
+                    "type": "string"
+                },
+                "postalCode": {
+                    "type": "string"
+                },
+                "unitNumber": {
+                    "type": "integer"
+                }
+            }
+        },
+        "parkingdto.ParkingDetailResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/parkingdto.AddressDetailResponse"
+                },
+                "attributeIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "basePrice": {
+                    "type": "integer"
+                },
+                "documentUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parkingdto.SlotDetailResponse"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "parkingdto.SlotDetailResponse": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "hour": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isBooked": {
+                    "type": "boolean"
                 }
             }
         }

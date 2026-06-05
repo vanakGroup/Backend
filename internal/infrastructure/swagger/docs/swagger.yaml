@@ -22,6 +22,59 @@ definitions:
         example: 200
         type: integer
     type: object
+  parkingdto.AddressDetailResponse:
+    properties:
+      cityId:
+        type: integer
+      exactAddress:
+        type: string
+      postalCode:
+        type: string
+      unitNumber:
+        type: integer
+    type: object
+  parkingdto.ParkingDetailResponse:
+    properties:
+      address:
+        $ref: '#/definitions/parkingdto.AddressDetailResponse'
+      attributeIds:
+        items:
+          type: integer
+        type: array
+      basePrice:
+        type: integer
+      documentUrl:
+        type: string
+      id:
+        type: integer
+      imageUrls:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      slots:
+        items:
+          $ref: '#/definitions/parkingdto.SlotDetailResponse'
+        type: array
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  parkingdto.SlotDetailResponse:
+    properties:
+      date:
+        type: string
+      hour:
+        type: integer
+      id:
+        type: integer
+      isBooked:
+        type: boolean
+    type: object
 info:
   contact: {}
 paths:
@@ -105,19 +158,17 @@ paths:
       summary: Verify OTP Code
       tags:
       - Authentication
-  /parking/crud/create:
-    post:
-      description: Create the parking for user
+  /parking/crud/{id}:
+    delete:
+      description: Delete a parking by its ID checking ownership
       parameters:
-      - description: User's mobile phone number
-        in: body
-        name: request
+      - description: Parking ID
+        in: path
+        name: id
         required: true
-        schema:
-          properties:
-            phone:
-              type: string
-          type: object
+        type: integer
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -127,7 +178,197 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/base.MultipleMessageResponse'
-      summary: Creating Parking
+      security:
+      - BearerAuth: []
+      summary: Delete a parking
       tags:
-      - Authentication
+      - Customer Parking
+    get:
+      description: Retrieve complete parking info with relations and presigned URLs
+        by ID
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get parking details for edit form
+      tags:
+      - Customer Parking
+  /parking/crud/create:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a parking space with details, document, and images
+      parameters:
+      - description: Parking Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Latitude (25 to 40)
+        in: formData
+        name: latitude
+        required: true
+        type: number
+      - description: Longitude (44 to 63)
+        in: formData
+        name: longitude
+        required: true
+        type: number
+      - description: Base Price (Greater than 0)
+        in: formData
+        name: basePrice
+        required: true
+        type: number
+      - description: City ID
+        in: formData
+        name: address.cityId
+        required: true
+        type: integer
+      - description: Postal Code
+        in: formData
+        name: address.postalCode
+        required: true
+        type: string
+      - description: Unit Number
+        in: formData
+        name: address.unitNumber
+        required: true
+        type: integer
+      - description: Exact Address
+        in: formData
+        name: address.exactAddress
+        required: true
+        type: string
+      - description: Array of Attribute IDs
+        in: formData
+        name: attributeIds
+        type: array
+      - description: JSON string of slots array
+        in: formData
+        name: slots
+        type: string
+      - description: Parking legal document file
+        in: formData
+        name: documentFile
+        required: true
+        type: file
+      - description: Parking gallery images
+        in: formData
+        name: images
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new parking
+      tags:
+      - Customer Parking
+  /parking/crud/update:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update parking details, location, slots, document and images
+      parameters:
+      - description: Parking ID to update
+        in: formData
+        name: parkingId
+        required: true
+        type: integer
+      - description: Parking Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Latitude
+        in: formData
+        name: latitude
+        required: true
+        type: number
+      - description: Longitude
+        in: formData
+        name: longitude
+        required: true
+        type: number
+      - description: Base Price
+        in: formData
+        name: basePrice
+        required: true
+        type: number
+      - description: City ID
+        in: formData
+        name: address.cityId
+        required: true
+        type: integer
+      - description: Postal Code
+        in: formData
+        name: address.postalCode
+        required: true
+        type: string
+      - description: Unit Number
+        in: formData
+        name: address.unitNumber
+        required: true
+        type: integer
+      - description: Exact Address
+        in: formData
+        name: address.exactAddress
+        required: true
+        type: string
+      - description: Array of Attribute IDs
+        in: formData
+        name: attributeIds
+        type: array
+      - description: JSON string of slots array
+        in: formData
+        name: slots
+        type: string
+      - description: New document file
+        in: formData
+        name: documentFile
+        required: true
+        type: file
+      - description: New complete package of gallery images
+        in: formData
+        name: images
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Update an existing parking
+      tags:
+      - Customer Parking
 swagger: "2.0"

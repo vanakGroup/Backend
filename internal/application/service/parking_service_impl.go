@@ -230,51 +230,6 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 	return ps.unitOfWork.Factory().ParkingRepository().Delete(parking)
 }
 
-func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingResponse, error) {
-	parkings, err := ps.unitOfWork.Factory().ParkingRepository().GetByUserID(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	var response []parkingdto.ParkingResponse
-
-	for _, p := range parkings {
-		docURL := ""
-		if p.DocumentURL != "" {
-			url, err := ps.s3Storage.GetPresignedURL(enums.ParkingDoc, p.DocumentURL, time.Hour)
-			if err == nil {
-				docURL = url
-			}
-		}
-
-		var imageUrls []string
-		for _, img := range p.Images {
-			if img.ImageURL != "" {
-				url, err := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
-				if err == nil {
-					imageUrls = append(imageUrls, url)
-				}
-			}
-		}
-
-		parkingDTO := parkingdto.ParkingResponse{
-			ID:           p.ID,
-			Title:        p.Title,
-			Latitude:     p.Latitude,
-			Longitude:    p.Longitude,
-			BasePrice:    uint(p.BasePrice),
-			DocumentURL:  docURL,
-			ImageURLs:    imageUrls,
-			ExactAddress: p.Address.ExactAddress,
-			PostalCode:   p.Address.PostalCode,
-		}
-
-		response = append(response, parkingDTO)
-	}
-
-	return response, nil
-}
-
 func (ps *ParkingService) UpdateParking(userID uint, parkingInfo parkingdto.UpdateParkingRequest) error {
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
@@ -471,7 +426,6 @@ func (ps *ParkingService) GetParkingDetail(userID uint, parkingID uint) (*parkin
 		})
 	}
 
-	
 	response := &parkingdto.ParkingDetailResponse{
 		ID:          parking.ID,
 		Title:       parking.Title,
