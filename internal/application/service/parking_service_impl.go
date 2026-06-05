@@ -6,6 +6,7 @@ import (
 
 	"github.com/Vanak/Backend/bootstrap"
 	parkingdto "github.com/Vanak/Backend/internal/application/dto/parking"
+	staticdto "github.com/Vanak/Backend/internal/application/dto/static"
 	"github.com/Vanak/Backend/internal/domain/entities"
 	"github.com/Vanak/Backend/internal/domain/enums"
 	"github.com/Vanak/Backend/internal/domain/exception"
@@ -445,5 +446,37 @@ func (ps *ParkingService) GetParkingDetail(userID uint, parkingID uint) (*parkin
 		AttributeIDs: attributeIDs,
 	}
 
+	return response, nil
+}
+
+func (ps *ParkingService) GetCitiesList() ([]staticdto.StaticItemResponse, error) {
+	cities, err := ps.unitOfWork.Factory().AddressRepository().GetAllCities()
+	if err != nil {
+		return nil, err
+	}
+
+	var response []staticdto.StaticItemResponse
+	for _, city := range cities {
+		response = append(response, staticdto.StaticItemResponse{
+			ID:   city.ID,
+			Name: city.Name,
+		})
+	}
+	return response, nil
+}
+
+func (ps *ParkingService) GetAttributesList() ([]staticdto.StaticItemResponse, error) {
+	attributes, err := ps.unitOfWork.Factory().ParkingRepository().GetAllAttributes()
+	if err != nil {
+		return nil, err
+	}
+
+	var response []staticdto.StaticItemResponse
+	for _, attr := range attributes {
+		response = append(response, staticdto.StaticItemResponse{
+			ID:   attr.ID,
+			Name: attr.Name,
+		})
+	}
 	return response, nil
 }

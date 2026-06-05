@@ -11,4 +11,5 @@ type AddressRepository interface {
 	CreateAddress(address *entities.Address) error
 	GetAddressByParkingID(parkingID uint) (*entities.Address, error)
 	UpdateAddress(address *entities.Address) error
+	GetAllCities() ([]entities.City, error)
 }

@@ -75,6 +75,13 @@ definitions:
       isBooked:
         type: boolean
     type: object
+  staticdto.StaticItemResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -371,4 +378,43 @@ paths:
       summary: Update an existing parking
       tags:
       - Customer Parking
+  /parking/static/attributes:
+    get:
+      description: Retrieve a list of all available parking attributes/features with
+        their IDs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/staticdto.StaticItemResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get all parking attributes
+      tags:
+      - Static Data
+  /parking/static/cities:
+    get:
+      description: Retrieve a list of all cities with their IDs for dropdowns
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/staticdto.StaticItemResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get all cities
+      tags:
+      - Static Data
 swagger: "2.0"

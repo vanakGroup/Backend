@@ -195,6 +195,8 @@ var English = map[string]interface{}{
 		"updateParking":              "Update Parking is successfully.",
 		"createParking":              "Create Parking is successfully.",
 		"detailParking":              "Get Detail Parking is successfully.",
+		"getCities":                  "Get Cities List is successfully.",
+		"getAttributes":              "Get Attributes List is successfully.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",

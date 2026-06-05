@@ -195,6 +195,8 @@ var Persian = map[string]interface{}{
 		"updateParking":             "پارکینگ با موفقیت بروزرسانی شد.",
 		"createParking":             "پارکینگ با موفقیت ایجاد شد.",
 		"detailParking":             "دریافت اطلاعات پارکینگ با موفقیت انجام شد.",
+		"getAttributes":             "لیست ویژگی ها با موفقیت دریافت شد.",
+		"getCities":                 "لیست شهر ها با موفقیت دریافت شد.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",

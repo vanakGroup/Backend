@@ -263,3 +263,42 @@ func parseSlotsRaw(slotsRaw string) ([]parkingdto.SlotRequest, error) {
 
 	return slots, nil
 }
+
+
+// GetCities godoc
+// @Summary      Get all cities
+// @Description  Retrieve a list of all cities with their IDs for dropdowns
+// @Tags         Static Data
+// @Produce      json
+// @Success      200  {array}   staticdto.StaticItemResponse
+// @Failure      500  {object}  base.MultipleMessageResponse
+// @Router       /parking/static/cities [get]
+func (cpc *CustomerParkingController) GetCities(ctx *gin.Context) {
+	cities, err := cpc.parkingService.GetCitiesList()
+	if err != nil {
+		panic(err)
+	}
+
+	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.getCities")
+	base.Response(ctx, http.StatusOK, message, cities)
+}
+
+// GetAttributes godoc
+// @Summary      Get all parking attributes
+// @Description  Retrieve a list of all available parking attributes/features with their IDs
+// @Tags         Static Data
+// @Produce      json
+// @Success      200  {array}   staticdto.StaticItemResponse
+// @Failure      500  {object}  base.MultipleMessageResponse
+// @Router       /parking/static/attributes [get]
+func (cpc *CustomerParkingController) GetAttributes(ctx *gin.Context) {
+	attributes, err := cpc.parkingService.GetAttributesList()
+	if err != nil {
+		panic(err)
+	}
+
+	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.getAttributes")
+	base.Response(ctx, http.StatusOK, message, attributes)
+}

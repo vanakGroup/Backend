@@ -173,3 +173,9 @@ func (r *ParkingRepository) GetDetailByIDAndUserID(parkingID uint, userID uint) 
 	}
 	return &parking, nil
 }
+
+func (r *ParkingRepository) GetAllAttributes() ([]entities.ParkingAttribute, error) {
+	var attributes []entities.ParkingAttribute
+	err := r.db.Select("id, name").Find(&attributes).Error
+	return attributes, err
+}

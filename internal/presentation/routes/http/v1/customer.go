@@ -15,4 +15,10 @@ func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
 		parkingCrudGroup.GET("/parkingDetail/:id", app.CustomerParkingController.GetParkingDetail)
 		parkingCrudGroup.PUT("/update", app.CustomerParkingController.UpdateParking)
 	}
+
+	staticGroup := router.Group("/parking/static")
+	{
+		staticGroup.GET("/cities", app.CustomerParkingController.GetCities)
+		staticGroup.GET("/attributes", app.CustomerParkingController.GetAttributes)
+	}
 }

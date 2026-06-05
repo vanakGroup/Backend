@@ -86,3 +86,10 @@ func (r *AddressRepository) GetAddressByParkingID(parkingID uint) (*entities.Add
 func (r *AddressRepository) UpdateAddress(address *entities.Address) error {
 	return r.db.Save(address).Error
 }
+
+func (r *AddressRepository) GetAllCities() ([]entities.City, error) {
+	var cities []entities.City
+
+	err := r.db.Select("id, name").Find(&cities).Error
+	return cities, err
+}

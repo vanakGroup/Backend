@@ -20,4 +20,5 @@ type ParkingRepository interface {
     DeleteParkingImagesWithIDs(imageIDs []uint) error
 	UpdateAttributes(parking *entities.Parking, attributes []entities.ParkingAttribute) error
 	GetDetailByIDAndUserID(parkingID uint, userID uint) (*entities.Parking, error)
+	GetAllAttributes() ([]entities.ParkingAttribute, error)
 }

@@ -453,6 +453,64 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/parking/static/attributes": {
+            "get": {
+                "description": "Retrieve a list of all available parking attributes/features with their IDs",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static Data"
+                ],
+                "summary": "Get all parking attributes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/staticdto.StaticItemResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/static/cities": {
+            "get": {
+                "description": "Retrieve a list of all cities with their IDs for dropdowns",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static Data"
+                ],
+                "summary": "Get all cities",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/staticdto.StaticItemResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -568,6 +626,17 @@ const docTemplate = `{
                 },
                 "isBooked": {
                     "type": "boolean"
+                }
+            }
+        },
+        "staticdto.StaticItemResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         }
