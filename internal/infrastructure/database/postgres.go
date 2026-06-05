@@ -47,7 +47,6 @@ func NewPostgresDataBase(dbConfig *bootstrap.Database) *gorm.DB {
 			&entities.AvailabilitySlot{},
 			&entities.ParkingImage{},
 		)
-		fmt.Println("Migration completed!")
 
 		if err != nil {
 			panic(err)
