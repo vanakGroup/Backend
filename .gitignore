@@ -51,3 +51,4 @@ Icon
 *.ipr
 
 logs/
+*.log
