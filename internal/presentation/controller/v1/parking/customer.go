@@ -61,7 +61,7 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 		BasePrice float64 `form:"basePrice" validate:"required,numeric,gt=0"`
 
 		CityID       uint   `form:"address.cityId" validate:"required"`
-		PostalCode   string `form:"address.postalCode" validate:"required"`
+		PostalCode   string `form:"address.postalCode" validate:"required,ir_postal"`
 		UnitNumber   uint   `form:"address.unitNumber" validate:"required"`
 		ExactAddress string `form:"address.exactAddress" validate:"required"`
 
@@ -109,7 +109,6 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 	base.Response(ctx, http.StatusCreated, message, response)
 }
 
-
 // UpdateParking godoc
 // @Summary      Update an existing parking
 // @Description  Update parking details, location, slots, document and images
@@ -132,7 +131,7 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 // @Param        images               formData  file    false  "New complete package of gallery images"
 // @Success      201      {object}  base.SingleMessageResponse
 // @Failure      400      {object}  base.MultipleMessageResponse
-// @Router       /parking/crud/update [put] 
+// @Router       /parking/crud/update [put]
 func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 	type updateParkingParams struct {
 		ParkingID uint    `form:"parkingId" validate:"required"`
@@ -142,7 +141,7 @@ func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 		BasePrice float64 `form:"basePrice" validate:"required,numeric,gt=0"`
 
 		CityID       uint   `form:"address.cityId" validate:"required"`
-		PostalCode   string `form:"address.postalCode" validate:"required"`
+		PostalCode   string `form:"address.postalCode" validate:"required,ir_postal"`
 		UnitNumber   uint   `form:"address.unitNumber" validate:"required"`
 		ExactAddress string `form:"address.exactAddress" validate:"required"`
 
@@ -263,7 +262,6 @@ func parseSlotsRaw(slotsRaw string) ([]parkingdto.SlotRequest, error) {
 
 	return slots, nil
 }
-
 
 // GetCities godoc
 // @Summary      Get all cities

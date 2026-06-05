@@ -29,6 +29,7 @@ func main() {
 	val, ok := binding.Validator.Engine().(*validator.Validate)
 	if ok {
 		val.RegisterValidation("ir_phone", validation.IranianMobileValidator, true)
+		val.RegisterValidation("ir_postal",validation.IranianPostalCodeValidator,true)
 	}
 
 	ginEngine.Use(middleware.TranslatorMiddleware(app.Translator))

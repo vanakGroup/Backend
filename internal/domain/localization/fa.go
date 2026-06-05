@@ -1,6 +1,7 @@
 package localization
 
 var Persian = map[string]interface{}{
+	"address.postalCode":  "کدپستی",
 	"reserve":             "رزرو",
 	"slot":                "شکاف(بازه)",
 	"duplicate":           "تکراری",
@@ -101,6 +102,7 @@ var Persian = map[string]interface{}{
 		"lte":                    "عدد باید کوچکتر باشد.",
 		"gt":                     "عدد باید بزگتر باشد.",
 		"ir_phone":               "این {0} معتبر نمی باشد",
+		"ir_postal":              "این {0} معتبر نمی باشد",
 		"duplicate":              "این {0} تکراری می باشد",
 		"conflict":               "این {0} تداخل دارد.",
 	},

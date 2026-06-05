@@ -12,6 +12,7 @@ var Val = validator.New()
 
 func init() {
 	Val.RegisterValidation("ir_phone", IranianMobileValidator, true)
+	Val.RegisterValidation("ir_postal", IranianPostalCodeValidator, true)
 }
 
 func ValidatedField[T any](params T) {

@@ -22,3 +22,20 @@ func IranianMobileValidator(fld validator.FieldLevel) bool {
 
 	return res
 }
+
+
+func IranianPostalCodeValidator(fld validator.FieldLevel) bool {
+    value, ok := fld.Field().Interface().(string)
+
+    if !ok {
+        return false
+    }
+
+    res, err := regexp.MatchString(`^([13-9\s]{4}[1-9\s][13-9\s]{5})$`, value)
+
+    if err != nil {
+        log.Println(err.Error())
+    }
+
+    return res
+}

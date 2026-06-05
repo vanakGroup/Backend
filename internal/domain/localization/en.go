@@ -1,6 +1,7 @@
 package localization
 
 var English = map[string]interface{}{
+	"address.postalCode":  "postal code",
 	"reserve":             "reserve",
 	"slot":                "slot",
 	"duplicate":           "duplicate",
@@ -99,6 +100,7 @@ var English = map[string]interface{}{
 		"alreadyDraft":           "This {0} has been already drafted.",
 		"bannedUser":             "Your account is currently banned. You are not allowed to perform this action.",
 		"ir_phone":               "The {0} is Not correct.",
+		"ir_postal":              "The {0} is Not correct",
 		"duplicate":              "The {0} has duplicate.",
 		"conflict":               "The {0} has Conflict.",
 		"lte":                    "The item should be smaller.",
