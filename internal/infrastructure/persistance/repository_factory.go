@@ -22,3 +22,7 @@ func NewRepositoryFactory(db *gorm.DB, cfg *bootstrap.Config) *RepositoryFactory
 func (f *RepositoryFactory) UserRepository() postgresDomain.UserRepository {
 	return postgres.NewUserRepository(f.cfg, f.db)
 }
+
+func (f *RepositoryFactory) VehicleRepository() postgresDomain.VehicleRepository {
+	return postgres.NewVehicleRepository(f.cfg, f.db)
+}
