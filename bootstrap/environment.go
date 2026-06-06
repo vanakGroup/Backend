@@ -8,12 +8,28 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type S3 struct {
+	Buckets   BucketName
+	Region    string
+	AccessKey string
+	SecretKey string
+	Endpoint  string
+}
+
+type BucketName struct {
+	LogoPic             string
+	ParkingDoc          string
+	ParkingPic          string
+	RegistrationCardPic string
+}
+
 type Env struct {
 	PrimaryDB Database
 	Logger    Logger
 	Redis     Redis
 	OTP       OTP
 	Jwt       Jwt
+	Storage   S3
 }
 
 type Jwt struct {
@@ -94,6 +110,18 @@ func NewEnv() *Env {
 		},
 		Jwt{
 			SecretKey: os.Getenv("SECRET_KEY"),
+		},
+		S3{
+			Region:    os.Getenv("BUCKET_REGION"),
+			AccessKey: os.Getenv("BUCKET_ACCESS_KEY"),
+			SecretKey: os.Getenv("BUCKET_SECRET_KEY"),
+			Endpoint:  os.Getenv("BUCKET_ENDPOINT"),
+			Buckets: BucketName{
+				LogoPic:             os.Getenv("LOGO_PIC_BUCKET_NAME"),
+				ParkingDoc:          os.Getenv("PARKING_DOC_BUCKET_NAME"),
+				ParkingPic:          os.Getenv("PARKING_PIC_BUCKET_NAME"),
+				RegistrationCardPic: os.Getenv("REGISTRATION_CARD_PIC_BUCKET_NAME"),
+			},
 		},
 	}
 }

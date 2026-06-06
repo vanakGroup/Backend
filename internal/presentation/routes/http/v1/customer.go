@@ -14,4 +14,13 @@ func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
 		profileGroup.PUT("", app.CustomerUserController.UpdateProfile)
 		profileGroup.GET("", app.CustomerUserController.GetProfile)
 	}
+
+	vehicleGroup := router.Group("/vehicle")
+	vehicleGroup.Use(app.Middlewares.Authentication.AuthMiddleware())
+	{
+		vehicleGroup.POST("", app.CustomerVehicleController.CreateVehicle)
+		vehicleGroup.GET("", app.CustomerVehicleController.GetAllVehicles)
+		vehicleGroup.GET("/:id", app.CustomerVehicleController.GetVehicle)
+		vehicleGroup.DELETE("/:id", app.CustomerVehicleController.DeleteVehicle)
+	}
 }

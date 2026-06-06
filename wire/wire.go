@@ -12,13 +12,16 @@ import (
 	"github.com/Vanak/Backend/internal/domain/ports"
 	postgresDomain "github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
 	redisDomain "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
+	storageDomain "github.com/Vanak/Backend/internal/domain/storage"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
 	"github.com/Vanak/Backend/internal/infrastructure/jwt"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
+	storage "github.com/Vanak/Backend/internal/infrastructure/storage"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/vehicle"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
 	"gorm.io/gorm"
@@ -34,18 +37,23 @@ type Middlewares struct {
 }
 
 type Application struct {
-	Database               *Database
-	Translator             domainLocalization.Translator
-	Middlewares            *Middlewares
-	Constants              *bootstrap.Constants
-	OtpService             *service.OtpService
-	UserService            *service.UserService
-	GeneralUserController  *user.GeneralUserController
-	CustomerUserController *user.CustomerUserController
+	Database                  *Database
+	Translator                domainLocalization.Translator
+	Middlewares               *Middlewares
+	Constants                 *bootstrap.Constants
+	OtpService                *service.OtpService
+	UserService               *service.UserService
+	GeneralUserController     *user.GeneralUserController
+	CustomerUserController    *user.CustomerUserController
+	CustomerVehicleController *vehicle.CustomerVehicleController
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
 	return &config.Env.PrimaryDB
+}
+
+func ProvideS3Config(config *bootstrap.Config) *bootstrap.S3 {
+	return &config.Env.Storage
 }
 
 func ProvideConstants(cfg *bootstrap.Config) *bootstrap.Constants {
@@ -62,13 +70,17 @@ var DatabaseProviderSet = wire.NewSet(
 	ProvideRedisCache,
 	redisRepo.NewUserCacheRepository,
 	postgresRepo.NewUserRepository,
+	postgresRepo.NewVehicleRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
+	storage.NewS3Storage,
+	wire.Bind(new(storageDomain.S3Storage), new(*storage.S3Storage)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)),
 	wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)),
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
 	wire.Bind(new(postgresDomain.UserProfileRepository), new(*postgresRepo.UserRepository)),
+	wire.Bind(new(postgresDomain.VehicleRepository), new(*postgresRepo.VehicleRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -84,17 +96,20 @@ var ServiceSet = wire.NewSet(
 	service.NewUserService,
 	service.NewJwtService,
 	jwt.NewJwtKeyManager,
+	service.NewVehicleService,
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 	wire.Bind(new(jwtDomain.KeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
 	wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)),
+	wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)),
 )
 
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
 	user.NewCustomerUserController,
+	vehicle.NewVehicleCustomerController,
 )
 
 func NewApplication(
@@ -106,16 +121,18 @@ func NewApplication(
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
 	customerUserController *user.CustomerUserController,
+	customerVehicleController *vehicle.CustomerVehicleController,
 ) *Application {
 	return &Application{
-		Database:               db,
-		Translator:             trans,
-		Middlewares:            mid,
-		Constants:              cons,
-		OtpService:             otpService,
-		UserService:            userService,
-		GeneralUserController:  generalUserController,
-		CustomerUserController: customerUserController,
+		Database:                  db,
+		Translator:                trans,
+		Middlewares:               mid,
+		Constants:                 cons,
+		OtpService:                otpService,
+		UserService:               userService,
+		GeneralUserController:     generalUserController,
+		CustomerUserController:    customerUserController,
+		CustomerVehicleController: customerVehicleController,
 	}
 }
 
@@ -125,6 +142,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		MiddlewareSet,
 		ServiceSet,
 		ProvideDBConfig,
+		ProvideS3Config,
 		ProvideConstants,
 		NewApplication,
 		ControllerSet,

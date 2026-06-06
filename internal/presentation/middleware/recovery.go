@@ -49,6 +49,8 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleNotFoundError(ctx, *NotFoundError, rm.constants.Context.Translator)
 	} else if AlreadyExistsError, ok := err.(*exception.AlreadyExistsError); ok {
 		handleAlreadyExistsError(ctx, *AlreadyExistsError, rm.constants.Context.Translator)
+	} else if FormatError, ok := err.(*exception.FormatError); ok {
+		handleFormatError(ctx, *FormatError, rm.constants.Context.Translator)
 	} else {
 		handleDefaultError(ctx, err)
 	}
@@ -112,6 +114,24 @@ func handleAlreadyExistsError(ctx *gin.Context, bError exception.AlreadyExistsEr
 	errorMessages := make(map[string]map[string]string)
 
 	for _, errDetail := range bError.FieldErrors {
+		if _, ok := errorMessages[errDetail.Field]; !ok {
+			errorMessages[errDetail.Field] = make(map[string]string)
+		}
+
+		fieldName, _ := trans.Translate(errDetail.TransKey)
+
+		message, _ := trans.Translate(fmt.Sprintf("errors.%s", errDetail.Tag), fieldName)
+
+		errorMessages[errDetail.Field][errDetail.Tag] = message
+	}
+	base.Response(ctx, 409, errorMessages, nil)
+}
+
+func handleFormatError(ctx *gin.Context, fError exception.FormatError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	errorMessages := make(map[string]map[string]string)
+
+	for _, errDetail := range fError.FieldErrors {
 		if _, ok := errorMessages[errDetail.Field]; !ok {
 			errorMessages[errDetail.Field] = make(map[string]string)
 		}
