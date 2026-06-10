@@ -199,7 +199,7 @@ func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 // @Param        id   path      int  true  "Parking ID"
 // @Success      200  {object}  base.SingleMessageResponse
 // @Failure      400  {object}  base.MultipleMessageResponse
-// @Router       /parking/crud/{id} [delete]
+// @Router       /parking/crud/delete/{id} [delete]
 func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 	parkingIDStr := ctx.Param("id")
 	parkingID, err := strconv.Atoi(parkingIDStr)
@@ -229,7 +229,7 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 // @Param        id   path      int  true  "Parking ID"
 // @Success      200  {object}  parkingdto.ParkingDetailResponse
 // @Failure      400  {object}  base.MultipleMessageResponse
-// @Router       /parking/crud/{id} [get]
+// @Router       /parking/crud/parkingDetail/{id} [get]
 func (cpc *CustomerParkingController) GetParkingDetail(ctx *gin.Context) {
 	parkingIDStr := ctx.Param("id")
 	parkingID, err := strconv.Atoi(parkingIDStr)
