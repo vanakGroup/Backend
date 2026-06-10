@@ -30,3 +30,7 @@ func (rf *RepositoryFactory) AddressRepository() postgresDomain.AddressRepositor
 func (rf *RepositoryFactory) ParkingRepository() postgresDomain.ParkingRepository {
 	return postgres.NewParkingRepository(rf.cfg, rf.db)
 }
+
+func (f *RepositoryFactory) VehicleRepository() postgresDomain.VehicleRepository {
+	return postgres.NewVehicleRepository(f.cfg, f.db)
+}

@@ -17,9 +17,10 @@ type S3 struct {
 }
 
 type BucketName struct {
-	LogoPic    string
-	ParkingDoc string
-	ParkingPic string
+	LogoPic             string
+	ParkingDoc          string
+	ParkingPic          string
+	RegistrationCardPic string
 }
 
 type Env struct {
@@ -116,9 +117,10 @@ func NewEnv() *Env {
 			SecretKey: os.Getenv("BUCKET_SECRET_KEY"),
 			Endpoint:  os.Getenv("BUCKET_ENDPOINT"),
 			Buckets: BucketName{
-				LogoPic:    os.Getenv("LOGO_PIC_BUCKET_NAME"),
-				ParkingDoc: os.Getenv("PARKING_DOC_BUCKET_NAME"),
-				ParkingPic: os.Getenv("PARKING_PIC_BUCKET_NAME"),
+				LogoPic:             os.Getenv("LOGO_PIC_BUCKET_NAME"),
+				ParkingDoc:          os.Getenv("PARKING_DOC_BUCKET_NAME"),
+				ParkingPic:          os.Getenv("PARKING_PIC_BUCKET_NAME"),
+				RegistrationCardPic: os.Getenv("REGISTRATION_CARD_PIC_BUCKET_NAME"),
 			},
 		},
 	}

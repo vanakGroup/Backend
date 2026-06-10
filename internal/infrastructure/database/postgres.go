@@ -46,6 +46,7 @@ func NewPostgresDataBase(dbConfig *bootstrap.Database) *gorm.DB {
 			&entities.ParkingAttribute{},
 			&entities.AvailabilitySlot{},
 			&entities.ParkingImage{},
+			&entities.Vehicle{},
 		)
 
 		if err != nil {

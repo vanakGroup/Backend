@@ -23,6 +23,7 @@ import (
 	storage "github.com/Vanak/Backend/internal/infrastructure/storage"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/vehicle"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
 	"gorm.io/gorm"
@@ -52,11 +53,17 @@ type Application struct {
 	GeneralUserController     *user.GeneralUserController
 	Seeds                     *Seeds
 	CustomerParkingController *parking.CustomerParkingController
+	CustomerUserController    *user.CustomerUserController
+	CustomerVehicleController *vehicle.CustomerVehicleController
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
 	return &config.Env.PrimaryDB
 }
+
+// func ProvideS3Config(config *bootstrap.Config) *bootstrap.S3 {
+// 	return &config.Env.Storage
+// }
 
 func ProvideConstants(cfg *bootstrap.Config) *bootstrap.Constants {
 	return cfg.Constant
@@ -74,6 +81,7 @@ var DatabaseProviderSet = wire.NewSet(
 	postgresRepo.NewUserRepository,
 	postgresRepo.NewAddressRepository,
 	postgresRepo.NewParkingRepository,
+	postgresRepo.NewVehicleRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
 	storage.NewS3Storage,
@@ -84,6 +92,8 @@ var DatabaseProviderSet = wire.NewSet(
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
 	wire.Bind(new(postgresDomain.AddressRepository), new(*postgresRepo.AddressRepository)),
 	wire.Bind(new(postgresDomain.ParkingRepository), new(*postgresRepo.ParkingRepository)),
+	wire.Bind(new(postgresDomain.UserProfileRepository), new(*postgresRepo.UserRepository)),
+	wire.Bind(new(postgresDomain.VehicleRepository), new(*postgresRepo.VehicleRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -100,6 +110,9 @@ var ServiceSet = wire.NewSet(
 	service.NewJwtService,
 	service.NewParkingService,
 	jwt.NewJwtKeyManager,
+	service.NewVehicleService,
+	wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)),
+	wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)),
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 	wire.Bind(new(jwtDomain.KeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
@@ -117,6 +130,8 @@ var SeederSet = wire.NewSet(
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
 	parking.NewCustomerParkingController,
+	user.NewCustomerUserController,
+	vehicle.NewVehicleCustomerController,
 )
 
 func NewApplication(
@@ -129,6 +144,8 @@ func NewApplication(
 	generalUserController *user.GeneralUserController,
 	customerParkingController *parking.CustomerParkingController,
 	seeds *Seeds,
+	customerUserController *user.CustomerUserController,
+	customerVehicleController *vehicle.CustomerVehicleController,
 ) *Application {
 	return &Application{
 		Database:                  db,
@@ -140,6 +157,8 @@ func NewApplication(
 		GeneralUserController:     generalUserController,
 		Seeds:                     seeds,
 		CustomerParkingController: customerParkingController,
+		CustomerUserController:    customerUserController,
+		CustomerVehicleController: customerVehicleController,
 	}
 }
 
@@ -149,6 +168,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		MiddlewareSet,
 		ServiceSet,
 		ProvideDBConfig,
+		// ProvideS3Config,
 		ProvideConstants,
 		NewApplication,
 		ControllerSet,

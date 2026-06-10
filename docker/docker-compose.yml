@@ -43,20 +43,20 @@ services:
     networks:
       - vanak_network
     restart: unless-stopped
-  # backend:
-  #   image: registry.hamdocker.ir/mani2005/vanak-backend:latest
-  #   platform: linux/arm64
-  #   container_name: vanak_backend_container
-  #   ports:
-  #     - "8080:8080"
-  #   env_file:
-  #     - ../.env
-  #   networks:
-  #     - vanak_network
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - postgres
-  #     - redis
+  backend:
+    image: registry.hamdocker.ir/mani2005/vanak-backend:latest
+    platform: linux/arm64
+    container_name: vanak_backend_container
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../.env
+    networks:
+      - vanak_network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
 
 volumes:
   postgres_data:

@@ -6,4 +6,5 @@ type RepositoryFactory interface {
 	UserRepository() postgresDomain.UserRepository
 	AddressRepository() postgresDomain.AddressRepository
 	ParkingRepository() postgresDomain.ParkingRepository
+	VehicleRepository() postgresDomain.VehicleRepository
 }

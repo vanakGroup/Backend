@@ -1,0 +1,156 @@
+package service
+
+import (
+	"context"
+	"strings"
+	"time"
+
+	"github.com/Vanak/Backend/bootstrap"
+	vehicledto "github.com/Vanak/Backend/internal/application/dto/vehicle"
+	"github.com/Vanak/Backend/internal/domain/entities"
+	"github.com/Vanak/Backend/internal/domain/enums"
+	"github.com/Vanak/Backend/internal/domain/exception"
+	"github.com/Vanak/Backend/internal/domain/ports"
+	"github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
+	"github.com/Vanak/Backend/internal/domain/storage"
+	"github.com/Vanak/Backend/internal/domain/utils"
+)
+
+type VehicleService struct {
+	unitOfWork  ports.UnitOfWork
+	cfg         *bootstrap.Config
+	S3Storage   storage.S3Storage
+	vehicleRepo postgres.VehicleRepository
+}
+
+func NewVehicleService(
+	unitOfWork ports.UnitOfWork,
+	cfg *bootstrap.Config,
+	S3Storage storage.S3Storage,
+	vehicleRepo postgres.VehicleRepository,
+) *VehicleService {
+	return &VehicleService{
+		cfg:         cfg,
+		S3Storage:   S3Storage,
+		vehicleRepo: vehicleRepo,
+		unitOfWork:  unitOfWork,
+	}
+}
+
+func (vs *VehicleService) RegisterVehicle(ctx context.Context, vehicleInfo vehicledto.VehicleDTORequest) error {
+	formatError := exception.NewFormatError()
+	alreadyExistsError := exception.NewAlreadyExistsError()
+	validationError := exception.NewValidationErrors()
+
+	if strings.TrimSpace(vehicleInfo.CarModel) == "" {
+		validationError.Add(vs.cfg.Constant.ErrorField.CarModel, vs.cfg.Constant.ErrorTag.Empty)
+	}
+
+	if vehicleInfo.CardFile.Size > 10*1024*1024 {
+		validationError.Add(vs.cfg.Constant.ErrorField.RegistrationCardSize, vs.cfg.Constant.ErrorTag.TooLarge)
+	}
+
+	if validationError.HasErrors() {
+		return validationError
+	}
+
+	LicensePlate, check := utils.CheckLicensePlate(vehicleInfo.LicensePlate)
+	if !check {
+		formatError.Add(vs.cfg.Constant.VehicleFields.LicensePlate, vs.cfg.Constant.ErrorTag.WrongFormat, vs.cfg.Constant.ErrorField.LicensePlate)
+	}
+
+	if formatError.HasErrors() {
+		return formatError
+	}
+
+	if vs.vehicleRepo.FindVehiclesByLicensePlate(*LicensePlate) {
+		alreadyExistsError.Add(vs.cfg.Constant.VehicleFields.LicensePlate, vs.cfg.Constant.ErrorTag.AlreadyExist, vs.cfg.Constant.ErrorField.LicensePlate)
+	}
+
+	if alreadyExistsError.HasErrors() {
+		return alreadyExistsError
+	}
+
+	registrationCardPath := vs.cfg.Constant.S3BucketPath.GenerateVehicleImagePath(vehicleInfo.CardFileName)
+	err := vs.S3Storage.UploadFile(enums.RegistrationCardPic, registrationCardPath, vehicleInfo.CardFile)
+	if err != nil {
+		return err
+	}
+
+	newVehicle := entities.Vehicle{
+		LicensePlate:        *LicensePlate,
+		CarModel:            vehicleInfo.CarModel,
+		RegistrationCardUrl: registrationCardPath,
+		UserId:              vehicleInfo.UserId,
+	}
+
+	if err := vs.vehicleRepo.Create(&newVehicle); err != nil {
+		vs.S3Storage.DeleteObject(enums.RegistrationCardPic, registrationCardPath)
+		return err
+	}
+
+	return nil
+}
+
+func (vs *VehicleService) GetVehicle(vehicleId uint, userId uint) (*vehicledto.VehicleDTOResponse, error) {
+	vehicle, err := vs.vehicleRepo.FindUserVehicle(vehicleId, userId)
+	if err != nil {
+		not_found := exception.NewNotFoundError(vs.cfg.Constant.ErrorField.Vehicle)
+		return nil, not_found
+	}
+
+	expirationTime := 15 * time.Minute
+	registrationCardUrl, errUrl := vs.S3Storage.GetPresignedURL(enums.RegistrationCardPic, vehicle.RegistrationCardUrl, expirationTime)
+	if errUrl != nil {
+		return nil, errUrl
+	}
+
+	vehicleInformation := vehicledto.VehicleDTOResponse{
+		LicensePlate:        vehicle.LicensePlate,
+		CarModel:            vehicle.CarModel,
+		RegistrationCardUrl: registrationCardUrl,
+	}
+	return &vehicleInformation, nil
+}
+
+func (vs *VehicleService) DeleteVehicle(vehicleId uint, userId uint) error {
+	vehicle, err := vs.vehicleRepo.FindUserVehicle(vehicleId, userId)
+	if err != nil {
+		not_found := exception.NewNotFoundError(vs.cfg.Constant.ErrorField.Vehicle)
+		return not_found
+	}
+
+	err = vs.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		err := rf.VehicleRepository().RemoveVehicle(vehicleId, userId)
+		if err != nil {
+			return err
+		}
+
+		err = vs.S3Storage.DeleteObject(enums.RegistrationCardPic, vehicle.RegistrationCardUrl)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func (vs *VehicleService) GetAllVehicles(userId uint) ([]vehicledto.VehicleListDTOResponse, error) {
+	vehicles, err := vs.vehicleRepo.FindAllUserVehicles(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	vehiclesList := make([]vehicledto.VehicleListDTOResponse, 0, len(vehicles))
+	for _, v := range vehicles {
+		vehiclesList = append(vehiclesList, vehicledto.VehicleListDTOResponse{
+			ID:           v.ID,
+			LicensePlate: v.LicensePlate,
+			CarModel:     v.CarModel,
+		})
+	}
+
+	return vehiclesList, nil
+}

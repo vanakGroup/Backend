@@ -6,6 +6,7 @@ const (
 	LogoPic BucketType = iota + 1
 	ParkingDoc
 	ParkingPic
+	RegistrationCardPic
 )
 
 func (bt BucketType) String() string {
@@ -16,6 +17,8 @@ func (bt BucketType) String() string {
 		return "parkingDoc"
 	case ParkingPic:
 		return "parkingPic"
+	case RegistrationCardPic:
+		return "registrationCarPic"
 	}
 	return ""
 }
@@ -25,5 +28,6 @@ func GetAllBucketTypes() []BucketType {
 		LogoPic,
 		ParkingDoc,
 		ParkingPic,
+		RegistrationCardPic,
 	}
 }
