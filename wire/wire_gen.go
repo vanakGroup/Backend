@@ -22,7 +22,9 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
+	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	"github.com/Vanak/Backend/internal/infrastructure/storage"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/vehicle"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
@@ -55,13 +57,20 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	userRepository := postgres.NewUserRepository(config, db)
 	userService := service.NewUserService(config, otpService, userCacheRepository, unitOfWork, jwtService, userRepository)
 	generalUserController := user.NewGeneralUserController(userService, config)
+	s3Storage := storage.NewS3Storage(config)
+	parkingService := service.NewParkingService(config, unitOfWork, s3Storage)
+	customerParkingController := parking.NewCustomerParkingController(config, parkingService)
+	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
+	attributeTypeSeeder := seeder.NewAttributeTypeSeeder(unitOfWork)
+	seeds := &Seeds{
+		Address:   addressSeeder,
+		Attribute: attributeTypeSeeder,
+	}
 	customerUserController := user.NewCustomerUserController(config, userService)
-	s3 := ProvideS3Config(config)
-	s3Storage := storage.NewS3Storage(s3)
 	vehicleRepository := postgres.NewVehicleRepository(config, db)
 	vehicleService := service.NewVehicleService(unitOfWork, config, s3Storage, vehicleRepository)
 	customerVehicleController := vehicle.NewVehicleCustomerController(config, vehicleService)
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerUserController, customerVehicleController)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, seeds, customerUserController, customerVehicleController)
 	return application, nil
 }
 
@@ -76,6 +85,11 @@ type Middlewares struct {
 	Recovery       *middleware.RecoveryMiddleware
 }
 
+type Seeds struct {
+	Address   *seeder.AddressSeeder
+	Attribute *seeder.AttributeTypeSeeder
+}
+
 type Application struct {
 	Database                  *Database
 	Translator                localization2.Translator
@@ -84,16 +98,14 @@ type Application struct {
 	OtpService                *service.OtpService
 	UserService               *service.UserService
 	GeneralUserController     *user.GeneralUserController
+	Seeds                     *Seeds
+	CustomerParkingController *parking.CustomerParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
 	return &config.Env.PrimaryDB
-}
-
-func ProvideS3Config(config *bootstrap.Config) *bootstrap.S3 {
-	return &config.Env.Storage
 }
 
 func ProvideConstants(cfg *bootstrap.Config) *bootstrap.Constants {
@@ -105,13 +117,15 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 	return &db
 }
 
-var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewVehicleRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, storage.NewS3Storage, wire.Bind(new(storage2.S3Storage), new(*storage.S3Storage)), wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.UserProfileRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.VehicleRepository), new(*postgres.VehicleRepository)), wire.Struct(new(Database), "*"))
+var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, postgres.NewParkingRepository, postgres.NewVehicleRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, storage.NewS3Storage, wire.Bind(new(storage2.S3Storage), new(*storage.S3Storage)), wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Bind(new(postgres2.ParkingRepository), new(*postgres.ParkingRepository)), wire.Bind(new(postgres2.UserProfileRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.VehicleRepository), new(*postgres.VehicleRepository)), wire.Struct(new(Database), "*"))
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
 
-var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, jwt.NewJwtKeyManager, service.NewVehicleService, wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)), wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)))
+var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, service.NewParkingService, jwt.NewJwtKeyManager, service.NewVehicleService, wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)), wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)))
 
-var ControllerSet = wire.NewSet(user.NewGeneralUserController, user.NewCustomerUserController, vehicle.NewVehicleCustomerController)
+var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, wire.Struct(new(Seeds), "*"))
+
+var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, user.NewCustomerUserController, vehicle.NewVehicleCustomerController)
 
 func NewApplication(
 	db *Database,
@@ -121,6 +135,8 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
+	customerParkingController *parking.CustomerParkingController,
+	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
 ) *Application {
@@ -132,6 +148,8 @@ func NewApplication(
 		OtpService:                otpService,
 		UserService:               userService,
 		GeneralUserController:     generalUserController,
+		Seeds:                     seeds,
+		CustomerParkingController: customerParkingController,
 		CustomerUserController:    customerUserController,
 		CustomerVehicleController: customerVehicleController,
 	}

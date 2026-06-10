@@ -13,8 +13,9 @@ type User struct {
 	PhoneVerified    bool `gorm:"default:false"`
 	MinInfoCompleted bool `gorm:"default:false"`
 
-	Roles    []Role  `gorm:"many2many:user_roles;constraint:OnDelete:CASCADE;"`
-	Contacts []*User `gorm:"many2many:user_contacts;constraint:OnDelete:CASCADE;"`
+	Roles    []Role    `gorm:"many2many:user_roles;constraint:OnDelete:CASCADE;"`
+	Contacts []*User   `gorm:"many2many:user_contacts;constraint:OnDelete:CASCADE;"`
+	Parkings []Parking `gorm:"foreignKey:UserID"`
 
 	Vehicles []Vehicle `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

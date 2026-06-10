@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,13 +19,19 @@ type Constants struct {
 	ProfileFilleds ProfileFilled
 	VehicleFields  VehicleField
 	S3BucketPath   BucketPath
+	ValidationTag  ValidationTag
 }
 
 type Server struct {
 	Port string
 }
 
-type BucketPath struct {
+// type BucketPath struct {
+// }
+
+type ValidationTag struct {
+	IranianPhone  string
+	IraninaPostal string
 }
 
 type ErrorTag struct {
@@ -78,7 +85,10 @@ type ErrorTag struct {
 }
 
 type ErrorField struct {
+	Attribute            string
+	Slot                 string
 	Recaptcha            string
+	Reserve              string
 	User                 string
 	Phone                string
 	Email                string
@@ -161,8 +171,15 @@ type Role struct {
 	DefaultType string
 }
 
+type BucketPath struct {
+}
+
 func NewConstant() *Constants {
 	return &Constants{
+		ValidationTag: ValidationTag{
+			IranianPhone:  "ir_phone",
+			IraninaPostal: "ir_postal",
+		},
 		Server: Server{
 			Port: "8080",
 		},
@@ -193,6 +210,8 @@ func NewConstant() *Constants {
 			OtpKey: "otp",
 		},
 		ErrorField: ErrorField{
+			Reserve:              "reserve",
+			Slot:                 "slot",
 			Recaptcha:            "recaptcha",
 			User:                 "user",
 			Phone:                "phone",
@@ -242,6 +261,7 @@ func NewConstant() *Constants {
 			CarModel:             "carModel",
 			VehicleId:            "vehiclId",
 			Vehicle:              "vehicle",
+			Attribute:            "attribute",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyRegistered:      "alreadyRegistered",
@@ -299,4 +319,12 @@ func (path *BucketPath) GenerateVehicleImagePath(originalFilename string) string
 	ext := filepath.Ext(originalFilename)
 	uniqueName := uuid.New().String()
 	return fmt.Sprintf("vehicles/%s%s", uniqueName, ext)
+}
+
+func (path *BucketPath) GetParkingDocPath(parkingID uint, fileName string) string {
+	return fmt.Sprintf("parkings/%d/document_%d_%s", parkingID, time.Now().Unix(), fileName)
+}
+
+func (path *BucketPath) GetParkingImagePath(parkingID uint, index int, fileName string) string {
+	return fmt.Sprintf("parkings/%d/images/img_%d_%d_%s", parkingID, index, time.Now().Unix(), fileName)
 }

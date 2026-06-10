@@ -21,15 +21,15 @@ type S3Storage struct {
 	buckets map[enums.BucketType]string
 }
 
-func NewS3Storage(storage *bootstrap.S3) *S3Storage {
+func NewS3Storage(cfg *bootstrap.Config) *S3Storage {
 	buckets := make(map[enums.BucketType]string)
+	storage := cfg.Env.Storage
 	buckets[enums.LogoPic] = storage.Buckets.LogoPic
 	buckets[enums.ParkingDoc] = storage.Buckets.ParkingDoc
 	buckets[enums.ParkingPic] = storage.Buckets.ParkingPic
-	buckets[enums.RegistrationCardPic] = storage.Buckets.RegistrationCardPic
 
 	return &S3Storage{
-		storage: storage,
+		storage: &storage,
 		buckets: buckets,
 	}
 }
@@ -119,18 +119,6 @@ func (s3s *S3Storage) DeleteObject(bucketType enums.BucketType, key string) erro
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
-
-	if err != nil {
-		return err
-	}
-
-	waiter := s3.NewObjectNotExistsWaiter(s3s.client)
-	err = waiter.Wait(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	},
-		time.Second*30,
-	)
 
 	if err != nil {
 		return err

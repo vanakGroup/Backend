@@ -124,155 +124,14 @@
                 }
             }
         },
-        "/profile": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieves current authenticated user's profile info. Requires Bearer Token.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "Get User Profile",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/base.SingleMessageResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/userdto.ProfileDTO"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates the user's profile information. Phone number cannot be changed here. Requires Bearer Token.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "Update Customer Profile",
-                "parameters": [
-                    {
-                        "description": "Profile update payload",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "firstname": {
-                                    "type": "string"
-                                },
-                                "lastname": {
-                                    "type": "string"
-                                },
-                                "national_code": {
-                                    "type": "string"
-                                },
-                                "shaba_number": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Profile updated successfully",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/base.MultipleMessageResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - Missing or invalid token",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/vehicle": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve a summary list of all vehicles belonging to the authenticated customer.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Customer Vehicle"
-                ],
-                "summary": "Get list of customer vehicles",
-                "responses": {
-                    "200": {
-                        "description": "Vehicles list fetched successfully",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/vehicledto.VehicleListDTOResponse"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized (missing or invalid token)",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    }
-                }
-            },
+        "/parking/crud/create": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Receive text information (license plate and car model) along with the uploaded vehicle registration card image.",
+                "description": "Create a parking space with details, document, and images",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -280,82 +139,251 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Customer Vehicle"
+                    "Customer Parking"
                 ],
-                "summary": "Register a new customer vehicle",
+                "summary": "Create a new parking",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Vehicle license plate (e.g., 12B345-67)",
-                        "name": "license_plate",
+                        "description": "Parking Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Latitude (25 to 40)",
+                        "name": "latitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude (44 to 63)",
+                        "name": "longitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Base Price (Greater than 0)",
+                        "name": "basePrice",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "City ID",
+                        "name": "address.cityId",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Car model (e.g., Peugeot Pars)",
-                        "name": "car_model",
+                        "description": "Postal Code",
+                        "name": "address.postalCode",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Unit Number",
+                        "name": "address.unitNumber",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exact Address",
+                        "name": "address.exactAddress",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "description": "Array of Attribute IDs",
+                        "name": "attributeIds",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON string of slots array",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Parking legal document file",
+                        "name": "documentFile",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "file",
-                        "description": "Physical vehicle registration card image (JPG/PNG)",
-                        "name": "registration_card",
-                        "in": "formData",
-                        "required": true
+                        "description": "Parking gallery images",
+                        "name": "images",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Successful registration message",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error (missing required fields or file)",
+                        "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized (missing or invalid token)",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error (file upload or database issue)",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
                         }
                     }
                 }
             }
         },
-        "/vehicle/{id}": {
+        "/parking/crud/update": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update parking details, location, slots, document and images",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Update an existing parking",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parking ID to update",
+                        "name": "parkingId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Parking Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Latitude",
+                        "name": "latitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude",
+                        "name": "longitude",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Base Price",
+                        "name": "basePrice",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "City ID",
+                        "name": "address.cityId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Postal Code",
+                        "name": "address.postalCode",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Unit Number",
+                        "name": "address.unitNumber",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exact Address",
+                        "name": "address.exactAddress",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "description": "Array of Attribute IDs",
+                        "name": "attributeIds",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON string of slots array",
+                        "name": "slots",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "New document file",
+                        "name": "documentFile",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "New complete package of gallery images",
+                        "name": "images",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/crud/{id}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve the details of a specific vehicle, including the presigned URL for the registration card.",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Retrieve complete parking info with relations and presigned URLs by ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Customer Vehicle"
+                    "Customer Parking"
                 ],
-                "summary": "Get customer vehicle details",
+                "summary": "Get parking details for edit form",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Vehicle ID",
+                        "description": "Parking ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -363,39 +391,15 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Vehicle details successfully retrieved",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/vehicledto.VehicleDTOResponse"
+                            "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid ID format",
+                        "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized (missing or invalid token)",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden (Vehicle does not belong to the user)",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Vehicle not found",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
                         }
                     }
                 }
@@ -406,21 +410,18 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Remove a vehicle belonging to the authenticated customer. Currently, this soft-deletes the database record and permanently removes the image from S3.",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Delete a parking by its ID checking ownership",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Customer Vehicle"
+                    "Customer Parking"
                 ],
-                "summary": "Delete customer vehicle",
+                "summary": "Delete a parking",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Vehicle ID",
+                        "description": "Parking ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -428,33 +429,73 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Vehicle successfully deleted",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid ID format",
+                        "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized (missing or invalid token)",
+                    }
+                }
+            }
+        },
+        "/parking/static/attributes": {
+            "get": {
+                "description": "Retrieve a list of all available parking attributes/features with their IDs",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static Data"
+                ],
+                "summary": "Get all parking attributes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Vehicle not found",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/staticdto.StaticItemResponse"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/static/cities": {
+            "get": {
+                "description": "Retrieve a list of all cities with their IDs for dropdowns",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static Data"
+                ],
+                "summary": "Get all cities",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/staticdto.StaticItemResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
                         }
                     }
                 }
@@ -496,60 +537,97 @@
                 }
             }
         },
-        "userdto.ProfileDTO": {
+        "parkingdto.AddressDetailResponse": {
             "type": "object",
             "properties": {
-                "first_name": {
+                "cityId": {
+                    "type": "integer"
+                },
+                "exactAddress": {
                     "type": "string"
                 },
-                "last_name": {
+                "postalCode": {
                     "type": "string"
                 },
-                "national_code": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "shaba_number": {
-                    "type": "string"
+                "unitNumber": {
+                    "type": "integer"
                 }
             }
         },
-        "vehicledto.VehicleDTOResponse": {
+        "parkingdto.ParkingDetailResponse": {
             "type": "object",
             "properties": {
-                "car_model": {
-                    "type": "string"
+                "address": {
+                    "$ref": "#/definitions/parkingdto.AddressDetailResponse"
                 },
-                "license_plate": {
-                    "type": "string"
+                "attributeIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
-                "registration_card_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "vehicledto.VehicleListDTOResponse": {
-            "type": "object",
-            "properties": {
-                "car_model": {
+                "basePrice": {
+                    "type": "integer"
+                },
+                "documentUrl": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "license_plate": {
+                "imageUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parkingdto.SlotDetailResponse"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
+        },
+        "parkingdto.SlotDetailResponse": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "hour": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isBooked": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "staticdto.StaticItemResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
         }
     }
 }

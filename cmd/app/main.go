@@ -32,6 +32,7 @@ func main() {
 	val, ok := binding.Validator.Engine().(*validator.Validate)
 	if ok {
 		val.RegisterValidation("ir_phone", validation.IranianMobileValidator, true)
+		val.RegisterValidation("ir_postal",validation.IranianPostalCodeValidator,true)
 	}
 
 	ginEngine.Use(middleware.TranslatorMiddleware(app.Translator))
@@ -40,6 +41,8 @@ func main() {
 	if app.Database.DB == nil {
 		log.Fatal("Database instance is nil")
 	}
+	app.Seeds.Address.SeedProvincesAndCities()
+	app.Seeds.Attribute.SeedAttributes()
 	swagger.RegisterSwagger(ginEngine, cfg)
 	routes.Run(ginEngine, app)
 

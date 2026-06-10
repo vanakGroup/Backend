@@ -22,35 +22,64 @@ definitions:
         example: 200
         type: integer
     type: object
-  userdto.ProfileDTO:
+  parkingdto.AddressDetailResponse:
     properties:
-      first_name:
+      cityId:
+        type: integer
+      exactAddress:
         type: string
-      last_name:
+      postalCode:
         type: string
-      national_code:
-        type: string
-      phone:
-        type: string
-      shaba_number:
-        type: string
+      unitNumber:
+        type: integer
     type: object
-  vehicledto.VehicleDTOResponse:
+  parkingdto.ParkingDetailResponse:
     properties:
-      car_model:
-        type: string
-      license_plate:
-        type: string
-      registration_card_url:
-        type: string
-    type: object
-  vehicledto.VehicleListDTOResponse:
-    properties:
-      car_model:
+      address:
+        $ref: '#/definitions/parkingdto.AddressDetailResponse'
+      attributeIds:
+        items:
+          type: integer
+        type: array
+      basePrice:
+        type: integer
+      documentUrl:
         type: string
       id:
         type: integer
-      license_plate:
+      imageUrls:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      slots:
+        items:
+          $ref: '#/definitions/parkingdto.SlotDetailResponse'
+        type: array
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  parkingdto.SlotDetailResponse:
+    properties:
+      date:
+        type: string
+      hour:
+        type: integer
+      id:
+        type: integer
+      isBooked:
+        type: boolean
+    type: object
+  staticdto.StaticItemResponse:
+    properties:
+      id:
+        type: integer
+      name:
         type: string
     type: object
 info:
@@ -136,228 +165,256 @@ paths:
       summary: Verify OTP Code
       tags:
       - Authentication
-  /profile:
-    get:
-      description: Retrieves current authenticated user's profile info. Requires Bearer
-        Token.
+  /parking/crud/{id}:
+    delete:
+      description: Delete a parking by its ID checking ownership
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/base.SingleMessageResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/userdto.ProfileDTO'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get User Profile
-      tags:
-      - Profile
-    put:
-      consumes:
-      - application/json
-      description: Updates the user's profile information. Phone number cannot be
-        changed here. Requires Bearer Token.
-      parameters:
-      - description: Profile update payload
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            firstname:
-              type: string
-            lastname:
-              type: string
-            national_code:
-              type: string
-            shaba_number:
-              type: string
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Profile updated successfully
-          schema:
             $ref: '#/definitions/base.SingleMessageResponse'
         "400":
-          description: Validation error
+          description: Bad Request
           schema:
             $ref: '#/definitions/base.MultipleMessageResponse'
-        "401":
-          description: Unauthorized - Missing or invalid token
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
       security:
       - BearerAuth: []
-      summary: Update Customer Profile
+      summary: Delete a parking
       tags:
-      - Profile
-  /vehicle:
+      - Customer Parking
     get:
-      consumes:
-      - application/json
-      description: Retrieve a summary list of all vehicles belonging to the authenticated
-        customer.
+      description: Retrieve complete parking info with relations and presigned URLs
+        by ID
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Vehicles list fetched successfully
+          description: OK
           schema:
-            items:
-              $ref: '#/definitions/vehicledto.VehicleListDTOResponse'
-            type: array
-        "401":
-          description: Unauthorized (missing or invalid token)
+            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+        "400":
+          description: Bad Request
           schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
+            $ref: '#/definitions/base.MultipleMessageResponse'
       security:
       - BearerAuth: []
-      summary: Get list of customer vehicles
+      summary: Get parking details for edit form
       tags:
-      - Customer Vehicle
+      - Customer Parking
+  /parking/crud/create:
     post:
       consumes:
       - multipart/form-data
-      description: Receive text information (license plate and car model) along with
-        the uploaded vehicle registration card image.
+      description: Create a parking space with details, document, and images
       parameters:
-      - description: Vehicle license plate (e.g., 12B345-67)
+      - description: Parking Title
         in: formData
-        name: license_plate
+        name: title
         required: true
         type: string
-      - description: Car model (e.g., Peugeot Pars)
+      - description: Latitude (25 to 40)
         in: formData
-        name: car_model
+        name: latitude
+        required: true
+        type: number
+      - description: Longitude (44 to 63)
+        in: formData
+        name: longitude
+        required: true
+        type: number
+      - description: Base Price (Greater than 0)
+        in: formData
+        name: basePrice
+        required: true
+        type: number
+      - description: City ID
+        in: formData
+        name: address.cityId
+        required: true
+        type: integer
+      - description: Postal Code
+        in: formData
+        name: address.postalCode
         required: true
         type: string
-      - description: Physical vehicle registration card image (JPG/PNG)
+      - description: Unit Number
         in: formData
-        name: registration_card
+        name: address.unitNumber
         required: true
+        type: integer
+      - description: Exact Address
+        in: formData
+        name: address.exactAddress
+        required: true
+        type: string
+      - description: Array of Attribute IDs
+        in: formData
+        name: attributeIds
+        type: array
+      - description: JSON string of slots array
+        in: formData
+        name: slots
+        type: string
+      - description: Parking legal document file
+        in: formData
+        name: documentFile
+        required: true
+        type: file
+      - description: Parking gallery images
+        in: formData
+        name: images
         type: file
       produces:
       - application/json
       responses:
-        "200":
-          description: Successful registration message
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/base.SingleMessageResponse'
         "400":
-          description: Validation error (missing required fields or file)
+          description: Bad Request
           schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "401":
-          description: Unauthorized (missing or invalid token)
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "500":
-          description: Internal server error (file upload or database issue)
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
+            $ref: '#/definitions/base.MultipleMessageResponse'
       security:
       - BearerAuth: []
-      summary: Register a new customer vehicle
+      summary: Create a new parking
       tags:
-      - Customer Vehicle
-  /vehicle/{id}:
-    delete:
+      - Customer Parking
+  /parking/crud/update:
+    put:
       consumes:
-      - application/json
-      description: Remove a vehicle belonging to the authenticated customer. Currently,
-        this soft-deletes the database record and permanently removes the image from
-        S3.
+      - multipart/form-data
+      description: Update parking details, location, slots, document and images
       parameters:
-      - description: Vehicle ID
-        in: path
-        name: id
+      - description: Parking ID to update
+        in: formData
+        name: parkingId
         required: true
         type: integer
+      - description: Parking Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Latitude
+        in: formData
+        name: latitude
+        required: true
+        type: number
+      - description: Longitude
+        in: formData
+        name: longitude
+        required: true
+        type: number
+      - description: Base Price
+        in: formData
+        name: basePrice
+        required: true
+        type: number
+      - description: City ID
+        in: formData
+        name: address.cityId
+        required: true
+        type: integer
+      - description: Postal Code
+        in: formData
+        name: address.postalCode
+        required: true
+        type: string
+      - description: Unit Number
+        in: formData
+        name: address.unitNumber
+        required: true
+        type: integer
+      - description: Exact Address
+        in: formData
+        name: address.exactAddress
+        required: true
+        type: string
+      - description: Array of Attribute IDs
+        in: formData
+        name: attributeIds
+        type: array
+      - description: JSON string of slots array
+        in: formData
+        name: slots
+        type: string
+      - description: New document file
+        in: formData
+        name: documentFile
+        required: true
+        type: file
+      - description: New complete package of gallery images
+        in: formData
+        name: images
+        type: file
       produces:
       - application/json
       responses:
-        "200":
-          description: Vehicle successfully deleted
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/base.SingleMessageResponse'
         "400":
-          description: Invalid ID format
+          description: Bad Request
           schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "401":
-          description: Unauthorized (missing or invalid token)
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "404":
-          description: Vehicle not found
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
+            $ref: '#/definitions/base.MultipleMessageResponse'
       security:
       - BearerAuth: []
-      summary: Delete customer vehicle
+      summary: Update an existing parking
       tags:
-      - Customer Vehicle
+      - Customer Parking
+  /parking/static/attributes:
     get:
-      consumes:
-      - application/json
-      description: Retrieve the details of a specific vehicle, including the presigned
-        URL for the registration card.
-      parameters:
-      - description: Vehicle ID
-        in: path
-        name: id
-        required: true
-        type: integer
+      description: Retrieve a list of all available parking attributes/features with
+        their IDs
       produces:
       - application/json
       responses:
         "200":
-          description: Vehicle details successfully retrieved
+          description: OK
           schema:
-            $ref: '#/definitions/vehicledto.VehicleDTOResponse'
-        "400":
-          description: Invalid ID format
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "401":
-          description: Unauthorized (missing or invalid token)
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "403":
-          description: Forbidden (Vehicle does not belong to the user)
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "404":
-          description: Vehicle not found
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
+            items:
+              $ref: '#/definitions/staticdto.StaticItemResponse'
+            type: array
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-      security:
-      - BearerAuth: []
-      summary: Get customer vehicle details
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get all parking attributes
       tags:
-      - Customer Vehicle
-securityDefinitions:
-  BearerAuth:
-    in: header
-    name: Authorization
-    type: apiKey
+      - Static Data
+  /parking/static/cities:
+    get:
+      description: Retrieve a list of all cities with their IDs for dropdowns
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/staticdto.StaticItemResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get all cities
+      tags:
+      - Static Data
 swagger: "2.0"

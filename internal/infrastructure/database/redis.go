@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Vanak/Backend/bootstrap"
@@ -19,8 +20,6 @@ type RedisDatabase struct {
 }
 
 func InitRedis(cfg *bootstrap.Config) RedisDatabase {
-	addr := fmt.Sprintf("%s:%s", cfg.Env.Redis.Host, cfg.Env.Redis.Port)
-	fmt.Println("🔍 Redis attempt address:", addr)
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:            fmt.Sprintf("%s:%s", cfg.Env.Redis.Host, cfg.Env.Redis.Port),
 		Password:        cfg.Env.Redis.Password,
@@ -40,9 +39,9 @@ func InitRedis(cfg *bootstrap.Config) RedisDatabase {
 func (rb *RedisDatabase) GetRedis() *redis.Client {
 	err := rb.redisClient.Ping(context.Background()).Err()
 	if err != nil {
-		fmt.Printf("❌ Redis Connection Error: %v\n", err)
+		log.Printf("❌ Redis Connection Error: %v\n", err)
 	} else {
-		fmt.Println("✅ Redis is alive and connected!")
+		log.Println("✅ Redis is alive and connected!")
 	}
 	return rb.redisClient
 }
