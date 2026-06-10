@@ -1,0 +1,56 @@
+package parkingdto
+
+import "time"
+
+type CreateParkingResponse struct {
+	ID           uint      `json:"id"`
+	Title        string    `json:"title"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"createdAt"`
+	AddressID    uint      `json:"addressId"`
+	AttributeIDs []uint    `json:"attributeIds,omitempty"`
+	SlotCount    int       `json:"slotCount"`
+
+	DocumentURL string   `json:"documentUrl"`
+	ImageURLs   []string `json:"imageUrls,omitempty"`
+}
+
+type ParkingResponse struct {
+	ID           uint     `json:"id"`
+	Title        string   `json:"title"`
+	Latitude     float64  `json:"latitude"`
+	Longitude    float64  `json:"longitude"`
+	BasePrice    uint     `json:"basePrice"`
+	DocumentURL  string   `json:"documentUrl,omitempty"`
+	ImageURLs    []string `json:"imageUrls,omitempty"`
+	PostalCode   string   `json:"postalCode"`
+	ExactAddress string   `json:"exactAddress"`
+}
+
+type ParkingDetailResponse struct {
+	ID           uint                  `json:"id"`
+	Title        string                `json:"title"`
+	Latitude     float64               `json:"latitude"`
+	Longitude    float64               `json:"longitude"`
+	BasePrice    uint                  `json:"basePrice"`
+	Status       string                `json:"status"`
+	DocumentURL  string                `json:"documentUrl"`
+	ImageURLs    []string              `json:"imageUrls"`
+	Address      AddressDetailResponse `json:"address"`
+	Slots        []SlotDetailResponse  `json:"slots"`
+	AttributeIDs []uint                `json:"attributeIds"`
+}
+
+type AddressDetailResponse struct {
+	CityID       uint   `json:"cityId"`
+	PostalCode   string `json:"postalCode"`
+	UnitNumber   uint   `json:"unitNumber"`
+	ExactAddress string `json:"exactAddress"`
+}
+
+type SlotDetailResponse struct {
+	ID       uint      `json:"id"`
+	Date     time.Time `json:"date"`
+	Hour     uint      `json:"hour"`
+	IsBooked bool      `json:"isBooked"`
+}

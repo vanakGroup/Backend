@@ -47,6 +47,10 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleUnauthorizedError(ctx, *AppErrors, rm.constants.Context.Translator)
 	} else if NotFoundError, ok := err.(*exception.NotFoundError); ok {
 		handleNotFoundError(ctx, *NotFoundError, rm.constants.Context.Translator)
+	} else if DuplicateError, ok := err.(*exception.DuplicateError); ok {
+		handleDuplicateError(ctx, *DuplicateError, rm.constants.Context.Translator)
+	} else if ConflictError, ok := err.(*exception.ConflictError); ok {
+		handleConflictError(ctx, *ConflictError, rm.constants.Context.Translator)
 	} else if AlreadyExistsError, ok := err.(*exception.AlreadyExistsError); ok {
 		handleAlreadyExistsError(ctx, *AlreadyExistsError, rm.constants.Context.Translator)
 	} else if FormatError, ok := err.(*exception.FormatError); ok {
@@ -54,6 +58,22 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 	} else {
 		handleDefaultError(ctx, err)
 	}
+}
+
+func handleConflictError(ctx *gin.Context, conflictError exception.ConflictError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	itemName, _ := trans.Translate(conflictError.Item)
+	message, _ := trans.Translate("errors.conflict", itemName)
+
+	base.Response(ctx, 409, message, nil)
+}
+
+func handleDuplicateError(ctx *gin.Context, duplicateError exception.DuplicateError, transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	itemName, _ := trans.Translate(duplicateError.Item)
+	message, _ := trans.Translate("errors.duplicate", itemName)
+
+	base.Response(ctx, 409, message, nil)
 }
 
 func handleNotFoundError(ctx *gin.Context, notFoundError exception.NotFoundError, transKey string) {

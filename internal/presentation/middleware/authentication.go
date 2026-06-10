@@ -53,7 +53,6 @@ func (authMiddleware *AuthMiddleware) AuthMiddleware() gin.HandlerFunc {
 		}
 
 		ctx.Set(authMiddleware.cfg.Constant.Context.UserID, uint(claims["userID"].(float64)))
-
 		ctx.Next()
 	}
 }

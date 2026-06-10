@@ -1,5 +1,0 @@
-{"level":"info","ts":"2026-05-18T14:47:03.091+0330","caller":"service/user_service_impl.go:57","msg":"otp generated and send","Category":"Auth","SubCategory":"Otp","phone":"09966304410","otp":"398868"}
-{"level":"info","ts":"2026-05-19T01:44:11.847+0330","caller":"service/user_service_impl.go:57","msg":"otp generated and send","SubCategory":"Otp","phone":"09126304410","otp":"643579","Category":"Auth"}
-{"level":"info","ts":"2026-05-19T01:55:04.872+0330","caller":"service/user_service_impl.go:57","msg":"otp generated and send","otp":"346861","Category":"Auth","SubCategory":"Otp","phone":"09966304410"}
-{"level":"info","ts":"2026-05-19T13:23:10.039+0330","caller":"service/user_service_impl.go:57","msg":"otp generated and send","SubCategory":"Otp","phone":"09966304410","otp":"285100","Category":"Auth"}
-{"level":"info","ts":"2026-05-19T13:23:51.501+0330","caller":"service/user_service_impl.go:57","msg":"otp generated and send","phone":"09966304420","otp":"115993","Category":"Auth","SubCategory":"Otp"}

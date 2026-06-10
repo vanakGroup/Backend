@@ -19,7 +19,9 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
 	postgresRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 	redisRepo "github.com/Vanak/Backend/internal/infrastructure/persistance/repository/redis"
+	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	storage "github.com/Vanak/Backend/internal/infrastructure/storage"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/vehicle"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
@@ -36,6 +38,11 @@ type Middlewares struct {
 	Recovery       *middleware.RecoveryMiddleware
 }
 
+type Seeds struct {
+	Address   *seeder.AddressSeeder
+	Attribute *seeder.AttributeTypeSeeder
+}
+
 type Application struct {
 	Database                  *Database
 	Translator                domainLocalization.Translator
@@ -44,6 +51,8 @@ type Application struct {
 	OtpService                *service.OtpService
 	UserService               *service.UserService
 	GeneralUserController     *user.GeneralUserController
+	Seeds                     *Seeds
+	CustomerParkingController *parking.CustomerParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
 }
@@ -52,9 +61,9 @@ func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
 	return &config.Env.PrimaryDB
 }
 
-func ProvideS3Config(config *bootstrap.Config) *bootstrap.S3 {
-	return &config.Env.Storage
-}
+// func ProvideS3Config(config *bootstrap.Config) *bootstrap.S3 {
+// 	return &config.Env.Storage
+// }
 
 func ProvideConstants(cfg *bootstrap.Config) *bootstrap.Constants {
 	return cfg.Constant
@@ -70,6 +79,8 @@ var DatabaseProviderSet = wire.NewSet(
 	ProvideRedisCache,
 	redisRepo.NewUserCacheRepository,
 	postgresRepo.NewUserRepository,
+	postgresRepo.NewAddressRepository,
+	postgresRepo.NewParkingRepository,
 	postgresRepo.NewVehicleRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
@@ -79,6 +90,8 @@ var DatabaseProviderSet = wire.NewSet(
 	wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)),
 	wire.Bind(new(redisDomain.UserCacheRepository), new(*redisRepo.UserCacheRepository)),
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
+	wire.Bind(new(postgresDomain.AddressRepository), new(*postgresRepo.AddressRepository)),
+	wire.Bind(new(postgresDomain.ParkingRepository), new(*postgresRepo.ParkingRepository)),
 	wire.Bind(new(postgresDomain.UserProfileRepository), new(*postgresRepo.UserRepository)),
 	wire.Bind(new(postgresDomain.VehicleRepository), new(*postgresRepo.VehicleRepository)),
 	wire.Struct(new(Database), "*"),
@@ -95,19 +108,28 @@ var ServiceSet = wire.NewSet(
 	service.NewOtpService,
 	service.NewUserService,
 	service.NewJwtService,
+	service.NewParkingService,
 	jwt.NewJwtKeyManager,
 	service.NewVehicleService,
+	wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)),
+	wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)),
 	wire.Bind(new(domainLocalization.Translator), new(*localization.TranslationService)),
 	wire.Bind(new(jwtDomain.KeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.OtpService), new(*service.OtpService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
-	wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)),
-	wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)),
+	wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)),
+)
+
+var SeederSet = wire.NewSet(
+	seeder.NewAddressSeeder,
+	seeder.NewAttributeTypeSeeder,
+	wire.Struct(new(Seeds), "*"),
 )
 
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
+	parking.NewCustomerParkingController,
 	user.NewCustomerUserController,
 	vehicle.NewVehicleCustomerController,
 )
@@ -120,6 +142,8 @@ func NewApplication(
 	otpService *service.OtpService,
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
+	customerParkingController *parking.CustomerParkingController,
+	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
 ) *Application {
@@ -131,6 +155,8 @@ func NewApplication(
 		OtpService:                otpService,
 		UserService:               userService,
 		GeneralUserController:     generalUserController,
+		Seeds:                     seeds,
+		CustomerParkingController: customerParkingController,
 		CustomerUserController:    customerUserController,
 		CustomerVehicleController: customerVehicleController,
 	}
@@ -142,10 +168,11 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		MiddlewareSet,
 		ServiceSet,
 		ProvideDBConfig,
-		ProvideS3Config,
+		// ProvideS3Config,
 		ProvideConstants,
 		NewApplication,
 		ControllerSet,
+		SeederSet,
 	)
 	return nil, nil
 }
