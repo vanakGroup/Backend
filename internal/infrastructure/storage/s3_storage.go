@@ -124,18 +124,6 @@ func (s3s *S3Storage) DeleteObject(bucketType enums.BucketType, key string) erro
 		return err
 	}
 
-	waiter := s3.NewObjectNotExistsWaiter(s3s.client)
-	err = waiter.Wait(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	},
-		time.Second*30,
-	)
-
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

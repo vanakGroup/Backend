@@ -3,16 +3,16 @@ package parkingdto
 import "time"
 
 type CreateParkingResponse struct {
-	ID           uint      `json:"id" example:"1"`
-	Title        string    `json:"title" example:"پارکینگ طبقاتی ونک"`
-	Status       string    `json:"status" example:"Active"`
-	CreatedAt    time.Time `json:"createdAt" example:"2026-06-04T00:00:00Z"`
-	AddressID    uint      `json:"addressId" example:"12"`
-	AttributeIDs []uint    `json:"attributeIds,omitempty" example:"[1,2,3]"`
-	SlotCount    int       `json:"slotCount" example:"24"`
+	ID           uint      `json:"id"`
+	Title        string    `json:"title"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"createdAt"`
+	AddressID    uint      `json:"addressId"`
+	AttributeIDs []uint    `json:"attributeIds,omitempty"`
+	SlotCount    int       `json:"slotCount"`
 
-	DocumentURL string   `json:"documentUrl" example:"https://s3.ir-thr-at1.arvanstorage.ir/vanak/parkings/1/document.pdf"`
-	ImageURLs   []string `json:"imageUrls,omitempty" example:"[\"https://s3.ir-thr-at1.arvanstorage.ir/vanak/parkings/1/images/image_0.jpg\",\"https://s3.ir-thr-at1.arvanstorage.ir/vanak/parkings/1/images/image_1.jpg\"]"`
+	DocumentURL string   `json:"documentUrl"`
+	ImageURLs   []string `json:"imageUrls,omitempty"`
 }
 
 type ParkingResponse struct {

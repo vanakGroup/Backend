@@ -3,6 +3,7 @@ package validation
 import (
 	"reflect"
 
+	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/exception"
 
 	"github.com/go-playground/validator/v10"
@@ -11,8 +12,8 @@ import (
 var Val = validator.New()
 
 func init() {
-	Val.RegisterValidation("ir_phone", IranianMobileValidator, true)
-	Val.RegisterValidation("ir_postal", IranianPostalCodeValidator, true)
+	Val.RegisterValidation(bootstrap.NewConstant().ValidationTag.IranianPhone, IranianMobileValidator, true)
+	Val.RegisterValidation(bootstrap.NewConstant().ValidationTag.IraninaPostal, IranianPostalCodeValidator, true)
 }
 
 func ValidatedField[T any](params T) {

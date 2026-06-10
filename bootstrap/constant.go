@@ -6,18 +6,24 @@ import (
 )
 
 type Constants struct {
-	Context      Context
-	Role         Role
-	RedisKey     RedisKey
-	ErrorTag     ErrorTag
-	ErrorField   ErrorField
-	JWTKeysPath  JWTKeysPath
-	Server       Server
-	S3BucketPath BucketPath
+	Context       Context
+	Role          Role
+	RedisKey      RedisKey
+	ErrorTag      ErrorTag
+	ErrorField    ErrorField
+	JWTKeysPath   JWTKeysPath
+	Server        Server
+	S3BucketPath  BucketPath
+	ValidationTag ValidationTag
 }
 
 type Server struct {
 	Port string
+}
+
+type ValidationTag struct {
+	IranianPhone  string
+	IraninaPostal string
 }
 
 type ErrorTag struct {
@@ -136,6 +142,10 @@ type BucketPath struct {
 
 func NewConstant() *Constants {
 	return &Constants{
+		ValidationTag: ValidationTag{
+			IranianPhone:  "ir_phone",
+			IraninaPostal: "ir_postal",
+		},
 		Server: Server{
 			Port: "8080",
 		},

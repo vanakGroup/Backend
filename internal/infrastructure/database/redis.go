@@ -1,7 +1,9 @@
 package database
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Vanak/Backend/bootstrap"
@@ -35,6 +37,12 @@ func InitRedis(cfg *bootstrap.Config) RedisDatabase {
 }
 
 func (rb *RedisDatabase) GetRedis() *redis.Client {
+	err := rb.redisClient.Ping(context.Background()).Err()
+	if err != nil {
+		log.Printf("❌ Redis Connection Error: %v\n", err)
+	} else {
+		log.Println("✅ Redis is alive and connected!")
+	}
 	return rb.redisClient
 }
 

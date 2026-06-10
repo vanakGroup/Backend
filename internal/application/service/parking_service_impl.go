@@ -176,7 +176,7 @@ func (ps *ParkingService) createFirstSlotsForParking(id uint, slotRequests []par
 		for hour := slot.StartHour; hour < slot.EndHour; hour++ {
 			key := fmt.Sprintf("%s:%d", slot.Date.Format("2006-01-02"), hour)
 			if existingMap[key] {
-				return nil, &exception.DuplicateError{Item: ps.cfg.Constant.ErrorField.Slot}
+				continue
 			}
 			existingMap[key] = true
 
@@ -210,25 +210,34 @@ func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
 		}
 	}
 
-	if parking.DocumentURL != "" {
+	err = ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		err = rf.ParkingRepository().Delete(parking)
+
+		if err != nil {
+			return err
+		}
+
 		err := ps.s3Storage.DeleteObject(enums.ParkingDoc, parking.DocumentURL)
 		if err != nil {
 			return err
 		}
-	}
 
-	if len(parking.Images) > 0 {
-		for _, img := range parking.Images {
-			if img.ImageURL != "" {
-				err := ps.s3Storage.DeleteObject(enums.ParkingPic, img.ImageURL)
-				if err != nil {
-					return err
+		if len(parking.Images) > 0 {
+			for _, img := range parking.Images {
+				if img.ImageURL != "" {
+					err := ps.s3Storage.DeleteObject(enums.ParkingPic, img.ImageURL)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
-	}
 
-	return ps.unitOfWork.Factory().ParkingRepository().Delete(parking)
+		return nil
+
+	})
+
+	return err
 }
 
 func (ps *ParkingService) UpdateParking(userID uint, parkingInfo parkingdto.UpdateParkingRequest) error {
