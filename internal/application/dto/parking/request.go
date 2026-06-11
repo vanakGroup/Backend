@@ -28,7 +28,7 @@ type SlotRequest struct {
 }
 
 type UpdateParkingRequest struct {
-	ParkingID uint
+	ParkingID string
 	Title     string
 	Latitude  float64
 	Longitude float64

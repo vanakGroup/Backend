@@ -22,4 +22,5 @@ type ParkingRepository interface {
 	GetDetailByIDAndUserID(parkingID uint, userID uint) (*entities.Parking, error)
 	GetAllAttributes() ([]entities.ParkingAttribute, error)
 	GetParkingByIDAndUserID(userID uint, parkingID uint) (*entities.Parking, error)
+	GetAllByUserID(userID uint) ([]*entities.Parking, error)
 }

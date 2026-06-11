@@ -28,7 +28,7 @@ type ParkingResponse struct {
 }
 
 type ParkingDetailResponse struct {
-	ID           uint                  `json:"id"`
+	ID           string                `json:"id"`
 	Title        string                `json:"title"`
 	Latitude     float64               `json:"latitude"`
 	Longitude    float64               `json:"longitude"`
@@ -60,6 +60,16 @@ type ParkingInfoResponse struct {
 	Title        string                `json:"title"`
 	Latitude     float64               `json:"latitude"`
 	Longitude    float64               `json:"longitude"`
+	BasePrice    float64               `json:"base_price"`
+	Status       string                `json:"status"`
+	Address      AddressDetailResponse `json:"address"`
+	AttributeIDs []uint                `json:"attribute_ids"`
+	ImageURLs    []string              `json:"image_urls"`
+}
+
+type ParkingForListResponse struct {
+	ID           string                `json:"id"`
+	Title        string                `json:"title"`
 	BasePrice    float64               `json:"base_price"`
 	Status       string                `json:"status"`
 	Address      AddressDetailResponse `json:"address"`

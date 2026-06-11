@@ -1,6 +1,9 @@
 package localization
 
 var English = map[string]interface{}{
+	"userID":               "user id",
+	"hashed":               "hashed",
+	"badRequestError":      "bad request error",
 	"parking":              "parking",
 	"firstName":            "first name",
 	"lastName":             "last name",
@@ -116,6 +119,7 @@ var English = map[string]interface{}{
 		"wrongFormat":            "the format of {0} is wrong.",
 		"tooLarge":               "the {0} is too large.",
 		"empty":                  "the {0} can't be empty",
+		"badRequestError":        "the {0} is bad Request.",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":               "Registration Successful! Please check your messages to verify your account and complete the registration process.",
@@ -216,6 +220,7 @@ var English = map[string]interface{}{
 		"deleteVehicle":              "Vehicle deleted successfully.",
 		"getVehiclesList":            "Vehicle list fetched successfully.",
 		"getParkingInfo":             "Get the Parking Info is successfully.",
+		"getUserParkings":            "Get The User Parkings is successfully.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",

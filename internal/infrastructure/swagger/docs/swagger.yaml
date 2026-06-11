@@ -46,7 +46,7 @@ definitions:
       documentUrl:
         type: string
       id:
-        type: integer
+        type: string
       imageUrls:
         items:
           type: string
@@ -196,6 +196,25 @@ paths:
       summary: Verify OTP Code
       tags:
       - Authentication
+  /parking:
+    get:
+      description: Retrieve complete User parkings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get User parkings
+      tags:
+      - Customer Parking
   /parking/crud/create:
     post:
       consumes:
@@ -408,6 +427,31 @@ paths:
       security:
       - BearerAuth: []
       summary: Update an existing parking
+      tags:
+      - Customer Parking
+  /parking/parkingInfo/{id}:
+    get:
+      description: Retrieve complete parking info
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get parking Info
       tags:
       - Customer Parking
   /parking/static/attributes:

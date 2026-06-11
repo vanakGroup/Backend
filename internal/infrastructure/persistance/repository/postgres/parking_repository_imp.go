@@ -225,3 +225,20 @@ func (pr *ParkingRepository) GetParkingByIDAndUserID(userID uint, parkingID uint
 
 	return &parking, nil
 }
+
+func (pr *ParkingRepository) GetAllByUserID(userID uint) ([]*entities.Parking, error) {
+	var parkings []*entities.Parking
+
+	err := pr.db.Preload("Address").
+		Preload("Images").
+		Preload("Attributes").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&parkings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return parkings, nil
+}

@@ -11,7 +11,7 @@ type HashID struct {
 	encoder *hashids.HashID
 }
 
-func NewHashID(cfg bootstrap.Config) *HashID {
+func NewHashID(cfg *bootstrap.Config) *HashID {
 	hd := hashids.NewData()
 	hd.Salt = cfg.Env.Hashed.Salt
 	hd.MinLength = cfg.Env.Hashed.MinLength
@@ -35,7 +35,7 @@ func (h *HashID) Encode(id uint) (string, error) {
 func (h *HashID) Decode(hash string) (uint, error) {
 	ids, err := h.encoder.DecodeWithError(hash)
 	if err != nil {
-		return 0, fmt.Errorf("invalid hash: %w", err)
+		return 0, err
 	}
 
 	if len(ids) == 0 {
