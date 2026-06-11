@@ -1,6 +1,7 @@
 package localization
 
 var Persian = map[string]interface{}{
+	"parking":              "پارکینگ",
 	"firstName":            "نام",
 	"lastName":             "نام خانوادگی",
 	"phone":                "شماره تماس",
@@ -214,6 +215,7 @@ var Persian = map[string]interface{}{
 		"getVehicle":                "اطلاعات ماشین با موفقیت دریافت شد.",
 		"deleteVehicle":             "ماشین با موفقیت حذف شد.",
 		"getVehiclesList":           "لیست وسایل نقلیه با موفقیت دریافت شد.",
+		"getParkingInfo":            "دریافت اطلاعات پارکینگ با موفقیت بود.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",

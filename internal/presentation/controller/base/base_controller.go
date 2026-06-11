@@ -1,6 +1,8 @@
 package base
 
 import (
+	"github.com/Vanak/Backend/bootstrap"
+	"github.com/Vanak/Backend/internal/domain/exception"
 	"github.com/Vanak/Backend/internal/domain/localization"
 
 	"github.com/gin-gonic/gin"
@@ -25,4 +27,13 @@ func GetLocalizedTemplateFile(ctx *gin.Context, key, persianTemplateFile, englis
 	default:
 		return persianTemplateFile
 	}
+}
+
+func GetID(ctx *gin.Context) uint {
+	id, ok := ctx.Get(bootstrap.Run().Constant.Context.UserID)
+	if !ok {
+		panic(exception.NewNotFoundError(bootstrap.Run().Constant.ErrorField.User))
+	}
+	ID, _ := id.(uint)
+	return ID
 }

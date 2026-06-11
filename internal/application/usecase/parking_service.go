@@ -12,4 +12,5 @@ type ParkingService interface {
 	UpdateParking(userID uint, parkingInfo parkingdto.UpdateParkingRequest) error
 	GetCitiesList() ([]staticdto.StaticItemResponse, error)
 	GetAttributesList() ([]staticdto.StaticItemResponse, error)
+	GetParkingByIDAndUserID(req parkingdto.GetParkingByIDAndUserIDRequest) (*parkingdto.ParkingInfoResponse, error)
 }

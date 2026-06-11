@@ -29,15 +29,20 @@ type SlotRequest struct {
 
 type UpdateParkingRequest struct {
 	ParkingID uint
-	Title     string                          
-	Latitude  float64                         
-	Longitude float64                         
-	BasePrice float64                         
-	Address   addressdto.UpdateAddressRequest 
+	Title     string
+	Latitude  float64
+	Longitude float64
+	BasePrice float64
+	Address   addressdto.UpdateAddressRequest
 
 	AttributeIDs []uint
-	Slots        []SlotRequest 
+	Slots        []SlotRequest
 
-	DocumentFile *multipart.FileHeader   
-	Images       []*multipart.FileHeader 
+	DocumentFile *multipart.FileHeader
+	Images       []*multipart.FileHeader
+}
+
+type GetParkingByIDAndUserIDRequest struct {
+	UserID          uint
+	ParkingIDHashed string
 }

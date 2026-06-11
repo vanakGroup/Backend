@@ -1,6 +1,7 @@
 package localization
 
 var English = map[string]interface{}{
+	"parking":              "parking",
 	"firstName":            "first name",
 	"lastName":             "last name",
 	"phone":                "phone",
@@ -214,6 +215,7 @@ var English = map[string]interface{}{
 		"getVehicle":                 "Vehicle fetched successfully.",
 		"deleteVehicle":              "Vehicle deleted successfully.",
 		"getVehiclesList":            "Vehicle list fetched successfully.",
+		"getParkingInfo":             "Get the Parking Info is successfully.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",

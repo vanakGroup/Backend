@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"github.com/Vanak/Backend/internal/domain/logging"
 	"github.com/Vanak/Backend/internal/domain/ports"
 	"github.com/Vanak/Backend/internal/domain/storage"
+	"github.com/Vanak/Backend/internal/infrastructure/hashed"
+	"gorm.io/gorm"
 )
 
 type ParkingService struct {
@@ -20,9 +23,10 @@ type ParkingService struct {
 	cfg        *bootstrap.Config
 	logger     logging.Logger
 	s3Storage  storage.S3Storage
+	hashID     *hashed.HashID
 }
 
-func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Storage storage.S3Storage) *ParkingService {
+func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Storage storage.S3Storage, hashedID *hashed.HashID) *ParkingService {
 	logger := logging.NewLogger(cfg)
 
 	return &ParkingService{
@@ -30,6 +34,7 @@ func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Sto
 		cfg:        cfg,
 		unitOfWork: unitOfWork,
 		s3Storage:  s3Storage,
+		hashID:     hashedID,
 	}
 }
 
@@ -455,6 +460,54 @@ func (ps *ParkingService) GetParkingDetail(userID uint, parkingID uint) (*parkin
 		AttributeIDs: attributeIDs,
 	}
 
+	return response, nil
+}
+
+func (ps *ParkingService) GetParkingByIDAndUserID(req parkingdto.GetParkingByIDAndUserIDRequest) (*parkingdto.ParkingInfoResponse, error) {
+	parkingID, err := ps.hashID.Decode(req.ParkingIDHashed)
+	if err != nil {
+		return nil, err
+	}
+
+	parking, err := ps.unitOfWork.Factory().ParkingRepository().GetParkingByIDAndUserID(req.UserID, parkingID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, exception.NewNotFoundError(ps.cfg.Constant.ErrorField.Parking)
+		}
+		return nil, err
+	}
+
+	var imageUrls []string
+	for _, img := range parking.Images {
+		if img.ImageURL != "" {
+			url, err := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
+			if err == nil {
+				imageUrls = append(imageUrls, url)
+			}
+		}
+	}
+
+	var attributeIDs []uint
+	for _, attr := range parking.Attributes {
+		attributeIDs = append(attributeIDs, attr.ID)
+	}
+
+	response := &parkingdto.ParkingInfoResponse{
+		ID:        req.ParkingIDHashed,
+		Title:     parking.Title,
+		Longitude: parking.Longitude,
+		Latitude:  parking.Latitude,
+		BasePrice: parking.BasePrice,
+		Status:    parking.Status.String(),
+		Address: parkingdto.AddressDetailResponse{
+			CityID:       parking.Address.CityID,
+			PostalCode:   parking.Address.PostalCode,
+			UnitNumber:   parking.Address.UnitNumber,
+			ExactAddress: parking.Address.ExactAddress,
+		},
+		AttributeIDs: attributeIDs,
+		ImageURLs:    imageUrls,
+	}
 	return response, nil
 }
 

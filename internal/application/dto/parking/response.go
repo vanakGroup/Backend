@@ -54,3 +54,15 @@ type SlotDetailResponse struct {
 	Hour     uint      `json:"hour"`
 	IsBooked bool      `json:"isBooked"`
 }
+
+type ParkingInfoResponse struct {
+	ID           string                `json:"id"`
+	Title        string                `json:"title"`
+	Latitude     float64               `json:"latitude"`
+	Longitude    float64               `json:"longitude"`
+	BasePrice    float64               `json:"base_price"`
+	Status       string                `json:"status"`
+	Address      AddressDetailResponse `json:"address"`
+	AttributeIDs []uint                `json:"attribute_ids"`
+	ImageURLs    []string              `json:"image_urls"`
+}

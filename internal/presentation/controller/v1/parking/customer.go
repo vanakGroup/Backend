@@ -80,7 +80,7 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 		panic(NewBindingError)
 	}
 
-	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
+	userID := base.GetID(ctx)
 	fmt.Println("the User id : ", userID)
 	parkingInfo := parkingdto.CreateParkingRequest{
 		Title:     params.Title,
@@ -99,7 +99,7 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 		Images:       params.Images,
 	}
 
-	response, err := cpc.parkingService.CreateParking(userID.(uint), parkingInfo)
+	response, err := cpc.parkingService.CreateParking(userID, parkingInfo)
 	if err != nil {
 		panic(err)
 	}
@@ -160,7 +160,7 @@ func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 		panic(NewBindingError)
 	}
 
-	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
+	userID := base.GetID(ctx)
 
 	updateParkingInfo := parkingdto.UpdateParkingRequest{
 		ParkingID: params.ParkingID,
@@ -180,7 +180,7 @@ func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 		Images:       params.Images,
 	}
 
-	err = cpc.parkingService.UpdateParking(userID.(uint), updateParkingInfo)
+	err = cpc.parkingService.UpdateParking(userID, updateParkingInfo)
 	if err != nil {
 		panic(err)
 	}
@@ -208,9 +208,9 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 		panic(NewBindingError)
 	}
 
-	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
+	userID := base.GetID(ctx)
 
-	err = cpc.parkingService.DeleteParking(userID.(uint), uint(parkingID))
+	err = cpc.parkingService.DeleteParking(userID, uint(parkingID))
 	if err != nil {
 		panic(err)
 	}
@@ -238,9 +238,9 @@ func (cpc *CustomerParkingController) GetParkingDetail(ctx *gin.Context) {
 		panic(NewBindingError)
 	}
 
-	userID, _ := ctx.Get(cpc.cfg.Constant.Context.UserID)
+	userID := base.GetID(ctx)
 
-	parking, err := cpc.parkingService.GetParkingDetail(userID.(uint), uint(parkingID))
+	parking, err := cpc.parkingService.GetParkingDetail(userID, uint(parkingID))
 	if err != nil {
 		panic(err)
 	}
@@ -299,4 +299,28 @@ func (cpc *CustomerParkingController) GetAttributes(ctx *gin.Context) {
 	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
 	message, _ := trans.Translate("successMessage.getAttributes")
 	base.Response(ctx, http.StatusOK, message, attributes)
+}
+
+func (cpc *CustomerParkingController) GetParkingInfo(ctx *gin.Context) {
+	type GetParkingInfoParam struct {
+		IDHashed string `uri:"id" validate:"required,min=1"`
+	}
+
+	params := base.Validated[GetParkingInfoParam](ctx)
+	userID := base.GetID(ctx)
+
+	req := parkingdto.GetParkingByIDAndUserIDRequest{
+		UserID:          userID,
+		ParkingIDHashed: params.IDHashed,
+	}
+
+	res, err := cpc.parkingService.GetParkingByIDAndUserID(req)
+
+	if err != nil {
+		panic(err)
+	}
+
+	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.getParkingInfo")
+	base.Response(ctx, http.StatusOK, message, res)
 }
