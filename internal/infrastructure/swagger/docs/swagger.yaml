@@ -82,6 +82,37 @@ definitions:
       name:
         type: string
     type: object
+  userdto.ProfileDTO:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      national_code:
+        type: string
+      phone:
+        type: string
+      shaba_number:
+        type: string
+    type: object
+  vehicledto.VehicleDTOResponse:
+    properties:
+      car_model:
+        type: string
+      license_plate:
+        type: string
+      registration_card_url:
+        type: string
+    type: object
+  vehicledto.VehicleListDTOResponse:
+    properties:
+      car_model:
+        type: string
+      id:
+        type: integer
+      license_plate:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -417,4 +448,228 @@ paths:
       summary: Get all cities
       tags:
       - Static Data
+  /profile:
+    get:
+      description: Retrieves current authenticated user's profile info. Requires Bearer
+        Token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/base.SingleMessageResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/userdto.ProfileDTO'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get User Profile
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      description: Updates the user's profile information. Phone number cannot be
+        changed here. Requires Bearer Token.
+      parameters:
+      - description: Profile update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            firstname:
+              type: string
+            lastname:
+              type: string
+            national_code:
+              type: string
+            shaba_number:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile updated successfully
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+        "401":
+          description: Unauthorized - Missing or invalid token
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Customer Profile
+      tags:
+      - Profile
+  /vehicle:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a summary list of all vehicles belonging to the authenticated
+        customer.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vehicles list fetched successfully
+          schema:
+            items:
+              $ref: '#/definitions/vehicledto.VehicleListDTOResponse'
+            type: array
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get list of customer vehicles
+      tags:
+      - Customer Vehicle
+    post:
+      consumes:
+      - multipart/form-data
+      description: Receive text information (license plate and car model) along with
+        the uploaded vehicle registration card image.
+      parameters:
+      - description: Vehicle license plate (e.g., 12B345-67)
+        in: formData
+        name: license_plate
+        required: true
+        type: string
+      - description: Car model (e.g., Peugeot Pars)
+        in: formData
+        name: car_model
+        required: true
+        type: string
+      - description: Physical vehicle registration card image (JPG/PNG)
+        in: formData
+        name: registration_card
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful registration message
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Validation error (missing required fields or file)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error (file upload or database issue)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Register a new customer vehicle
+      tags:
+      - Customer Vehicle
+  /vehicle/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a vehicle belonging to the authenticated customer. Currently,
+        this soft-deletes the database record and permanently removes the image from
+        S3.
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vehicle successfully deleted
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "404":
+          description: Vehicle not found
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete customer vehicle
+      tags:
+      - Customer Vehicle
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the details of a specific vehicle, including the presigned
+        URL for the registration card.
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vehicle details successfully retrieved
+          schema:
+            $ref: '#/definitions/vehicledto.VehicleDTOResponse'
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "403":
+          description: Forbidden (Vehicle does not belong to the user)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "404":
+          description: Vehicle not found
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get customer vehicle details
+      tags:
+      - Customer Vehicle
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
