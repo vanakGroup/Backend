@@ -14,6 +14,7 @@ import (
 	redisDomain "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 	storageDomain "github.com/Vanak/Backend/internal/domain/storage"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
+	"github.com/Vanak/Backend/internal/infrastructure/hashed"
 	"github.com/Vanak/Backend/internal/infrastructure/jwt"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
@@ -55,6 +56,7 @@ type Application struct {
 	CustomerParkingController *parking.CustomerParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
+	HashID                    *hashed.HashID
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -127,6 +129,10 @@ var SeederSet = wire.NewSet(
 	wire.Struct(new(Seeds), "*"),
 )
 
+var HashIDSet = wire.NewSet(
+	hashed.NewHashID,
+)
+
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
 	parking.NewCustomerParkingController,
@@ -146,6 +152,7 @@ func NewApplication(
 	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
+	hashID *hashed.HashID,
 ) *Application {
 	return &Application{
 		Database:                  db,
@@ -159,6 +166,7 @@ func NewApplication(
 		CustomerParkingController: customerParkingController,
 		CustomerUserController:    customerUserController,
 		CustomerVehicleController: customerVehicleController,
+		HashID:                    hashID,
 	}
 }
 
@@ -173,6 +181,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 		NewApplication,
 		ControllerSet,
 		SeederSet,
+		HashIDSet,
 	)
 	return nil, nil
 }

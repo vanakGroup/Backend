@@ -55,9 +55,19 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleAlreadyExistsError(ctx, *AlreadyExistsError, rm.constants.Context.Translator)
 	} else if FormatError, ok := err.(*exception.FormatError); ok {
 		handleFormatError(ctx, *FormatError, rm.constants.Context.Translator)
+	}else if BadRequestError, ok := err.(*exception.BadRequestError); ok {
+		handleBadRequestError(ctx , *BadRequestError,rm.constants.Context.Translator)
 	} else {
 		handleDefaultError(ctx, err)
 	}
+}
+
+func handleBadRequestError(ctx *gin.Context,badRequestError exception.BadRequestError , transKey string) {
+	trans := base.GetTranslator(ctx, transKey)
+	itemName, _ := trans.Translate(badRequestError.Field)
+	message, _ := trans.Translate("errors.badRequestError", itemName)
+
+	base.Response(ctx,400, message , nil)
 }
 
 func handleConflictError(ctx *gin.Context, conflictError exception.ConflictError, transKey string) {

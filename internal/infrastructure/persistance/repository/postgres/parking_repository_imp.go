@@ -20,9 +20,9 @@ func NewParkingRepository(cfg *bootstrap.Config, db *gorm.DB) *ParkingRepository
 	}
 }
 
-func (ps *ParkingRepository) GetAttributeByName(name string) (*entities.ParkingAttribute, error) {
+func (pr *ParkingRepository) GetAttributeByName(name string) (*entities.ParkingAttribute, error) {
 	var attribute entities.ParkingAttribute
-	result := ps.db.Where("name = ?", name).First(&attribute)
+	result := pr.db.Where("name = ?", name).First(&attribute)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -33,54 +33,54 @@ func (ps *ParkingRepository) GetAttributeByName(name string) (*entities.ParkingA
 	return &attribute, nil
 }
 
-func (ps *ParkingRepository) CreateAttribute(parkingAttribute *entities.ParkingAttribute) error {
-	return ps.db.Create(parkingAttribute).Error
+func (pr *ParkingRepository) CreateAttribute(parkingAttribute *entities.ParkingAttribute) error {
+	return pr.db.Create(parkingAttribute).Error
 }
 
-func (ps *ParkingRepository) CreateParking(parking *entities.Parking) error {
-	return ps.db.Create(parking).Error
+func (pr *ParkingRepository) CreateParking(parking *entities.Parking) error {
+	return pr.db.Create(parking).Error
 }
 
-func (ps *ParkingRepository) GetAttributesByIDs(ids []uint) ([]*entities.ParkingAttribute, error) {
+func (pr *ParkingRepository) GetAttributesByIDs(ids []uint) ([]*entities.ParkingAttribute, error) {
 	var attributes []*entities.ParkingAttribute
-	result := ps.db.Where("id IN ?", ids).Find(&attributes)
+	result := pr.db.Where("id IN ?", ids).Find(&attributes)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return attributes, nil
 }
 
-func (ps *ParkingRepository) AddAttributes(parking *entities.Parking, attributes []*entities.ParkingAttribute) error {
-	return ps.db.Model(parking).Association("Attributes").Append(attributes)
+func (pr *ParkingRepository) AddAttributes(parking *entities.Parking, attributes []*entities.ParkingAttribute) error {
+	return pr.db.Model(parking).Association("Attributes").Append(attributes)
 }
 
-func (ps *ParkingRepository) CreateSlots(slots []entities.AvailabilitySlot) error {
-	return ps.db.Create(&slots).Error
+func (pr *ParkingRepository) CreateSlots(slots []entities.AvailabilitySlot) error {
+	return pr.db.Create(&slots).Error
 }
 
-func (r *ParkingRepository) UpdateParking(parking *entities.Parking) error {
-	return r.db.Save(parking).Error
+func (pr *ParkingRepository) UpdateParking(parking *entities.Parking) error {
+	return pr.db.Save(parking).Error
 }
 
-func (r *ParkingRepository) CreateParkingImages(images []entities.ParkingImage) error {
+func (pr *ParkingRepository) CreateParkingImages(images []entities.ParkingImage) error {
 	if len(images) == 0 {
 		return nil
 	}
 
-	return r.db.Create(&images).Error
+	return pr.db.Create(&images).Error
 }
 
-func (r *ParkingRepository) FindByIDAndUserID(id uint, userID uint) (*entities.Parking, error) {
+func (pr *ParkingRepository) FindByIDAndUserID(id uint, userID uint) (*entities.Parking, error) {
 	var parking entities.Parking
-	err := r.db.Preload("Images").Where("id = ? AND user_id = ?", id, userID).First(&parking).Error
+	err := pr.db.Preload("Images").Where("id = ? AND user_id = ?", id, userID).First(&parking).Error
 	if err != nil {
 		return nil, err
 	}
 	return &parking, nil
 }
 
-func (r *ParkingRepository) Delete(parking *entities.Parking) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (pr *ParkingRepository) Delete(parking *entities.Parking) error {
+	return pr.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Where("parking_id = ?", parking.ID).Delete(&entities.AvailabilitySlot{}).Error
 		if err != nil {
 			return err
@@ -130,38 +130,38 @@ func (r *ParkingRepository) HasActiveReservations(parkingID uint) (bool, error) 
 	return count > 0, nil
 }
 
-func (r *ParkingRepository) GetSlotsByParkingID(parkingID uint) ([]entities.AvailabilitySlot, error) {
+func (pr *ParkingRepository) GetSlotsByParkingID(parkingID uint) ([]entities.AvailabilitySlot, error) {
 	var slots []entities.AvailabilitySlot
-	err := r.db.Where("parking_id = ?", parkingID).Find(&slots).Error
+	err := pr.db.Where("parking_id = ?", parkingID).Find(&slots).Error
 	if err != nil {
 		return nil, err
 	}
 	return slots, nil
 }
 
-func (r *ParkingRepository) DeleteSlotsWithIDs(slotIDs []uint) error {
+func (pr *ParkingRepository) DeleteSlotsWithIDs(slotIDs []uint) error {
 	if len(slotIDs) == 0 {
 		return nil
 	}
 
-	return r.db.Where("id IN ?", slotIDs).Delete(&entities.AvailabilitySlot{}).Error
+	return pr.db.Where("id IN ?", slotIDs).Delete(&entities.AvailabilitySlot{}).Error
 }
 
-func (r *ParkingRepository) DeleteParkingImagesWithIDs(imageIDs []uint) error {
+func (pr *ParkingRepository) DeleteParkingImagesWithIDs(imageIDs []uint) error {
 	if len(imageIDs) == 0 {
 		return nil
 	}
-	return r.db.Where("id IN ?", imageIDs).Delete(&entities.ParkingImage{}).Error
+	return pr.db.Where("id IN ?", imageIDs).Delete(&entities.ParkingImage{}).Error
 }
 
-func (r *ParkingRepository) UpdateAttributes(parking *entities.Parking, attributes []entities.ParkingAttribute) error {
-	return r.db.Model(parking).Association("Attributes").Replace(attributes)
+func (pr *ParkingRepository) UpdateAttributes(parking *entities.Parking, attributes []entities.ParkingAttribute) error {
+	return pr.db.Model(parking).Association("Attributes").Replace(attributes)
 }
 
-func (r *ParkingRepository) GetDetailByIDAndUserID(parkingID uint, userID uint) (*entities.Parking, error) {
+func (pr *ParkingRepository) GetDetailByIDAndUserID(parkingID uint, userID uint) (*entities.Parking, error) {
 	var parking entities.Parking
 
-	err := r.db.Where("id = ? AND user_id = ?", parkingID, userID).
+	err := pr.db.Where("id = ? AND user_id = ?", parkingID, userID).
 		Preload("Address").
 		Preload("Images").
 		Preload("Attributes").
@@ -174,8 +174,45 @@ func (r *ParkingRepository) GetDetailByIDAndUserID(parkingID uint, userID uint) 
 	return &parking, nil
 }
 
-func (r *ParkingRepository) GetAllAttributes() ([]entities.ParkingAttribute, error) {
+func (pr *ParkingRepository) GetAllAttributes() ([]entities.ParkingAttribute, error) {
 	var attributes []entities.ParkingAttribute
-	err := r.db.Select("id, name").Find(&attributes).Error
+	err := pr.db.Select("id, name").Find(&attributes).Error
 	return attributes, err
+}
+
+
+func (pr *ParkingRepository) GetParkingByIDAndUserID(userID uint, parkingID uint) (*entities.Parking, error) {
+	var parking entities.Parking
+
+	err := pr.db.Preload("Address").
+		Preload("Images").
+		Preload("Attributes").
+		Where("id = ? AND user_id = ?", parkingID, userID).
+		First(&parking).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &parking, nil
+}
+
+func (pr *ParkingRepository) GetAllByUserID(userID uint) ([]*entities.Parking, error) {
+	var parkings []*entities.Parking
+
+	err := pr.db.Preload("Address").
+		Preload("Images").
+		Preload("Attributes").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&parkings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return parkings, nil
 }

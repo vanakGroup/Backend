@@ -46,7 +46,7 @@ definitions:
       documentUrl:
         type: string
       id:
-        type: integer
+        type: string
       imageUrls:
         items:
           type: string
@@ -196,40 +196,9 @@ paths:
       summary: Verify OTP Code
       tags:
       - Authentication
-  /parking/crud/{id}:
-    delete:
-      description: Delete a parking by its ID checking ownership
-      parameters:
-      - description: Parking ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/base.SingleMessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/base.MultipleMessageResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete a parking
-      tags:
-      - Customer Parking
+  /parking:
     get:
-      description: Retrieve complete parking info with relations and presigned URLs
-        by ID
-      parameters:
-      - description: Parking ID
-        in: path
-        name: id
-        required: true
-        type: integer
+      description: Retrieve complete User parkings
       produces:
       - application/json
       responses:
@@ -243,7 +212,7 @@ paths:
             $ref: '#/definitions/base.MultipleMessageResponse'
       security:
       - BearerAuth: []
-      summary: Get parking details for edit form
+      summary: Get User parkings
       tags:
       - Customer Parking
   /parking/crud/create:
@@ -323,6 +292,57 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new parking
+      tags:
+      - Customer Parking
+  /parking/crud/delete/{id}:
+    delete:
+      description: Delete a parking by its ID checking ownership
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a parking
+      tags:
+      - Customer Parking
+  /parking/crud/parkingDetail/{id}:
+    get:
+      description: Retrieve complete parking info with relations and presigned URLs
+        by ID
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get parking details for edit form
       tags:
       - Customer Parking
   /parking/crud/update:
@@ -407,6 +427,31 @@ paths:
       security:
       - BearerAuth: []
       summary: Update an existing parking
+      tags:
+      - Customer Parking
+  /parking/parkingInfo/{id}:
+    get:
+      description: Retrieve complete parking info
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get parking Info
       tags:
       - Customer Parking
   /parking/static/attributes:

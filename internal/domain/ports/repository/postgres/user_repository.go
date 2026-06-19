@@ -9,6 +9,7 @@ import (
 type UserRepository interface {
 	FindUserByPhone(phone string) (*entities.User, error)
 	Create(user *entities.User) error
+	FindUserById(userId uint) (*entities.User, error)
 }
 
 type UserProfileRepository interface {

@@ -1,6 +1,6 @@
 FROM golang:1.26-alpine AS builder
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirror.arvancloud.ir/g' /etc/apk/repositories || true
+RUN sed -i 's/dl-cdn.alpinelinux.org/hub.megan.ir/g' /etc/apk/repositories || true
 RUN apk add --no-cache git
 
 WORKDIR /app
@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o vanak-backend ./cmd/ap
 
 FROM alpine:3.19
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirror.arvancloud.ir/g' /etc/apk/repositories || true
+RUN sed -i 's/dl-cdn.alpinelinux.org/hub.megan.ir/g' /etc/apk/repositories || true
 RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
