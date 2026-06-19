@@ -23,8 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /app/vanak-backend .
 COPY --from=builder /app/.env .
-
-COPY internal/infrastructure/jwt/ ./internal/infrastructure/jwt/
+COPY --from=builder /app/internal/infrastructure/jwt/ ./internal/infrastructure/jwt/
 
 EXPOSE 8080
 

@@ -1,0 +1,72 @@
+stages:
+  - lint
+  # - test
+  - build-image
+
+variables:
+  GOPROXY: "https://hub.megan.ir/go,direct"
+  CGO_ENABLED: "0"
+  DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_NAME: "$HAMRAVESH_REGISTRY/vanak-backend"
+
+# ── Cache Go modules across jobs ─────────────────────────────────────────────
+.go-cache: &go-cache
+  cache:
+    key: "go-modules-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .go-cache/
+  variables:
+    GOPATH: "$CI_PROJECT_DIR/.go-cache"
+
+# ── Lint ──────────────────────────────────────────────────────────────────────
+lint:
+  stage: lint
+  image: golang:1.26-alpine
+  <<: *go-cache
+  script:
+    - |
+      UNFORMATTED=$(gofmt -l ./...)
+      if [ -n "$UNFORMATTED" ]; then
+        echo "The following files are not gofmt-compliant:"
+        echo "$UNFORMATTED"
+        exit 1
+      fi
+    - go vet ./...
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "ops/ci-cd"' # 👈 اضافه شد
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# ── Test ──────────────────────────────────────────────────────────────────────
+# test:
+#   stage: test
+#   image: golang:1.26-alpine
+#   <<: *go-cache
+#   script:
+#     - go test -v -race -count=1 ./...
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "ops/ci-cd"' # 👈 اضافه شد
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# ── Build & Push Docker Image ─────────────────────────────────────────────────
+build-image:
+  stage: build-image
+  image: docker:27
+  services:
+    - name: docker:27-dind
+      alias: docker
+  before_script:
+    - cp "$APP_DOTENV" .env
+    - docker login -u "$HAMRAVESH_USERNAME" -p "$HAMRAVESH_PASSWORD" "$HAMRAVESH_REGISTRY"
+  script:
+    - |
+      docker build \
+        -f docker/Dockerfile \
+        -t "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" \
+        -t "$IMAGE_NAME:latest" \
+        .
+    - docker push "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
+    - docker push "$IMAGE_NAME:latest"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "ops/ci-cd"'
