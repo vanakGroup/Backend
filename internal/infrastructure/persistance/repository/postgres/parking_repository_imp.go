@@ -180,35 +180,6 @@ func (pr *ParkingRepository) GetAllAttributes() ([]entities.ParkingAttribute, er
 	return attributes, err
 }
 
-// func (pr *ParkingRepository) GetParkingByUserID(userID uint, options *QueryOptions) ([]*entities.Parking, int64, error) {
-// 	var parkings []*entities.Parking
-// 	var totalCount int64
-
-// 	query := pr.db.Model(&entities.Parking{}).Where("user_id = ?", userID)
-
-// 	if err := query.Count(&totalCount).Error; err != nil {
-// 		return nil, 0, err
-// 	}
-
-// 	query = query.Preload("Address").
-// 		Preload("Images").
-// 		Preload("Attributes").
-// 		Preload("Slots", func(db *gorm.DB) *gorm.DB {
-// 			return db.Where("date >= ?", time.Now()).Order("date ASC, hour ASC")
-// 		})
-
-// 	query = query.Order("created_at DESC")
-
-// 	if options != nil && options.HasPagination() {
-// 		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
-// 		query = paginationModifier.Apply(query)
-// 	}
-// 	if err := query.Find(&parkings).Error; err != nil {
-// 		return nil, 0, err
-// 	}
-// 	return parkings, totalCount, nil
-
-// }
 
 func (pr *ParkingRepository) GetParkingByIDAndUserID(userID uint, parkingID uint) (*entities.Parking, error) {
 	var parking entities.Parking
@@ -220,6 +191,9 @@ func (pr *ParkingRepository) GetParkingByIDAndUserID(userID uint, parkingID uint
 		First(&parking).Error
 
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
 

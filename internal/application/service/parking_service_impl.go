@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/Vanak/Backend/internal/domain/ports"
 	"github.com/Vanak/Backend/internal/domain/storage"
 	"github.com/Vanak/Backend/internal/infrastructure/hashed"
-	"gorm.io/gorm"
 )
 
 type ParkingService struct {
@@ -493,10 +491,11 @@ func (ps *ParkingService) GetParkingByIDAndUserID(req parkingdto.GetParkingByIDA
 
 	parking, err := ps.unitOfWork.Factory().ParkingRepository().GetParkingByIDAndUserID(req.UserID, parkingID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, exception.NewNotFoundError(ps.cfg.Constant.ErrorField.Parking)
-		}
 		return nil, err
+	}
+
+	if parking == nil {
+		return nil, exception.NewNotFoundError(ps.cfg.Constant.ErrorField.Parking)
 	}
 
 	var imageUrls []string
