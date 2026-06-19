@@ -1,6 +1,10 @@
 package localization
 
 var Persian = map[string]interface{}{
+	"userID":               "آیدی کاربر",
+	"hashed":               "هش",
+	"badRequestError":      "درخواست بد",
+	"parking":              "پارکینگ",
 	"firstName":            "نام",
 	"lastName":             "نام خانوادگی",
 	"phone":                "شماره تماس",
@@ -115,6 +119,7 @@ var Persian = map[string]interface{}{
 		"wrongFormat":            "فرمت {0} اشتباه است.",
 		"tooLarge":               "{0} بیش ازاندازه بزرگ است.",
 		"empty":                  "{0} نمیتونه خالی باشه.",
+		"badRequestError":        "این {0} برای درخواست شکست خورد.",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":              "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",
@@ -214,6 +219,8 @@ var Persian = map[string]interface{}{
 		"getVehicle":                "اطلاعات ماشین با موفقیت دریافت شد.",
 		"deleteVehicle":             "ماشین با موفقیت حذف شد.",
 		"getVehiclesList":           "لیست وسایل نقلیه با موفقیت دریافت شد.",
+		"getParkingInfo":            "دریافت اطلاعات پارکینگ با موفقیت بود.",
+		"getUserParkings":           "پارکینگ های کاربر با موفقیت دریافت شد.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",

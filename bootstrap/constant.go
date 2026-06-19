@@ -85,6 +85,8 @@ type ErrorTag struct {
 }
 
 type ErrorField struct {
+	Hashed               string
+	Parking              string
 	Attribute            string
 	Slot                 string
 	Recaptcha            string
@@ -210,6 +212,8 @@ func NewConstant() *Constants {
 			OtpKey: "otp",
 		},
 		ErrorField: ErrorField{
+			Hashed:               "hashed",
+			Parking:              "parking",
 			Reserve:              "reserve",
 			Slot:                 "slot",
 			Recaptcha:            "recaptcha",

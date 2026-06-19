@@ -135,6 +135,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/parking": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve complete User parkings",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Get User parkings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/parking/crud/create": {
             "post": {
                 "security": [
@@ -241,6 +272,86 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/crud/delete/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a parking by its ID checking ownership",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Delete a parking",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/crud/parkingDetail/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve complete parking info with relations and presigned URLs by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Parking"
+                ],
+                "summary": "Get parking details for edit form",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
                         }
                     },
                     "400": {
@@ -376,24 +487,24 @@ const docTemplate = `{
                 }
             }
         },
-        "/parking/crud/{id}": {
+        "/parking/parkingInfo/{id}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve complete parking info with relations and presigned URLs by ID",
+                "description": "Retrieve complete parking info",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Customer Parking"
                 ],
-                "summary": "Get parking details for edit form",
+                "summary": "Get parking Info",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Parking ID",
                         "name": "id",
                         "in": "path",
@@ -405,44 +516,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/base.MultipleMessageResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete a parking by its ID checking ownership",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Customer Parking"
-                ],
-                "summary": "Delete a parking",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Parking ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/base.SingleMessageResponse"
                         }
                     },
                     "400": {
@@ -920,7 +993,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "imageUrls": {
                     "type": "array",

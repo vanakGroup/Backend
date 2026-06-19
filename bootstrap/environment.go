@@ -30,6 +30,12 @@ type Env struct {
 	OTP       OTP
 	Jwt       Jwt
 	Storage   S3
+	Hashed    HashIDConfig
+}
+
+type HashIDConfig struct {
+	Salt      string
+	MinLength int
 }
 
 type Jwt struct {
@@ -122,6 +128,10 @@ func NewEnv() *Env {
 				ParkingPic:          os.Getenv("PARKING_PIC_BUCKET_NAME"),
 				RegistrationCardPic: os.Getenv("REGISTRATION_CARD_PIC_BUCKET_NAME"),
 			},
+		},
+		HashIDConfig{
+			Salt:      os.Getenv("HASHID_SALT"),
+			MinLength: getEnvInt("HASHID_MIN_LENGTH", 8),
 		},
 	}
 }

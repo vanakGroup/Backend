@@ -17,6 +17,7 @@ import (
 	redis2 "github.com/Vanak/Backend/internal/domain/ports/repository/redis"
 	storage2 "github.com/Vanak/Backend/internal/domain/storage"
 	"github.com/Vanak/Backend/internal/infrastructure/database"
+	"github.com/Vanak/Backend/internal/infrastructure/hashed"
 	"github.com/Vanak/Backend/internal/infrastructure/jwt"
 	"github.com/Vanak/Backend/internal/infrastructure/localization"
 	"github.com/Vanak/Backend/internal/infrastructure/persistance"
@@ -43,7 +44,8 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	translationService := localization.NewTranslationService()
 	jwtKeyManager := jwt.NewJwtKeyManager(config)
 	jwtService := service.NewJwtService(config, jwtKeyManager)
-	authMiddleware := middleware.NewAuthMiddleWare(config, jwtService)
+	unitOfWork := persistance.NewUnitOfWork(db)
+	authMiddleware := middleware.NewAuthMiddleWare(config, jwtService, unitOfWork)
 	constants := ProvideConstants(config)
 	recoveryMiddleware := middleware.NewRecoveryMiddleware(constants)
 	middlewares := &Middlewares{
@@ -53,12 +55,12 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	cache := ProvideRedisCache(config)
 	userCacheRepository := redis.NewUserCacheRepository(cache)
 	otpService := service.NewOtpService(config, userCacheRepository)
-	unitOfWork := persistance.NewUnitOfWork(db)
 	userRepository := postgres.NewUserRepository(config, db)
 	userService := service.NewUserService(config, otpService, userCacheRepository, unitOfWork, jwtService, userRepository)
 	generalUserController := user.NewGeneralUserController(userService, config)
 	s3Storage := storage.NewS3Storage(config)
-	parkingService := service.NewParkingService(config, unitOfWork, s3Storage)
+	hashID := hashed.NewHashID(config)
+	parkingService := service.NewParkingService(config, unitOfWork, s3Storage, hashID)
 	customerParkingController := parking.NewCustomerParkingController(config, parkingService)
 	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
 	attributeTypeSeeder := seeder.NewAttributeTypeSeeder(unitOfWork)
@@ -70,7 +72,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	vehicleRepository := postgres.NewVehicleRepository(config, db)
 	vehicleService := service.NewVehicleService(unitOfWork, config, s3Storage, vehicleRepository)
 	customerVehicleController := vehicle.NewVehicleCustomerController(config, vehicleService)
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, seeds, customerUserController, customerVehicleController)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, seeds, customerUserController, customerVehicleController, hashID)
 	return application, nil
 }
 
@@ -102,6 +104,7 @@ type Application struct {
 	CustomerParkingController *parking.CustomerParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
+	HashID                    *hashed.HashID
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -125,6 +128,8 @@ var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpS
 
 var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, wire.Struct(new(Seeds), "*"))
 
+var HashIDSet = wire.NewSet(hashed.NewHashID)
+
 var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, user.NewCustomerUserController, vehicle.NewVehicleCustomerController)
 
 func NewApplication(
@@ -139,6 +144,7 @@ func NewApplication(
 	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
+	hashID *hashed.HashID,
 ) *Application {
 	return &Application{
 		Database:                  db,
@@ -152,5 +158,6 @@ func NewApplication(
 		CustomerParkingController: customerParkingController,
 		CustomerUserController:    customerUserController,
 		CustomerVehicleController: customerVehicleController,
+		HashID:                    hashID,
 	}
 }

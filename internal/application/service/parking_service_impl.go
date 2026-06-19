@@ -13,6 +13,7 @@ import (
 	"github.com/Vanak/Backend/internal/domain/logging"
 	"github.com/Vanak/Backend/internal/domain/ports"
 	"github.com/Vanak/Backend/internal/domain/storage"
+	"github.com/Vanak/Backend/internal/infrastructure/hashed"
 )
 
 type ParkingService struct {
@@ -20,9 +21,10 @@ type ParkingService struct {
 	cfg        *bootstrap.Config
 	logger     logging.Logger
 	s3Storage  storage.S3Storage
+	hashID     *hashed.HashID
 }
 
-func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Storage storage.S3Storage) *ParkingService {
+func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Storage storage.S3Storage, hashedID *hashed.HashID) *ParkingService {
 	logger := logging.NewLogger(cfg)
 
 	return &ParkingService{
@@ -30,6 +32,7 @@ func NewParkingService(cfg *bootstrap.Config, unitOfWork ports.UnitOfWork, s3Sto
 		cfg:        cfg,
 		unitOfWork: unitOfWork,
 		s3Storage:  s3Storage,
+		hashID:     hashedID,
 	}
 }
 
@@ -194,7 +197,12 @@ func (ps *ParkingService) createFirstSlotsForParking(id uint, slotRequests []par
 	return allSlots, nil
 }
 
-func (ps *ParkingService) DeleteParking(userID uint, parkingID uint) error {
+func (ps *ParkingService) DeleteParking(userID uint, parkingIDHashed string) error {
+	parkingID, err := ps.hashID.Decode(parkingIDHashed)
+	if err != nil {
+		return exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
+	}
+
 	parking, err := ps.unitOfWork.Factory().ParkingRepository().FindByIDAndUserID(parkingID, userID)
 	if err != nil {
 		return err
@@ -244,7 +252,12 @@ func (ps *ParkingService) UpdateParking(userID uint, parkingInfo parkingdto.Upda
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	currentHour := uint(now.Hour())
-	parkingID := parkingInfo.ParkingID
+
+	parkingID, err := ps.hashID.Decode(parkingInfo.ParkingID)
+	if err != nil {
+		return exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
+	}
+
 	return ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		parkingRepo := rf.ParkingRepository()
 		addressRepo := rf.AddressRepository()
@@ -397,7 +410,13 @@ func (ps *ParkingService) UpdateParking(userID uint, parkingInfo parkingdto.Upda
 	})
 }
 
-func (ps *ParkingService) GetParkingDetail(userID uint, parkingID uint) (*parkingdto.ParkingDetailResponse, error) {
+func (ps *ParkingService) GetParkingDetail(userID uint, parkingIDHashed string) (*parkingdto.ParkingDetailResponse, error) {
+	parkingID, err := ps.hashID.Decode(parkingIDHashed)
+
+	if err != nil {
+		return nil, exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
+	}
+
 	parking, err := ps.unitOfWork.Factory().ParkingRepository().GetDetailByIDAndUserID(parkingID, userID)
 	if err != nil {
 		return nil, err
@@ -436,8 +455,14 @@ func (ps *ParkingService) GetParkingDetail(userID uint, parkingID uint) (*parkin
 		})
 	}
 
+	parkingIDHashedResponse, err := ps.hashID.Encode(parking.ID)
+
+	if err != nil {
+		return nil, exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
+	}
+
 	response := &parkingdto.ParkingDetailResponse{
-		ID:          parking.ID,
+		ID:          parkingIDHashedResponse,
 		Title:       parking.Title,
 		Latitude:    parking.Latitude,
 		Longitude:   parking.Longitude,
@@ -455,6 +480,55 @@ func (ps *ParkingService) GetParkingDetail(userID uint, parkingID uint) (*parkin
 		AttributeIDs: attributeIDs,
 	}
 
+	return response, nil
+}
+
+func (ps *ParkingService) GetParkingByIDAndUserID(req parkingdto.GetParkingByIDAndUserIDRequest) (*parkingdto.ParkingInfoResponse, error) {
+	parkingID, err := ps.hashID.Decode(req.ParkingIDHashed)
+	if err != nil {
+		return nil, exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
+	}
+
+	parking, err := ps.unitOfWork.Factory().ParkingRepository().GetParkingByIDAndUserID(req.UserID, parkingID)
+	if err != nil {
+		return nil, err
+	}
+
+	if parking == nil {
+		return nil, exception.NewNotFoundError(ps.cfg.Constant.ErrorField.Parking)
+	}
+
+	var imageUrls []string
+	for _, img := range parking.Images {
+		if img.ImageURL != "" {
+			url, err := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
+			if err == nil {
+				imageUrls = append(imageUrls, url)
+			}
+		}
+	}
+
+	var attributeIDs []uint
+	for _, attr := range parking.Attributes {
+		attributeIDs = append(attributeIDs, attr.ID)
+	}
+
+	response := &parkingdto.ParkingInfoResponse{
+		ID:        req.ParkingIDHashed,
+		Title:     parking.Title,
+		Longitude: parking.Longitude,
+		Latitude:  parking.Latitude,
+		BasePrice: parking.BasePrice,
+		Status:    parking.Status.String(),
+		Address: parkingdto.AddressDetailResponse{
+			CityID:       parking.Address.CityID,
+			PostalCode:   parking.Address.PostalCode,
+			UnitNumber:   parking.Address.UnitNumber,
+			ExactAddress: parking.Address.ExactAddress,
+		},
+		AttributeIDs: attributeIDs,
+		ImageURLs:    imageUrls,
+	}
 	return response, nil
 }
 
@@ -488,4 +562,52 @@ func (ps *ParkingService) GetAttributesList() ([]staticdto.StaticItemResponse, e
 		})
 	}
 	return response, nil
+}
+
+func (ps *ParkingService) GetUserParkings(userID uint) ([]parkingdto.ParkingForListResponse, error) {
+	parkings, err := ps.unitOfWork.Factory().ParkingRepository().GetAllByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	parkingList := make([]parkingdto.ParkingForListResponse, 0, len(parkings))
+
+	for _, parking := range parkings {
+		parkingHashedID, err := ps.hashID.Encode(parking.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		var imageUrls []string
+		for _, img := range parking.Images {
+			if img.ImageURL != "" {
+				url, err := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
+				if err == nil {
+					imageUrls = append(imageUrls, url)
+				}
+			}
+		}
+
+		var attributeIDs []uint
+		for _, attr := range parking.Attributes {
+			attributeIDs = append(attributeIDs, attr.ID)
+		}
+
+		parkingList = append(parkingList, parkingdto.ParkingForListResponse{
+			ID:        parkingHashedID,
+			Title:     parking.Title,
+			BasePrice: parking.BasePrice,
+			Status:    parking.Status.String(),
+			Address: parkingdto.AddressDetailResponse{
+				CityID:       parking.Address.CityID,
+				PostalCode:   parking.Address.PostalCode,
+				UnitNumber:   parking.Address.UnitNumber,
+				ExactAddress: parking.Address.ExactAddress,
+			},
+			AttributeIDs: attributeIDs,
+			ImageURLs:    imageUrls,
+		})
+	}
+
+	return parkingList, nil
 }
