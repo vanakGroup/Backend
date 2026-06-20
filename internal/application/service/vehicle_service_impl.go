@@ -63,7 +63,7 @@ func (vs *VehicleService) RegisterVehicle(ctx context.Context, vehicleInfo vehic
 		return formatError
 	}
 
-	if vs.vehicleRepo.FindVehiclesByLicensePlate(*LicensePlate) {
+	if vs.unitOfWork.Factory().VehicleRepository().FindVehiclesByLicensePlate(*LicensePlate) {
 		alreadyExistsError.Add(vs.cfg.Constant.VehicleFields.LicensePlate, vs.cfg.Constant.ErrorTag.AlreadyExist, vs.cfg.Constant.ErrorField.LicensePlate)
 	}
 
@@ -71,29 +71,35 @@ func (vs *VehicleService) RegisterVehicle(ctx context.Context, vehicleInfo vehic
 		return alreadyExistsError
 	}
 
-	registrationCardPath := vs.cfg.Constant.S3BucketPath.GenerateVehicleImagePath(vehicleInfo.CardFileName)
-	err := vs.S3Storage.UploadFile(enums.RegistrationCardPic, registrationCardPath, vehicleInfo.CardFile)
-	if err != nil {
-		return err
-	}
+	err := vs.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		vehicleRepo := rf.VehicleRepository()
 
-	newVehicle := entities.Vehicle{
-		LicensePlate:        *LicensePlate,
-		CarModel:            vehicleInfo.CarModel,
-		RegistrationCardUrl: registrationCardPath,
-		UserId:              vehicleInfo.UserId,
-	}
+		registrationCardPath := vs.cfg.Constant.S3BucketPath.GenerateVehicleImagePath(vehicleInfo.CardFileName)
+		err := vs.S3Storage.UploadFile(enums.RegistrationCardPic, registrationCardPath, vehicleInfo.CardFile)
+		if err != nil {
+			return err
+		}
 
-	if err := vs.vehicleRepo.Create(&newVehicle); err != nil {
-		vs.S3Storage.DeleteObject(enums.RegistrationCardPic, registrationCardPath)
-		return err
-	}
+		newVehicle := entities.Vehicle{
+			LicensePlate:        *LicensePlate,
+			CarModel:            vehicleInfo.CarModel,
+			RegistrationCardUrl: registrationCardPath,
+			UserID:              vehicleInfo.UserId,
+		}
 
-	return nil
+		if err := vehicleRepo.Create(&newVehicle); err != nil {
+			vs.S3Storage.DeleteObject(enums.RegistrationCardPic, registrationCardPath)
+			return err
+		}
+
+		return nil
+	})
+
+	return err
 }
 
 func (vs *VehicleService) GetVehicle(vehicleId uint, userId uint) (*vehicledto.VehicleDTOResponse, error) {
-	vehicle, err := vs.vehicleRepo.FindUserVehicle(vehicleId, userId)
+	vehicle, err := vs.unitOfWork.Factory().VehicleRepository().FindUserVehicle(vehicleId, userId)
 	if err != nil {
 		not_found := exception.NewNotFoundError(vs.cfg.Constant.ErrorField.Vehicle)
 		return nil, not_found

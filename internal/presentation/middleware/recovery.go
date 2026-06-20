@@ -55,6 +55,8 @@ func (rm *RecoveryMiddleware) handlerError(ctx *gin.Context, err error) {
 		handleAlreadyExistsError(ctx, *AlreadyExistsError, rm.constants.Context.Translator)
 	} else if FormatError, ok := err.(*exception.FormatError); ok {
 		handleFormatError(ctx, *FormatError, rm.constants.Context.Translator)
+	} else if DisabledError, ok := err.(*exception.DisabledError); ok {
+		handleDisabledError(ctx, *DisabledError, rm.constants.Context.Translator)
 	}else if BadRequestError, ok := err.(*exception.BadRequestError); ok {
 		handleBadRequestError(ctx , *BadRequestError,rm.constants.Context.Translator)
 	} else {
@@ -172,5 +174,22 @@ func handleFormatError(ctx *gin.Context, fError exception.FormatError, transKey 
 
 		errorMessages[errDetail.Field][errDetail.Tag] = message
 	}
+	base.Response(ctx, 422, errorMessages, nil)
+}
+
+func handleDisabledError(ctx *gin.Context, dError exception.DisabledError, transKey string) {
+
+	trans := base.GetTranslator(ctx, transKey)
+	errorMessages := make(map[string]map[string]string)
+
+	for _, disabledError := range dError.FieldsError {
+		if _, ok := errorMessages[disabledError.Field]; !ok {
+			errorMessages[disabledError.Field] = make(map[string]string)
+		}
+		fieldName, _ := trans.Translate(disabledError.Field)
+		message, _ := trans.Translate(fmt.Sprintf("errors.%s", disabledError.Tag), fieldName)
+		errorMessages[disabledError.Field][disabledError.Tag] = message
+	}
+
 	base.Response(ctx, 422, errorMessages, nil)
 }

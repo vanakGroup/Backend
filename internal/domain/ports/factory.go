@@ -7,4 +7,7 @@ type RepositoryFactory interface {
 	AddressRepository() postgresDomain.AddressRepository
 	ParkingRepository() postgresDomain.ParkingRepository
 	VehicleRepository() postgresDomain.VehicleRepository
+	WalletRepository() postgresDomain.WalletRepository
+	PaymentRepository() postgresDomain.PaymentRepository
+	TransactionRepository() postgresDomain.TransactionRepository
 }

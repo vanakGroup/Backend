@@ -113,6 +113,26 @@ definitions:
       license_plate:
         type: string
     type: object
+  walletdto.TransactionListDTOResponse:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: integer
+      id:
+        type: integer
+      reason:
+        type: string
+      type:
+        type: string
+    type: object
+  walletdto.WalletDTOResponse:
+    properties:
+      balance:
+        type: integer
+      is_active:
+        type: boolean
+    type: object
 info:
   contact: {}
 paths:
@@ -712,6 +732,104 @@ paths:
       summary: Get customer vehicle details
       tags:
       - Customer Vehicle
+  /wallet:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the current balance and status of the authenticated customer's
+        wallet.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful retrieval of wallet data
+          schema:
+            $ref: '#/definitions/walletdto.WalletDTOResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "404":
+          description: Wallet not found
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get customer wallet details
+      tags:
+      - Customer Wallet
+  /wallet/deposit:
+    post:
+      consumes:
+      - application/json
+      description: Charge the authenticated customer's wallet using a mock gateway.
+      parameters:
+      - description: Deposit payload
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            amount:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful registration message
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Deposit funds into customer wallet
+      tags:
+      - Customer Wallet
+  /wallet/transactions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of the most recent transactions (deposits, withdrawals,
+        etc.) for the authenticated customer's wallet.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of recent transactions with details (amount, type, reason,
+            timestamp)
+          schema:
+            items:
+              $ref: '#/definitions/walletdto.TransactionListDTOResponse'
+            type: array
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get recent wallet transactions
+      tags:
+      - Customer Wallet
 securityDefinitions:
   BearerAuth:
     in: header

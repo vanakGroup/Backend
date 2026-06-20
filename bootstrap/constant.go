@@ -26,9 +26,6 @@ type Server struct {
 	Port string
 }
 
-// type BucketPath struct {
-// }
-
 type ValidationTag struct {
 	IranianPhone  string
 	IraninaPostal string
@@ -82,6 +79,7 @@ type ErrorTag struct {
 	WrongFormat            string
 	TooLarge               string
 	Empty                  string
+	Disabled               string
 }
 
 type ErrorField struct {
@@ -139,13 +137,17 @@ type ErrorField struct {
 	CarModel             string
 	VehicleId            string
 	Vehicle              string
+	FirstName            string
+	LastName             string
+	Wallet               string
 }
 
 type ProfileFilled struct {
-	Firstname    string
-	Lastname     string
-	NationalCode string
-	ShabaNumber  string
+	Firstname        string
+	Lastname         string
+	NationalCode     string
+	ShabaNumber      string
+	MinInfoCompleted string
 }
 
 type VehicleField struct {
@@ -190,10 +192,11 @@ func NewConstant() *Constants {
 			UserID:     "userID",
 		},
 		ProfileFilleds: ProfileFilled{
-			Firstname:    "first_name",
-			Lastname:     "last_name",
-			NationalCode: "national_code",
-			ShabaNumber:  "shaba_number",
+			Firstname:        "first_name",
+			Lastname:         "last_name",
+			NationalCode:     "national_code",
+			ShabaNumber:      "shaba_number",
+			MinInfoCompleted: "min_info_completed",
 		},
 		VehicleFields: VehicleField{
 			ID:                  "vehicle_id",
@@ -266,6 +269,9 @@ func NewConstant() *Constants {
 			VehicleId:            "vehiclId",
 			Vehicle:              "vehicle",
 			Attribute:            "attribute",
+			FirstName:            "firstName",
+			LastName:             "lastName",
+			Wallet:               "wallet",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyRegistered:      "alreadyRegistered",
@@ -315,6 +321,7 @@ func NewConstant() *Constants {
 			WrongFormat:            "wrongFormat",
 			TooLarge:               "tooLarge",
 			Empty:                  "empty",
+			Disabled:               "disabled",
 		},
 	}
 }

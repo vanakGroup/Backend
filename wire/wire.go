@@ -25,6 +25,7 @@ import (
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/vehicle"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/wallet"
 	"github.com/Vanak/Backend/internal/presentation/middleware"
 	"github.com/google/wire"
 	"gorm.io/gorm"
@@ -56,6 +57,7 @@ type Application struct {
 	CustomerParkingController *parking.CustomerParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
+	CustomerWalletController  *wallet.CustomerWalletController
 	HashID                    *hashed.HashID
 }
 
@@ -84,6 +86,7 @@ var DatabaseProviderSet = wire.NewSet(
 	postgresRepo.NewAddressRepository,
 	postgresRepo.NewParkingRepository,
 	postgresRepo.NewVehicleRepository,
+	postgresRepo.NewWalletRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
 	storage.NewS3Storage,
@@ -94,8 +97,8 @@ var DatabaseProviderSet = wire.NewSet(
 	wire.Bind(new(postgresDomain.UserRepository), new(*postgresRepo.UserRepository)),
 	wire.Bind(new(postgresDomain.AddressRepository), new(*postgresRepo.AddressRepository)),
 	wire.Bind(new(postgresDomain.ParkingRepository), new(*postgresRepo.ParkingRepository)),
-	wire.Bind(new(postgresDomain.UserProfileRepository), new(*postgresRepo.UserRepository)),
 	wire.Bind(new(postgresDomain.VehicleRepository), new(*postgresRepo.VehicleRepository)),
+	wire.Bind(new(postgresDomain.WalletRepository), new(*postgresRepo.WalletRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -111,6 +114,7 @@ var ServiceSet = wire.NewSet(
 	service.NewUserService,
 	service.NewJwtService,
 	service.NewParkingService,
+	service.NewWalletService,
 	jwt.NewJwtKeyManager,
 	service.NewVehicleService,
 	wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)),
@@ -121,6 +125,7 @@ var ServiceSet = wire.NewSet(
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
 	wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)),
+	wire.Bind(new(usecase.WalletService), new(*service.WalletService)),
 )
 
 var SeederSet = wire.NewSet(
@@ -137,7 +142,8 @@ var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
 	parking.NewCustomerParkingController,
 	user.NewCustomerUserController,
-	vehicle.NewVehicleCustomerController,
+	vehicle.NewCustomerVehicleController,
+	wallet.NewCustomerWalletController,
 )
 
 func NewApplication(
@@ -152,6 +158,7 @@ func NewApplication(
 	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
+	customerWalletController *wallet.CustomerWalletController,
 	hashID *hashed.HashID,
 ) *Application {
 	return &Application{
@@ -166,6 +173,7 @@ func NewApplication(
 		CustomerParkingController: customerParkingController,
 		CustomerUserController:    customerUserController,
 		CustomerVehicleController: customerVehicleController,
+		CustomerWalletController:  customerWalletController,
 		HashID:                    hashID,
 	}
 }

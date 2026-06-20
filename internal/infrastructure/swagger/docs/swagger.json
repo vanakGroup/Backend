@@ -909,6 +909,157 @@
                     }
                 }
             }
+        },
+        "/wallet": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve the current balance and status of the authenticated customer's wallet.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Wallet"
+                ],
+                "summary": "Get customer wallet details",
+                "responses": {
+                    "200": {
+                        "description": "Successful retrieval of wallet data",
+                        "schema": {
+                            "$ref": "#/definitions/walletdto.WalletDTOResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Wallet not found",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/wallet/deposit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Charge the authenticated customer's wallet using a mock gateway.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Wallet"
+                ],
+                "summary": "Deposit funds into customer wallet",
+                "parameters": [
+                    {
+                        "description": "Deposit payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful registration message",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/wallet/transactions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of the most recent transactions (deposits, withdrawals, etc.) for the authenticated customer's wallet.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Wallet"
+                ],
+                "summary": "Get recent wallet transactions",
+                "responses": {
+                    "200": {
+                        "description": "List of recent transactions with details (amount, type, reason, timestamp)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/walletdto.TransactionListDTOResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1083,6 +1234,37 @@
                 },
                 "license_plate": {
                     "type": "string"
+                }
+            }
+        },
+        "walletdto.TransactionListDTOResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "walletdto.WalletDTOResponse": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
                 }
             }
         }

@@ -14,10 +14,11 @@ type Parking struct {
 	Status      enums.ParkingStatus `gorm:"default:2"`
 	DocumentURL string              `gorm:"type:varchar(500);not null"`
 
-	UserID     uint               `gorm:"not null;index"`
-	User       User               `gorm:"foreignKey:UserID"`
-	Address    Address            `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
-	Attributes []ParkingAttribute `gorm:"many2many:parking_attribute_relations;constraint:OnDelete:CASCADE"`
-	Slots      []AvailabilitySlot `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
-	Images     []ParkingImage     `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
+	UserID       uint               `gorm:"not null;index"`
+	User         User               `gorm:"foreignKey:UserID"`
+	Address      Address            `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
+	Attributes   []ParkingAttribute `gorm:"many2many:parking_attribute_relations;constraint:OnDelete:CASCADE"`
+	Slots        []AvailabilitySlot `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
+	Images       []ParkingImage     `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
+	Reservations []Reservation      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
