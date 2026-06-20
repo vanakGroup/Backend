@@ -61,6 +61,7 @@ var English = map[string]interface{}{
 	"slot":                 "slot",
 	"duplicate":            "duplicate",
 	"attribute":            "attribute",
+	"wallet":               "wallet",
 	"errors": map[string]interface{}{
 		"generic":                "an error occurred, please try again.",
 		"numeric":                "The {0} should be a numeric value.",
@@ -119,6 +120,7 @@ var English = map[string]interface{}{
 		"wrongFormat":            "the format of {0} is wrong.",
 		"tooLarge":               "the {0} is too large.",
 		"empty":                  "the {0} can't be empty",
+		"disabled":               "the {0} is disabled.",
 		"badRequestError":        "the {0} is bad Request.",
 	},
 	"successMessage": map[string]interface{}{
@@ -219,6 +221,9 @@ var English = map[string]interface{}{
 		"getVehicle":                 "Vehicle fetched successfully.",
 		"deleteVehicle":              "Vehicle deleted successfully.",
 		"getVehiclesList":            "Vehicle list fetched successfully.",
+		"getWallet":                  "Wallet fetched successfully.",
+		"registerTransaction":        "Transaction is Done successfully.",
+		"getTransactionList":         "Transaction list fetched successfully.",
 		"getParkingInfo":             "Get the Parking Info is successfully.",
 		"getUserParkings":            "Get The User Parkings is successfully.",
 	},

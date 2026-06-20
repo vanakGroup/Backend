@@ -18,7 +18,7 @@ type CustomerVehicleController struct {
 	vehicleService usecase.VehicleService
 }
 
-func NewVehicleCustomerController(cfg *bootstrap.Config, vehicleService usecase.VehicleService) *CustomerVehicleController {
+func NewCustomerVehicleController(cfg *bootstrap.Config, vehicleService usecase.VehicleService) *CustomerVehicleController {
 	return &CustomerVehicleController{
 		cfg:            cfg,
 		vehicleService: vehicleService,

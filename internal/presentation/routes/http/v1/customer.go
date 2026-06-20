@@ -44,4 +44,12 @@ func SetupCustomerRoutes(router *gin.RouterGroup, app *wire.Application) {
 		vehicleGroup.GET("/:id", app.CustomerVehicleController.GetVehicle)
 		vehicleGroup.DELETE("/:id", app.CustomerVehicleController.DeleteVehicle)
 	}
+
+	walletGroup := router.Group("/wallet")
+	walletGroup.Use(app.Middlewares.Authentication.AuthMiddleware())
+	{
+		walletGroup.GET("", app.CustomerWalletController.GetWallet)
+		walletGroup.POST("/deposit", app.CustomerWalletController.Deposit)
+		walletGroup.GET("/transactions", app.CustomerWalletController.GetLastTransactions)
+	}
 }

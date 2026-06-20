@@ -34,3 +34,15 @@ func (rf *RepositoryFactory) ParkingRepository() postgresDomain.ParkingRepositor
 func (f *RepositoryFactory) VehicleRepository() postgresDomain.VehicleRepository {
 	return postgres.NewVehicleRepository(f.cfg, f.db)
 }
+
+func (f *RepositoryFactory) WalletRepository() postgresDomain.WalletRepository {
+	return postgres.NewWalletRepository(f.cfg, f.db)
+}
+
+func (f *RepositoryFactory) PaymentRepository() postgresDomain.PaymentRepository {
+	return postgres.NewPaymentRepository(f.cfg, f.db)
+}
+
+func (f *RepositoryFactory) TransactionRepository() postgresDomain.TransactionRepository {
+	return postgres.NewTransactionRepository(f.cfg, f.db)
+}

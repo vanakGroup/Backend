@@ -61,6 +61,7 @@ var Persian = map[string]interface{}{
 	"slot":                 "شکاف(بازه)",
 	"duplicate":            "تکراری",
 	"attribute":            "ویژگی",
+	"wallet":               "کیف پول",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
 		"numeric":                "`{0}` باید عدد باشد.",
@@ -119,6 +120,7 @@ var Persian = map[string]interface{}{
 		"wrongFormat":            "فرمت {0} اشتباه است.",
 		"tooLarge":               "{0} بیش ازاندازه بزرگ است.",
 		"empty":                  "{0} نمیتونه خالی باشه.",
+		"disabled":               "این {0} غیرفعال شده است.",
 		"badRequestError":        "این {0} برای درخواست شکست خورد.",
 	},
 	"successMessage": map[string]interface{}{
@@ -219,6 +221,9 @@ var Persian = map[string]interface{}{
 		"getVehicle":                "اطلاعات ماشین با موفقیت دریافت شد.",
 		"deleteVehicle":             "ماشین با موفقیت حذف شد.",
 		"getVehiclesList":           "لیست وسایل نقلیه با موفقیت دریافت شد.",
+		"getWallet":                 "کیف پول با موفقیت دریافت شد.",
+		"registerTransaction":       "تراکنش با موفقیت انجام شد.",
+		"getTransactionList":        "لیست تراکنش ها با موفقیت دریافت شد.",
 		"getParkingInfo":            "دریافت اطلاعات پارکینگ با موفقیت بود.",
 		"getUserParkings":           "پارکینگ های کاربر با موفقیت دریافت شد.",
 	},
