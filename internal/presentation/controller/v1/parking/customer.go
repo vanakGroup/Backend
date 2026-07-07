@@ -252,48 +252,35 @@ func (cpc *CustomerParkingController) GetParkingDetail(ctx *gin.Context) {
 // @Summary      Search parkings
 // @Description  Search available parkings with optional filters. Pagination: send page + pageSize, offset is calculated here.
 // @Tags         Parking Search
+// @Accept       json
 // @Produce      json
-// @Param        page         query  int     false  "Page number (default 1)"
-// @Param        pageSize     query  int     false  "Items per page (default 10, max 100)"
-// @Param        sortBy       query  string  false  "Sort column: price | title | date"
-// @Param        sortAsc      query  bool    false  "Sort ascending (default true)"
-// @Param        minPrice     query  number  false  "Minimum base price"
-// @Param        maxPrice     query  number  false  "Maximum base price"
-// @Param        cityId       query  int     false  "City ID"
-// @Param        address      query  string  false  "Partial address text search"
-// @Param        latitude     query  number  false  "GPS latitude (requires longitude and radius)"
-// @Param        longitude    query  number  false  "GPS longitude (requires latitude and radius)"
-// @Param        radius       query  number  false  "Search radius in km"
-// @Param        date         query  string  false  "Availability date (YYYY-MM-DD)"
-// @Param        startHour    query  int     false  "Availability start hour (0-23)"
-// @Param        endHour      query  int     false  "Availability end hour (1-24)"
-// @Param        attributeIds query  []int   false  "Attribute IDs to filter by"
-// @Success      200  {array}   parkingdto.ParkingForListResponse
+// @Param        request  body  object  false  "Search filters"
+// @Success      200  {object}  base.PaginatedResponse[parkingdto.ParkingForListResponse]
 // @Failure      400  {object}  base.MultipleMessageResponse
-// @Router       /parking/search [get]
+// @Router       /parking/search [post]
 func (cpc *CustomerParkingController) SearchParking(ctx *gin.Context) {
 	type searchParkingParams struct {
-		Page     int `form:"page"     validate:"omitempty,min=1"`
-		PageSize int `form:"pageSize" validate:"omitempty,min=1,max=100"`
+		Page     int `json:"page"     validate:"omitempty,min=1"`
+		PageSize int `json:"pageSize" validate:"omitempty,min=1,max=100"`
 
-		SortBy  string `form:"sortBy"  validate:"omitempty,oneof=price title date"`
-		SortAsc bool   `form:"sortAsc"`
+		SortBy  string `json:"sortBy"  validate:"omitempty,oneof=price"`
+		SortAsc bool   `json:"sortAsc"`
 
-		MinPrice *float64 `form:"minPrice"  validate:"omitempty,gt=0"`
-		MaxPrice *float64 `form:"maxPrice"  validate:"omitempty,gt=0"`
+		MinPrice *float64 `json:"minPrice"  validate:"omitempty,gt=0"`
+		MaxPrice *float64 `json:"maxPrice"  validate:"omitempty,gt=0"`
 
-		CityID  *uint   `form:"cityId"  validate:"omitempty"`
-		Address *string `form:"address" validate:"omitempty,min=2"`
+		CityID  *uint   `json:"cityId"  validate:"omitempty"`
+		Address *string `json:"address" validate:"omitempty,min=2"`
 
-		Latitude  *float64 `form:"latitude"  validate:"omitempty"`
-		Longitude *float64 `form:"longitude" validate:"omitempty"`
-		Radius    *float64 `form:"radius"    validate:"omitempty,gt=0"`
+		Latitude  *float64 `json:"latitude"  validate:"omitempty"`
+		Longitude *float64 `json:"longitude" validate:"omitempty"`
+		Radius    *float64 `json:"radius"    validate:"omitempty,gt=0"`
 
-		DateRaw   string `form:"date"      validate:"omitempty"`
-		StartHour uint   `form:"startHour" validate:"omitempty,max=23"`
-		EndHour   uint   `form:"endHour"   validate:"omitempty,max=24"`
+		DateRaw   string `json:"date"      validate:"omitempty"`
+		StartHour uint   `json:"startHour" validate:"omitempty,max=23"`
+		EndHour   uint   `json:"endHour"   validate:"omitempty,max=24"`
 
-		AttributeIDs []uint `form:"attributeIds" validate:"omitempty"`
+		AttributeIDs []uint `json:"attributeIds" validate:"omitempty"`
 	}
 
 	params := base.Validated[searchParkingParams](ctx)
@@ -305,12 +292,10 @@ func (cpc *CustomerParkingController) SearchParking(ctx *gin.Context) {
 		cpc.cfg.Constant.Pagination.DefaultPageSize,
 	)
 
-	sortColumnMap := map[string]string{
-		"price": "base_price",
-		"title": "title",
-		"date":  "created_at",
+	sortColumn := ""
+	if params.SortBy == "price" {
+		sortColumn = "base_price"
 	}
-	sortColumn := sortColumnMap[params.SortBy]
 
 	req := parkingdto.ParkingSearchRequest{
 		Limit:        limit,
