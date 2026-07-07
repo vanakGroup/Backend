@@ -35,6 +35,7 @@ func main() {
 		val.RegisterValidation("ir_postal",validation.IranianPostalCodeValidator,true)
 	}
 
+	ginEngine.Use(app.Middlewares.CORS.CORS())
 	ginEngine.Use(middleware.TranslatorMiddleware(app.Translator))
 	ginEngine.Use(app.Middlewares.Recovery.Recovery)
 

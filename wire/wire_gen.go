@@ -49,9 +49,11 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	authMiddleware := middleware.NewAuthMiddleWare(config, jwtService, unitOfWork)
 	constants := ProvideConstants(config)
 	recoveryMiddleware := middleware.NewRecoveryMiddleware(constants)
+	corsMiddleware := middleware.NewCorsMiddleware()
 	middlewares := &Middlewares{
 		Authentication: authMiddleware,
 		Recovery:       recoveryMiddleware,
+		CORS:           corsMiddleware,
 	}
 	cache := ProvideRedisCache(config)
 	userCacheRepository := redis.NewUserCacheRepository(cache)
@@ -89,6 +91,7 @@ type Database struct {
 type Middlewares struct {
 	Authentication *middleware.AuthMiddleware
 	Recovery       *middleware.RecoveryMiddleware
+	CORS           *middleware.CORSMiddleware
 }
 
 type Seeds struct {
@@ -128,7 +131,7 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 
 var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, postgres.NewParkingRepository, postgres.NewVehicleRepository, postgres.NewWalletRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, storage.NewS3Storage, wire.Bind(new(storage2.S3Storage), new(*storage.S3Storage)), wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Bind(new(postgres2.ParkingRepository), new(*postgres.ParkingRepository)), wire.Bind(new(postgres2.VehicleRepository), new(*postgres.VehicleRepository)), wire.Bind(new(postgres2.WalletRepository), new(*postgres.WalletRepository)), wire.Struct(new(Database), "*"))
 
-var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
+var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, middleware.NewCorsMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, service.NewParkingService, service.NewWalletService, jwt.NewJwtKeyManager, service.NewVehicleService, wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)), wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)), wire.Bind(new(usecase.WalletService), new(*service.WalletService)))
 

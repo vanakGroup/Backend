@@ -38,6 +38,7 @@ type Database struct {
 type Middlewares struct {
 	Authentication *middleware.AuthMiddleware
 	Recovery       *middleware.RecoveryMiddleware
+	CORS           *middleware.CORSMiddleware
 }
 
 type Seeds struct {
@@ -106,6 +107,7 @@ var DatabaseProviderSet = wire.NewSet(
 var MiddlewareSet = wire.NewSet(
 	middleware.NewRecoveryMiddleware,
 	middleware.NewAuthMiddleWare,
+	middleware.NewCorsMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
