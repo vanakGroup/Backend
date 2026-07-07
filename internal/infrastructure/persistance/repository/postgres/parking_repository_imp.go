@@ -217,11 +217,23 @@ func (pr *ParkingRepository) GetAllByUserID(userID uint) ([]*entities.Parking, e
 	return parkings, nil
 }
 
-func (pr *ParkingRepository) Search(filter filter.ParkingFilter, options *QueryOptions) ([]entities.Parking, error) {
+func (pr *ParkingRepository) Count(f filter.ParkingFilter) (int64, error) {
 	baseQuery := pr.db.Model(&entities.Parking{})
 
 	query := NewParkingQueryBuilder(baseQuery).
-		Apply(filter).
+		Apply(f).
+		Build()
+
+	var total int64
+	err := query.Count(&total).Error
+	return total, err
+}
+
+func (pr *ParkingRepository) Search(f filter.ParkingFilter, options *filter.QueryOptions) ([]entities.Parking, error) {
+	baseQuery := pr.db.Model(&entities.Parking{})
+
+	query := NewParkingQueryBuilder(baseQuery).
+		Apply(f).
 		Build()
 
 	var parkings []entities.Parking

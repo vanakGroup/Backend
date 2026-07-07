@@ -15,4 +15,9 @@ func SetupGeneralRoutes(router *gin.RouterGroup, app *wire.Application) {
 		authGroup.POST("/login", app.GeneralUserController.Login)
 	}
 
+	parkingGroup := router.Group("/parking")
+	{
+		parkingGroup.GET("/search", app.CustomerParkingController.SearchParking)
+	}
+
 }

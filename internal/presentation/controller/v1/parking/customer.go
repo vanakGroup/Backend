@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"time"
 
 	"github.com/Vanak/Backend/bootstrap"
 	addressdto "github.com/Vanak/Backend/internal/application/dto/address"
@@ -245,6 +246,105 @@ func (cpc *CustomerParkingController) GetParkingDetail(ctx *gin.Context) {
 	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
 	message, _ := trans.Translate("successMessage.detailParking")
 	base.Response(ctx, http.StatusOK, message, parking)
+}
+
+// SearchParking godoc
+// @Summary      Search parkings
+// @Description  Search available parkings with optional filters. Pagination: send page + pageSize, offset is calculated here.
+// @Tags         Parking Search
+// @Produce      json
+// @Param        page         query  int     false  "Page number (default 1)"
+// @Param        pageSize     query  int     false  "Items per page (default 10, max 100)"
+// @Param        sortBy       query  string  false  "Sort column: price | title | date"
+// @Param        sortAsc      query  bool    false  "Sort ascending (default true)"
+// @Param        minPrice     query  number  false  "Minimum base price"
+// @Param        maxPrice     query  number  false  "Maximum base price"
+// @Param        cityId       query  int     false  "City ID"
+// @Param        address      query  string  false  "Partial address text search"
+// @Param        latitude     query  number  false  "GPS latitude (requires longitude and radius)"
+// @Param        longitude    query  number  false  "GPS longitude (requires latitude and radius)"
+// @Param        radius       query  number  false  "Search radius in km"
+// @Param        date         query  string  false  "Availability date (YYYY-MM-DD)"
+// @Param        startHour    query  int     false  "Availability start hour (0-23)"
+// @Param        endHour      query  int     false  "Availability end hour (1-24)"
+// @Param        attributeIds query  []int   false  "Attribute IDs to filter by"
+// @Success      200  {array}   parkingdto.ParkingForListResponse
+// @Failure      400  {object}  base.MultipleMessageResponse
+// @Router       /parking/search [get]
+func (cpc *CustomerParkingController) SearchParking(ctx *gin.Context) {
+	type searchParkingParams struct {
+		Page     int `form:"page"     validate:"omitempty,min=1"`
+		PageSize int `form:"pageSize" validate:"omitempty,min=1,max=100"`
+
+		SortBy  string `form:"sortBy"  validate:"omitempty,oneof=price title date"`
+		SortAsc bool   `form:"sortAsc"`
+
+		MinPrice *float64 `form:"minPrice"  validate:"omitempty,gt=0"`
+		MaxPrice *float64 `form:"maxPrice"  validate:"omitempty,gt=0"`
+
+		CityID  *uint   `form:"cityId"  validate:"omitempty"`
+		Address *string `form:"address" validate:"omitempty,min=2"`
+
+		Latitude  *float64 `form:"latitude"  validate:"omitempty"`
+		Longitude *float64 `form:"longitude" validate:"omitempty"`
+		Radius    *float64 `form:"radius"    validate:"omitempty,gt=0"`
+
+		DateRaw   string `form:"date"      validate:"omitempty"`
+		StartHour uint   `form:"startHour" validate:"omitempty,max=23"`
+		EndHour   uint   `form:"endHour"   validate:"omitempty,max=24"`
+
+		AttributeIDs []uint `form:"attributeIds" validate:"omitempty"`
+	}
+
+	params := base.Validated[searchParkingParams](ctx)
+
+	offset, limit := base.GetOffsetLimit(
+		params.Page,
+		params.PageSize,
+		cpc.cfg.Constant.Pagination.DefaultPage,
+		cpc.cfg.Constant.Pagination.DefaultPageSize,
+	)
+
+	sortColumnMap := map[string]string{
+		"price": "base_price",
+		"title": "title",
+		"date":  "created_at",
+	}
+	sortColumn := sortColumnMap[params.SortBy]
+
+	req := parkingdto.ParkingSearchRequest{
+		Limit:        limit,
+		Offset:       offset,
+		SortBy:       sortColumn,
+		SortAsc:      params.SortAsc,
+		MinPrice:     params.MinPrice,
+		MaxPrice:     params.MaxPrice,
+		CityID:       params.CityID,
+		Address:      params.Address,
+		Latitude:     params.Latitude,
+		Longitude:    params.Longitude,
+		Radius:       params.Radius,
+		StartHour:    params.StartHour,
+		EndHour:      params.EndHour,
+		AttributeIDs: params.AttributeIDs,
+	}
+
+	if params.DateRaw != "" {
+		parsed, err := time.Parse("2006-01-02", params.DateRaw)
+		if err != nil {
+			panic(exception.NewBinding(err))
+		}
+		req.Date = &parsed
+	}
+
+	data, total, err := cpc.parkingService.SearchParking(req)
+	if err != nil {
+		panic(err)
+	}
+
+	trans := base.GetTranslator(ctx, cpc.cfg.Constant.Context.Translator)
+	message, _ := trans.Translate("successMessage.searchParking")
+	base.Response(ctx, http.StatusOK, message, base.NewPaginatedResponse(data, total, offset, limit))
 }
 
 func parseSlotsRaw(slotsRaw string) ([]parkingdto.SlotRequest, error) {

@@ -14,4 +14,5 @@ type ParkingService interface {
 	GetAttributesList() ([]staticdto.StaticItemResponse, error)
 	GetParkingByIDAndUserID(req parkingdto.GetParkingByIDAndUserIDRequest) (*parkingdto.ParkingInfoResponse, error)
 	GetUserParkings(userID uint) ([]parkingdto.ParkingForListResponse, error)
+	SearchParking(req parkingdto.ParkingSearchRequest) ([]parkingdto.ParkingForListResponse, int64, error)
 }

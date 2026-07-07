@@ -1,46 +1,32 @@
 package postgres
 
-type PaginationOptions struct {
-	Limit  int
-	Offset int
-}
+import (
+	"github.com/Vanak/Backend/internal/domain/filter"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
 
-type SortingOptions struct {
-	Column string
-	Asc    bool
-}
-
-type QueryOptions struct {
-	Pagination *PaginationOptions
-	Sorting    *SortingOptions
-}
-
-func NewQueryOptions() *QueryOptions {
-	return &QueryOptions{}
-}
-
-func (qp *QueryOptions) WithPagination(limit int, offset int) *QueryOptions {
-	qp.Pagination = &PaginationOptions{
-		Offset: offset,
-		Limit:  limit,
+func applyQueryOptions(query *gorm.DB, options *filter.QueryOptions) *gorm.DB {
+	if options == nil {
+		return query
 	}
 
-	return qp
-}
-
-func (qp *QueryOptions) WithSorting(column string, asc bool) *QueryOptions {
-	qp.Sorting = &SortingOptions{
-		Column: column,
-		Asc:    asc,
+	if options.HasSorting() {
+		if options.Sorting.Asc {
+			query = query.Order(clause.OrderByColumn{
+				Column: clause.Column{Name: options.Sorting.Column},
+			})
+		} else {
+			query = query.Order(clause.OrderByColumn{
+				Column: clause.Column{Name: options.Sorting.Column},
+				Desc:   true,
+			})
+		}
 	}
 
-	return qp
-}
+	if options.HasPagination() {
+		query = query.Offset(options.Pagination.Offset).Limit(options.Pagination.Limit)
+	}
 
-func (q *QueryOptions) HasPagination() bool {
-	return q.Pagination != nil
-}
-
-func (q *QueryOptions) HasSorting() bool {
-	return q.Sorting != nil
+	return query
 }

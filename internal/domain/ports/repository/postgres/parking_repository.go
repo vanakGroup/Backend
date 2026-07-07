@@ -3,7 +3,6 @@ package postgres
 import (
 	"github.com/Vanak/Backend/internal/domain/entities"
 	"github.com/Vanak/Backend/internal/domain/filter"
-	"github.com/Vanak/Backend/internal/infrastructure/persistance/repository/postgres"
 )
 
 type ParkingRepository interface {
@@ -27,5 +26,6 @@ type ParkingRepository interface {
 	GetAllAttributes() ([]entities.ParkingAttribute, error)
 	GetParkingByIDAndUserID(userID uint, parkingID uint) (*entities.Parking, error)
 	GetAllByUserID(userID uint) ([]*entities.Parking, error)
-	Search(filter filter.ParkingFilter, options *postgres.QueryOptions) ([]entities.Parking, error)
+	Search(f filter.ParkingFilter, options *filter.QueryOptions) ([]entities.Parking, error)
+	Count(f filter.ParkingFilter) (int64, error)
 }

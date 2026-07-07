@@ -20,6 +20,12 @@ type Constants struct {
 	VehicleFields  VehicleField
 	S3BucketPath   BucketPath
 	ValidationTag  ValidationTag
+	Pagination     Pagination
+}
+
+type Pagination struct {
+	DefaultPage     int
+	DefaultPageSize int
 }
 
 type Server struct {
@@ -183,6 +189,10 @@ func NewConstant() *Constants {
 		ValidationTag: ValidationTag{
 			IranianPhone:  "ir_phone",
 			IraninaPostal: "ir_postal",
+		},
+		Pagination: Pagination{
+			DefaultPage:     1,
+			DefaultPageSize: 10,
 		},
 		Server: Server{
 			Port: "8080",
