@@ -64,9 +64,11 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	customerParkingController := parking.NewCustomerParkingController(config, parkingService)
 	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
 	attributeTypeSeeder := seeder.NewAttributeTypeSeeder(unitOfWork)
+	parkingSeeder := seeder.NewParkingSeeder(db)
 	seeds := &Seeds{
 		Address:   addressSeeder,
 		Attribute: attributeTypeSeeder,
+		Parking:   parkingSeeder,
 	}
 	customerUserController := user.NewCustomerUserController(config, userService)
 	vehicleRepository := postgres.NewVehicleRepository(config, db)
@@ -92,6 +94,7 @@ type Middlewares struct {
 type Seeds struct {
 	Address   *seeder.AddressSeeder
 	Attribute *seeder.AttributeTypeSeeder
+	Parking   *seeder.ParkingSeeder
 }
 
 type Application struct {
@@ -129,7 +132,7 @@ var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.New
 
 var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, service.NewParkingService, service.NewWalletService, jwt.NewJwtKeyManager, service.NewVehicleService, wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)), wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)), wire.Bind(new(usecase.WalletService), new(*service.WalletService)))
 
-var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, wire.Struct(new(Seeds), "*"))
+var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, seeder.NewParkingSeeder, wire.Struct(new(Seeds), "*"))
 
 var HashIDSet = wire.NewSet(hashed.NewHashID)
 

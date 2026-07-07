@@ -43,6 +43,7 @@ type Middlewares struct {
 type Seeds struct {
 	Address   *seeder.AddressSeeder
 	Attribute *seeder.AttributeTypeSeeder
+	Parking   *seeder.ParkingSeeder
 }
 
 type Application struct {
@@ -131,6 +132,7 @@ var ServiceSet = wire.NewSet(
 var SeederSet = wire.NewSet(
 	seeder.NewAddressSeeder,
 	seeder.NewAttributeTypeSeeder,
+	seeder.NewParkingSeeder,
 	wire.Struct(new(Seeds), "*"),
 )
 
