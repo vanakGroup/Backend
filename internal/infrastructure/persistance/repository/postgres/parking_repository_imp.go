@@ -5,6 +5,7 @@ import (
 
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/entities"
+	"github.com/Vanak/Backend/internal/domain/filter"
 	"gorm.io/gorm"
 )
 
@@ -180,7 +181,6 @@ func (pr *ParkingRepository) GetAllAttributes() ([]entities.ParkingAttribute, er
 	return attributes, err
 }
 
-
 func (pr *ParkingRepository) GetParkingByIDAndUserID(userID uint, parkingID uint) (*entities.Parking, error) {
 	var parking entities.Parking
 
@@ -215,4 +215,29 @@ func (pr *ParkingRepository) GetAllByUserID(userID uint) ([]*entities.Parking, e
 	}
 
 	return parkings, nil
+}
+
+func (pr *ParkingRepository) Search(filter filter.ParkingFilter, options *QueryOptions) ([]entities.Parking, error) {
+	baseQuery := pr.db.Model(&entities.Parking{})
+
+	query := NewParkingQueryBuilder(baseQuery).
+		Apply(filter).
+		Build()
+
+	var parkings []entities.Parking
+
+	query = applyQueryOptions(query, options)
+
+	err := query.
+		Preload("Address").
+		Preload("Attributes").
+		Preload("Images").
+		Find(&parkings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return parkings, nil
+
 }
