@@ -38,3 +38,25 @@ func (us *UserSeeder) SeedRoles() {
 		}
 	}
 }
+
+func (us *UserSeeder) SeedTestUser() {
+	var count int64
+	us.db.Model(&entities.User{}).Count(&count)
+	if count > 0 {
+		log.Println("user seeder: users already exist, skipping")
+		return
+	}
+
+	phone := "09000000000"
+	user := entities.User{
+		Phone:         phone,
+		PhoneVerified: true,
+	}
+
+	if err := us.db.Create(&user).Error; err != nil {
+		log.Printf("user seeder: failed to create test user: %v", err)
+		return
+	}
+
+	log.Printf("user seeder: test user created (phone: %s)", phone)
+}

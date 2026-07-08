@@ -255,7 +255,7 @@ func (cpc *CustomerParkingController) GetParkingDetail(ctx *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        request  body  object  false  "Search filters"
-// @Success      200  {object}  base.PaginatedResponse[parkingdto.ParkingForListResponse]
+// @Success      200  {object}  parkingdto.ParkingSearchResponse
 // @Failure      400  {object}  base.MultipleMessageResponse
 // @Router       /parking/search [post]
 func (cpc *CustomerParkingController) SearchParking(ctx *gin.Context) {

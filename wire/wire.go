@@ -45,6 +45,7 @@ type Seeds struct {
 	Address   *seeder.AddressSeeder
 	Attribute *seeder.AttributeTypeSeeder
 	Parking   *seeder.ParkingSeeder
+	User      *seeder.UserSeeder
 }
 
 type Application struct {
@@ -135,6 +136,7 @@ var SeederSet = wire.NewSet(
 	seeder.NewAddressSeeder,
 	seeder.NewAttributeTypeSeeder,
 	seeder.NewParkingSeeder,
+	seeder.NewUserSeeder,
 	wire.Struct(new(Seeds), "*"),
 )
 

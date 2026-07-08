@@ -527,6 +527,45 @@ const docTemplate = `{
                 }
             }
         },
+        "/parking/search": {
+            "post": {
+                "description": "Search available parkings with optional filters. Pagination: send page + pageSize, offset is calculated here.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Parking Search"
+                ],
+                "summary": "Search parkings",
+                "parameters": [
+                    {
+                        "description": "Search filters",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/parking/static/attributes": {
             "get": {
                 "description": "Retrieve a list of all available parking attributes/features with their IDs",
@@ -1169,6 +1208,75 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "parkingdto.ParkingForListResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/parkingdto.AddressDetailResponse"
+                },
+                "attribute_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "base_price": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "parkingdto.ParkingSearchPaginationMeta": {
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "type": "integer"
+                },
+                "hasNextPage": {
+                    "type": "boolean"
+                },
+                "hasPrevPage": {
+                    "type": "boolean"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "totalItems": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "parkingdto.ParkingSearchResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parkingdto.ParkingForListResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/parkingdto.ParkingSearchPaginationMeta"
                 }
             }
         },

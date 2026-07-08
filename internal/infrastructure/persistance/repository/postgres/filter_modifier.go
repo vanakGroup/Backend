@@ -86,12 +86,12 @@ func (pqb *ParkingQueryBuilder) ApplyAttributes(attr filter.AttributeFilter) *Pa
 					ON par.parking_id = parkings.id
 			`).
 			Where(
-				"par.attribute_id IN ?",
+				"par.parking_attribute_id IN ?",
 				attr.AttributeIDs,
 			).
 			Group("parkings.id").
 			Having(
-				"COUNT(DISTINCT par.attribute_id) = ?",
+				"COUNT(DISTINCT par.parking_attribute_id) = ?",
 				len(attr.AttributeIDs),
 			)
 	}

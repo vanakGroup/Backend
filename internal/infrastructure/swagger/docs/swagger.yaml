@@ -64,6 +64,51 @@ definitions:
       title:
         type: string
     type: object
+  parkingdto.ParkingForListResponse:
+    properties:
+      address:
+        $ref: '#/definitions/parkingdto.AddressDetailResponse'
+      attribute_ids:
+        items:
+          type: integer
+        type: array
+      base_price:
+        type: number
+      id:
+        type: string
+      image_urls:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  parkingdto.ParkingSearchPaginationMeta:
+    properties:
+      currentPage:
+        type: integer
+      hasNextPage:
+        type: boolean
+      hasPrevPage:
+        type: boolean
+      pageSize:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  parkingdto.ParkingSearchResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/parkingdto.ParkingForListResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/parkingdto.ParkingSearchPaginationMeta'
+    type: object
   parkingdto.SlotDetailResponse:
     properties:
       date:
@@ -474,6 +519,32 @@ paths:
       summary: Get parking Info
       tags:
       - Customer Parking
+  /parking/search:
+    post:
+      consumes:
+      - application/json
+      description: 'Search available parkings with optional filters. Pagination: send
+        page + pageSize, offset is calculated here.'
+      parameters:
+      - description: Search filters
+        in: body
+        name: request
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Search parkings
+      tags:
+      - Parking Search
   /parking/static/attributes:
     get:
       description: Retrieve a list of all available parking attributes/features with

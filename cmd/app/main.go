@@ -44,6 +44,7 @@ func main() {
 	}
 	app.Seeds.Address.SeedProvincesAndCities()
 	app.Seeds.Attribute.SeedAttributes()
+	app.Seeds.User.SeedTestUser()
 	app.Seeds.Parking.SeedParkings()
 	swagger.RegisterSwagger(ginEngine, cfg)
 	routes.Run(ginEngine, app)
