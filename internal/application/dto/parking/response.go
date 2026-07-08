@@ -76,3 +76,17 @@ type ParkingForListResponse struct {
 	AttributeIDs []uint                `json:"attribute_ids"`
 	ImageURLs    []string              `json:"image_urls"`
 }
+
+type ParkingSearchPaginationMeta struct {
+	CurrentPage int   `json:"currentPage"`
+	PageSize    int   `json:"pageSize"`
+	TotalItems  int64 `json:"totalItems"`
+	TotalPages  int   `json:"totalPages"`
+	HasNextPage bool  `json:"hasNextPage"`
+	HasPrevPage bool  `json:"hasPrevPage"`
+}
+
+type ParkingSearchResponse struct {
+	Data       []ParkingForListResponse    `json:"data"`
+	Pagination ParkingSearchPaginationMeta `json:"pagination"`
+}

@@ -49,9 +49,11 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	authMiddleware := middleware.NewAuthMiddleWare(config, jwtService, unitOfWork)
 	constants := ProvideConstants(config)
 	recoveryMiddleware := middleware.NewRecoveryMiddleware(constants)
+	corsMiddleware := middleware.NewCorsMiddleware()
 	middlewares := &Middlewares{
 		Authentication: authMiddleware,
 		Recovery:       recoveryMiddleware,
+		CORS:           corsMiddleware,
 	}
 	cache := ProvideRedisCache(config)
 	userCacheRepository := redis.NewUserCacheRepository(cache)
@@ -62,11 +64,16 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	hashID := hashed.NewHashID(config)
 	parkingService := service.NewParkingService(config, unitOfWork, s3Storage, hashID)
 	customerParkingController := parking.NewCustomerParkingController(config, parkingService)
+	generalParkingController := parking.NewGeneralParkingController(config, parkingService)
 	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
 	attributeTypeSeeder := seeder.NewAttributeTypeSeeder(unitOfWork)
+	parkingSeeder := seeder.NewParkingSeeder(db)
+	userSeeder := seeder.NewUserSeeder(db)
 	seeds := &Seeds{
 		Address:   addressSeeder,
 		Attribute: attributeTypeSeeder,
+		Parking:   parkingSeeder,
+		User:      userSeeder,
 	}
 	customerUserController := user.NewCustomerUserController(config, userService)
 	vehicleRepository := postgres.NewVehicleRepository(config, db)
@@ -74,7 +81,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	customerVehicleController := vehicle.NewCustomerVehicleController(config, vehicleService)
 	walletService := service.NewWalletService(unitOfWork, config)
 	customerWalletController := wallet.NewCustomerWalletController(config, walletService)
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, seeds, customerUserController, customerVehicleController, customerWalletController, hashID)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, generalParkingController, seeds, customerUserController, customerVehicleController, customerWalletController, hashID)
 	return application, nil
 }
 
@@ -87,11 +94,14 @@ type Database struct {
 type Middlewares struct {
 	Authentication *middleware.AuthMiddleware
 	Recovery       *middleware.RecoveryMiddleware
+	CORS           *middleware.CORSMiddleware
 }
 
 type Seeds struct {
 	Address   *seeder.AddressSeeder
 	Attribute *seeder.AttributeTypeSeeder
+	Parking   *seeder.ParkingSeeder
+	User      *seeder.UserSeeder
 }
 
 type Application struct {
@@ -104,6 +114,7 @@ type Application struct {
 	GeneralUserController     *user.GeneralUserController
 	Seeds                     *Seeds
 	CustomerParkingController *parking.CustomerParkingController
+	GeneralParkingController  *parking.GeneralParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
 	CustomerWalletController  *wallet.CustomerWalletController
@@ -125,15 +136,15 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 
 var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, postgres.NewParkingRepository, postgres.NewVehicleRepository, postgres.NewWalletRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, storage.NewS3Storage, wire.Bind(new(storage2.S3Storage), new(*storage.S3Storage)), wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Bind(new(postgres2.ParkingRepository), new(*postgres.ParkingRepository)), wire.Bind(new(postgres2.VehicleRepository), new(*postgres.VehicleRepository)), wire.Bind(new(postgres2.WalletRepository), new(*postgres.WalletRepository)), wire.Struct(new(Database), "*"))
 
-var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, wire.Struct(new(Middlewares), "*"))
+var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, middleware.NewCorsMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, service.NewParkingService, service.NewWalletService, jwt.NewJwtKeyManager, service.NewVehicleService, wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)), wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)), wire.Bind(new(usecase.WalletService), new(*service.WalletService)))
 
-var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, wire.Struct(new(Seeds), "*"))
+var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, seeder.NewParkingSeeder, seeder.NewUserSeeder, wire.Struct(new(Seeds), "*"))
 
 var HashIDSet = wire.NewSet(hashed.NewHashID)
 
-var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, user.NewCustomerUserController, vehicle.NewCustomerVehicleController, wallet.NewCustomerWalletController)
+var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, parking.NewGeneralParkingController, user.NewCustomerUserController, vehicle.NewCustomerVehicleController, wallet.NewCustomerWalletController)
 
 func NewApplication(
 	db *Database,
@@ -144,6 +155,7 @@ func NewApplication(
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
 	customerParkingController *parking.CustomerParkingController,
+	generalParkingController *parking.GeneralParkingController,
 	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
@@ -160,6 +172,7 @@ func NewApplication(
 		GeneralUserController:     generalUserController,
 		Seeds:                     seeds,
 		CustomerParkingController: customerParkingController,
+		GeneralParkingController:  generalParkingController,
 		CustomerUserController:    customerUserController,
 		CustomerVehicleController: customerVehicleController,
 		CustomerWalletController:  customerWalletController,

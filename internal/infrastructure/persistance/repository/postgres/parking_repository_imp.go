@@ -5,6 +5,7 @@ import (
 
 	"github.com/Vanak/Backend/bootstrap"
 	"github.com/Vanak/Backend/internal/domain/entities"
+	"github.com/Vanak/Backend/internal/domain/filter"
 	"gorm.io/gorm"
 )
 
@@ -180,7 +181,6 @@ func (pr *ParkingRepository) GetAllAttributes() ([]entities.ParkingAttribute, er
 	return attributes, err
 }
 
-
 func (pr *ParkingRepository) GetParkingByIDAndUserID(userID uint, parkingID uint) (*entities.Parking, error) {
 	var parking entities.Parking
 
@@ -215,4 +215,75 @@ func (pr *ParkingRepository) GetAllByUserID(userID uint) ([]*entities.Parking, e
 	}
 
 	return parkings, nil
+}
+
+func (pr *ParkingRepository) GetAll(options *filter.QueryOptions) ([]entities.Parking, error) {
+	var parkings []entities.Parking
+	query := pr.db.Model(&entities.Parking{}).
+		Preload("Address").
+		Preload("Images").
+		Preload("Attributes")
+
+	query = applyQueryOptions(query, options)
+
+	err := query.Find(&parkings).Error
+	if err != nil {
+		return nil, err
+	}
+	return parkings, nil
+}
+
+func (pr *ParkingRepository) CountAll() (int64, error) {
+	var total int64
+	err := pr.db.Model(&entities.Parking{}).Count(&total).Error
+	return total, err
+}
+
+func (pr *ParkingRepository) GetByID(id uint) (*entities.Parking, error) {
+	var parking entities.Parking
+	err := pr.db.Preload("Address").
+		Preload("Images").
+		Preload("Attributes").
+		First(&parking, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &parking, nil
+}
+
+func (pr *ParkingRepository) Count(f filter.ParkingFilter) (int64, error) {
+	baseQuery := pr.db.Model(&entities.Parking{})
+
+	query := NewParkingQueryBuilder(baseQuery).
+		Apply(f).
+		Build()
+
+	var total int64
+	err := query.Count(&total).Error
+	return total, err
+}
+
+func (pr *ParkingRepository) Search(f filter.ParkingFilter, options *filter.QueryOptions) ([]entities.Parking, error) {
+	baseQuery := pr.db.Model(&entities.Parking{})
+
+	query := NewParkingQueryBuilder(baseQuery).
+		Apply(f).
+		Build()
+
+	var parkings []entities.Parking
+
+	query = applyQueryOptions(query, options)
+
+	err := query.
+		Preload("Address").
+		Preload("Attributes").
+		Preload("Images").
+		Find(&parkings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return parkings, nil
+
 }

@@ -226,6 +226,7 @@ var English = map[string]interface{}{
 		"getTransactionList":         "Transaction list fetched successfully.",
 		"getParkingInfo":             "Get the Parking Info is successfully.",
 		"getUserParkings":            "Get The User Parkings is successfully.",
+		"searchParking":              "Parking search completed successfully.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "Verify Your Email Address",

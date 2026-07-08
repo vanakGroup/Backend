@@ -35,6 +35,7 @@ func main() {
 		val.RegisterValidation("ir_postal",validation.IranianPostalCodeValidator,true)
 	}
 
+	ginEngine.Use(app.Middlewares.CORS.CORS())
 	ginEngine.Use(middleware.TranslatorMiddleware(app.Translator))
 	ginEngine.Use(app.Middlewares.Recovery.Recovery)
 
@@ -43,6 +44,8 @@ func main() {
 	}
 	app.Seeds.Address.SeedProvincesAndCities()
 	app.Seeds.Attribute.SeedAttributes()
+	app.Seeds.User.SeedTestUser()
+	app.Seeds.Parking.SeedParkings()
 	swagger.RegisterSwagger(ginEngine, cfg)
 	routes.Run(ginEngine, app)
 
