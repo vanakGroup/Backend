@@ -402,6 +402,20 @@ func (ps *ParkingService) UpdateParking(userID uint, parkingInfo parkingdto.Upda
 			}
 		}
 
+		var attributes []entities.ParkingAttribute
+		if len(parkingInfo.AttributeIDs) > 0 {
+			fetchedAttrs, err := parkingRepo.GetAttributesByIDs(parkingInfo.AttributeIDs)
+			if err != nil {
+				return err
+			}
+			for _, a := range fetchedAttrs {
+				attributes = append(attributes, *a)
+			}
+		}
+		if err := parkingRepo.UpdateAttributes(parking, attributes); err != nil {
+			return err
+		}
+
 		err = parkingRepo.UpdateParking(parking)
 		if err != nil {
 			return err
