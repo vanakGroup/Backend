@@ -46,3 +46,27 @@ type GetParkingByIDAndUserIDRequest struct {
 	UserID          uint
 	ParkingIDHashed string
 }
+
+type ParkingSearchRequest struct {
+	MinPrice *float64
+	MaxPrice *float64
+
+	CityID  *uint
+	Address *string
+
+	Latitude  *float64
+	Longitude *float64
+	Radius    *float64
+
+	Date      *time.Time
+	StartHour uint
+	EndHour   uint
+
+	AttributeIDs []uint
+
+	Limit  int
+	Offset int
+
+	SortBy  string
+	SortAsc bool
+}

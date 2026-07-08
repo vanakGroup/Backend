@@ -38,11 +38,14 @@ type Database struct {
 type Middlewares struct {
 	Authentication *middleware.AuthMiddleware
 	Recovery       *middleware.RecoveryMiddleware
+	CORS           *middleware.CORSMiddleware
 }
 
 type Seeds struct {
 	Address   *seeder.AddressSeeder
 	Attribute *seeder.AttributeTypeSeeder
+	Parking   *seeder.ParkingSeeder
+	User      *seeder.UserSeeder
 }
 
 type Application struct {
@@ -55,6 +58,7 @@ type Application struct {
 	GeneralUserController     *user.GeneralUserController
 	Seeds                     *Seeds
 	CustomerParkingController *parking.CustomerParkingController
+	GeneralParkingController  *parking.GeneralParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
 	CustomerWalletController  *wallet.CustomerWalletController
@@ -105,6 +109,7 @@ var DatabaseProviderSet = wire.NewSet(
 var MiddlewareSet = wire.NewSet(
 	middleware.NewRecoveryMiddleware,
 	middleware.NewAuthMiddleWare,
+	middleware.NewCorsMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -131,6 +136,8 @@ var ServiceSet = wire.NewSet(
 var SeederSet = wire.NewSet(
 	seeder.NewAddressSeeder,
 	seeder.NewAttributeTypeSeeder,
+	seeder.NewParkingSeeder,
+	seeder.NewUserSeeder,
 	wire.Struct(new(Seeds), "*"),
 )
 
@@ -141,6 +148,7 @@ var HashIDSet = wire.NewSet(
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
 	parking.NewCustomerParkingController,
+	parking.NewGeneralParkingController,
 	user.NewCustomerUserController,
 	vehicle.NewCustomerVehicleController,
 	wallet.NewCustomerWalletController,
@@ -155,6 +163,7 @@ func NewApplication(
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
 	customerParkingController *parking.CustomerParkingController,
+	generalParkingController *parking.GeneralParkingController,
 	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,

@@ -137,24 +137,33 @@ const docTemplate = `{
         },
         "/parking": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve complete User parkings",
+                "description": "Retrieve paginated list of all parkings without authentication",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Customer Parking"
+                    "Public Parking"
                 ],
-                "summary": "Get User parkings",
+                "summary": "Get all parkings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 10, max 100)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
+                            "$ref": "#/definitions/parkingdto.ParkingSearchResponse"
                         }
                     },
                     "400": {
@@ -487,6 +496,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/parking/info/{id}": {
+            "get": {
+                "description": "Retrieve general parking information by ID without authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Parking"
+                ],
+                "summary": "Get public parking info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Parking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/parking/parkingInfo/{id}": {
             "get": {
                 "security": [
@@ -516,6 +560,45 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/search": {
+            "post": {
+                "description": "Search available parkings with optional filters. Pagination: send page + pageSize, offset is calculated here.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Parking"
+                ],
+                "summary": "Search parkings",
+                "parameters": [
+                    {
+                        "description": "Search filters",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingSearchResponse"
                         }
                     },
                     "400": {
@@ -1169,6 +1252,113 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "parkingdto.ParkingForListResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/parkingdto.AddressDetailResponse"
+                },
+                "attribute_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "base_price": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "parkingdto.ParkingInfoResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/parkingdto.AddressDetailResponse"
+                },
+                "attribute_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "base_price": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "parkingdto.ParkingSearchPaginationMeta": {
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "type": "integer"
+                },
+                "hasNextPage": {
+                    "type": "boolean"
+                },
+                "hasPrevPage": {
+                    "type": "boolean"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "totalItems": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "parkingdto.ParkingSearchResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parkingdto.ParkingForListResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/parkingdto.ParkingSearchPaginationMeta"
                 }
             }
         },

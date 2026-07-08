@@ -64,6 +64,76 @@ definitions:
       title:
         type: string
     type: object
+  parkingdto.ParkingForListResponse:
+    properties:
+      address:
+        $ref: '#/definitions/parkingdto.AddressDetailResponse'
+      attribute_ids:
+        items:
+          type: integer
+        type: array
+      base_price:
+        type: number
+      id:
+        type: string
+      image_urls:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  parkingdto.ParkingInfoResponse:
+    properties:
+      address:
+        $ref: '#/definitions/parkingdto.AddressDetailResponse'
+      attribute_ids:
+        items:
+          type: integer
+        type: array
+      base_price:
+        type: number
+      id:
+        type: string
+      image_urls:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  parkingdto.ParkingSearchPaginationMeta:
+    properties:
+      currentPage:
+        type: integer
+      hasNextPage:
+        type: boolean
+      hasPrevPage:
+        type: boolean
+      pageSize:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  parkingdto.ParkingSearchResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/parkingdto.ParkingForListResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/parkingdto.ParkingSearchPaginationMeta'
+    type: object
   parkingdto.SlotDetailResponse:
     properties:
       date:
@@ -218,23 +288,30 @@ paths:
       - Authentication
   /parking:
     get:
-      description: Retrieve complete User parkings
+      description: Retrieve paginated list of all parkings without authentication
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 10, max 100)
+        in: query
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/base.MultipleMessageResponse'
-      security:
-      - BearerAuth: []
-      summary: Get User parkings
+      summary: Get all parkings
       tags:
-      - Customer Parking
+      - Public Parking
   /parking/crud/create:
     post:
       consumes:
@@ -449,6 +526,29 @@ paths:
       summary: Update an existing parking
       tags:
       - Customer Parking
+  /parking/info/{id}:
+    get:
+      description: Retrieve general parking information by ID without authentication
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get public parking info
+      tags:
+      - Public Parking
   /parking/parkingInfo/{id}:
     get:
       description: Retrieve complete parking info
@@ -474,6 +574,32 @@ paths:
       summary: Get parking Info
       tags:
       - Customer Parking
+  /parking/search:
+    post:
+      consumes:
+      - application/json
+      description: 'Search available parkings with optional filters. Pagination: send
+        page + pageSize, offset is calculated here.'
+      parameters:
+      - description: Search filters
+        in: body
+        name: request
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Search parkings
+      tags:
+      - Public Parking
   /parking/static/attributes:
     get:
       description: Retrieve a list of all available parking attributes/features with
