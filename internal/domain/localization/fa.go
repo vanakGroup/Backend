@@ -226,6 +226,7 @@ var Persian = map[string]interface{}{
 		"getTransactionList":        "لیست تراکنش ها با موفقیت دریافت شد.",
 		"getParkingInfo":            "دریافت اطلاعات پارکینگ با موفقیت بود.",
 		"getUserParkings":           "پارکینگ های کاربر با موفقیت دریافت شد.",
+		"searchParking":             "جستجوی پارکینگ با موفقیت انجام شد.",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",

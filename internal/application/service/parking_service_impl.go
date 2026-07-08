@@ -703,3 +703,107 @@ func (ps *ParkingService) SearchParking(req parkingdto.ParkingSearchRequest) ([]
 
 	return result, total, nil
 }
+
+func (ps *ParkingService) GetAllParkings(limit, offset int) ([]parkingdto.ParkingForListResponse, int64, error) {
+	repo := ps.unitOfWork.Factory().ParkingRepository()
+
+	total, err := repo.CountAll()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	queryOptions := filter.NewQueryOptions().WithPagination(limit, offset)
+	parkings, err := repo.GetAll(queryOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	result := make([]parkingdto.ParkingForListResponse, 0, len(parkings))
+	for _, parking := range parkings {
+		parkingHashedID, err := ps.hashID.Encode(parking.ID)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		var imageUrls []string
+		for _, img := range parking.Images {
+			if img.ImageURL != "" {
+				url, urlErr := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
+				if urlErr == nil {
+					imageUrls = append(imageUrls, url)
+				}
+			}
+		}
+
+		var attributeIDs []uint
+		for _, attr := range parking.Attributes {
+			attributeIDs = append(attributeIDs, attr.ID)
+		}
+
+		result = append(result, parkingdto.ParkingForListResponse{
+			ID:        parkingHashedID,
+			Title:     parking.Title,
+			BasePrice: parking.BasePrice,
+			Status:    parking.Status.String(),
+			Address: parkingdto.AddressDetailResponse{
+				CityID:       parking.Address.CityID,
+				PostalCode:   parking.Address.PostalCode,
+				UnitNumber:   parking.Address.UnitNumber,
+				ExactAddress: parking.Address.ExactAddress,
+			},
+			AttributeIDs: attributeIDs,
+			ImageURLs:    imageUrls,
+		})
+	}
+
+	return result, total, nil
+}
+
+func (ps *ParkingService) GetParkingPublicInfo(parkingIDHashed string) (*parkingdto.ParkingInfoResponse, error) {
+	parkingID, err := ps.hashID.Decode(parkingIDHashed)
+	if err != nil {
+		return nil, exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
+	}
+
+	parking, err := ps.unitOfWork.Factory().ParkingRepository().GetByID(parkingID)
+	if err != nil {
+		return nil, err
+	}
+
+	var imageUrls []string
+	for _, img := range parking.Images {
+		if img.ImageURL != "" {
+			url, urlErr := ps.s3Storage.GetPresignedURL(enums.ParkingPic, img.ImageURL, time.Hour)
+			if urlErr == nil {
+				imageUrls = append(imageUrls, url)
+			}
+		}
+	}
+
+	var attributeIDs []uint
+	for _, attr := range parking.Attributes {
+		attributeIDs = append(attributeIDs, attr.ID)
+	}
+
+	parkingHashedID, err := ps.hashID.Encode(parking.ID)
+	if err != nil {
+		return nil, exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
+	}
+
+	return &parkingdto.ParkingInfoResponse{
+		ID:        parkingHashedID,
+		Title:     parking.Title,
+		Longitude: parking.Longitude,
+		Latitude:  parking.Latitude,
+		BasePrice: parking.BasePrice,
+		Status:    parking.Status.String(),
+		Address: parkingdto.AddressDetailResponse{
+			CityID:       parking.Address.CityID,
+			PostalCode:   parking.Address.PostalCode,
+			UnitNumber:   parking.Address.UnitNumber,
+			ExactAddress: parking.Address.ExactAddress,
+		},
+		AttributeIDs: attributeIDs,
+		ImageURLs:    imageUrls,
+	}, nil
+}

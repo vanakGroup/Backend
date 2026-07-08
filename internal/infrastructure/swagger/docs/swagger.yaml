@@ -85,6 +85,31 @@ definitions:
       title:
         type: string
     type: object
+  parkingdto.ParkingInfoResponse:
+    properties:
+      address:
+        $ref: '#/definitions/parkingdto.AddressDetailResponse'
+      attribute_ids:
+        items:
+          type: integer
+        type: array
+      base_price:
+        type: number
+      id:
+        type: string
+      image_urls:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      status:
+        type: string
+      title:
+        type: string
+    type: object
   parkingdto.ParkingSearchPaginationMeta:
     properties:
       currentPage:
@@ -263,23 +288,30 @@ paths:
       - Authentication
   /parking:
     get:
-      description: Retrieve complete User parkings
+      description: Retrieve paginated list of all parkings without authentication
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 10, max 100)
+        in: query
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
+            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/base.MultipleMessageResponse'
-      security:
-      - BearerAuth: []
-      summary: Get User parkings
+      summary: Get all parkings
       tags:
-      - Customer Parking
+      - Public Parking
   /parking/crud/create:
     post:
       consumes:
@@ -494,6 +526,29 @@ paths:
       summary: Update an existing parking
       tags:
       - Customer Parking
+  /parking/info/{id}:
+    get:
+      description: Retrieve general parking information by ID without authentication
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get public parking info
+      tags:
+      - Public Parking
   /parking/parkingInfo/{id}:
     get:
       description: Retrieve complete parking info
@@ -544,7 +599,7 @@ paths:
             $ref: '#/definitions/base.MultipleMessageResponse'
       summary: Search parkings
       tags:
-      - Parking Search
+      - Public Parking
   /parking/static/attributes:
     get:
       description: Retrieve a list of all available parking attributes/features with

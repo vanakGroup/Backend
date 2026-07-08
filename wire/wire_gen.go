@@ -64,6 +64,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	hashID := hashed.NewHashID(config)
 	parkingService := service.NewParkingService(config, unitOfWork, s3Storage, hashID)
 	customerParkingController := parking.NewCustomerParkingController(config, parkingService)
+	generalParkingController := parking.NewGeneralParkingController(config, parkingService)
 	addressSeeder := seeder.NewAddressSeeder(unitOfWork)
 	attributeTypeSeeder := seeder.NewAttributeTypeSeeder(unitOfWork)
 	parkingSeeder := seeder.NewParkingSeeder(db)
@@ -80,7 +81,7 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	customerVehicleController := vehicle.NewCustomerVehicleController(config, vehicleService)
 	walletService := service.NewWalletService(unitOfWork, config)
 	customerWalletController := wallet.NewCustomerWalletController(config, walletService)
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, seeds, customerUserController, customerVehicleController, customerWalletController, hashID)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, generalParkingController, seeds, customerUserController, customerVehicleController, customerWalletController, hashID)
 	return application, nil
 }
 
@@ -113,6 +114,7 @@ type Application struct {
 	GeneralUserController     *user.GeneralUserController
 	Seeds                     *Seeds
 	CustomerParkingController *parking.CustomerParkingController
+	GeneralParkingController  *parking.GeneralParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
 	CustomerWalletController  *wallet.CustomerWalletController
@@ -142,7 +144,7 @@ var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeed
 
 var HashIDSet = wire.NewSet(hashed.NewHashID)
 
-var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, user.NewCustomerUserController, vehicle.NewCustomerVehicleController, wallet.NewCustomerWalletController)
+var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, parking.NewGeneralParkingController, user.NewCustomerUserController, vehicle.NewCustomerVehicleController, wallet.NewCustomerWalletController)
 
 func NewApplication(
 	db *Database,
@@ -153,6 +155,7 @@ func NewApplication(
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
 	customerParkingController *parking.CustomerParkingController,
+	generalParkingController *parking.GeneralParkingController,
 	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
@@ -169,6 +172,7 @@ func NewApplication(
 		GeneralUserController:     generalUserController,
 		Seeds:                     seeds,
 		CustomerParkingController: customerParkingController,
+		GeneralParkingController:  generalParkingController,
 		CustomerUserController:    customerUserController,
 		CustomerVehicleController: customerVehicleController,
 		CustomerWalletController:  customerWalletController,

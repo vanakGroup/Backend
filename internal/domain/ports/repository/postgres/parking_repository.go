@@ -28,4 +28,7 @@ type ParkingRepository interface {
 	GetAllByUserID(userID uint) ([]*entities.Parking, error)
 	Search(f filter.ParkingFilter, options *filter.QueryOptions) ([]entities.Parking, error)
 	Count(f filter.ParkingFilter) (int64, error)
+	GetAll(options *filter.QueryOptions) ([]entities.Parking, error)
+	CountAll() (int64, error)
+	GetByID(id uint) (*entities.Parking, error)
 }

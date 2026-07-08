@@ -58,6 +58,7 @@ type Application struct {
 	GeneralUserController     *user.GeneralUserController
 	Seeds                     *Seeds
 	CustomerParkingController *parking.CustomerParkingController
+	GeneralParkingController  *parking.GeneralParkingController
 	CustomerUserController    *user.CustomerUserController
 	CustomerVehicleController *vehicle.CustomerVehicleController
 	CustomerWalletController  *wallet.CustomerWalletController
@@ -147,6 +148,7 @@ var HashIDSet = wire.NewSet(
 var ControllerSet = wire.NewSet(
 	user.NewGeneralUserController,
 	parking.NewCustomerParkingController,
+	parking.NewGeneralParkingController,
 	user.NewCustomerUserController,
 	vehicle.NewCustomerVehicleController,
 	wallet.NewCustomerWalletController,
@@ -161,6 +163,7 @@ func NewApplication(
 	userService *service.UserService,
 	generalUserController *user.GeneralUserController,
 	customerParkingController *parking.CustomerParkingController,
+	generalParkingController *parking.GeneralParkingController,
 	seeds *Seeds,
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
