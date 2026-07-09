@@ -1,0 +1,33 @@
+stages:
+  - build-and-push
+  - deploy
+
+variables:
+  REGISTRY: "registry.hamdocker.ir"
+  IMAGE: "registry.hamdocker.ir/mani2005/vanak-backend"
+build-and-push:
+  stage: build-and-push
+  tags:
+    - vps-runner
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_MESSAGE =~ /^\[deploy\]/'
+  script:
+    - echo "$HAMDOCKER_PASSWORD" | docker login $REGISTRY -u "$HAMDOCKER_USER" --password-stdin
+    - docker build --platform linux/amd64 -t $IMAGE:latest -f docker/Dockerfile .
+    - docker push $IMAGE:latest
+
+deploy:
+  stage: deploy
+  tags:
+    - vps-runner
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_MESSAGE =~ /^\[deploy\]/'
+  script:
+    - echo "$HAMDOCKER_PASSWORD" | docker login $REGISTRY -u "$HAMDOCKER_USER" --password-stdin
+    - cd /root/vanak-backend
+    - docker pull $IMAGE:latest
+    - docker rm -f vanak_backend_container || true
+    - docker compose up -d --force-recreate backend
+    - docker image prune -f

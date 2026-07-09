@@ -22,7 +22,7 @@ RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 
 COPY --from=builder /app/vanak-backend .
-COPY --from=builder /app/.env .
+#COPY --from=builder /app/.env .
 
 COPY internal/infrastructure/jwt/ ./internal/infrastructure/jwt/
 
