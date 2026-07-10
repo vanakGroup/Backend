@@ -4,6 +4,120 @@
         "contact": {}
     },
     "paths": {
+        "/Generalparking": {
+            "get": {
+                "description": "Retrieve paginated list of all parkings without authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Parking"
+                ],
+                "summary": "Get all parkings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 10, max 100)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/Generalparking/info/{id}": {
+            "get": {
+                "description": "Retrieve general parking information by ID without authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Parking"
+                ],
+                "summary": "Get public parking info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Parking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/Generalparking/search": {
+            "post": {
+                "description": "Search available parkings with optional filters. Pagination: send page + pageSize, offset is calculated here.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Parking"
+                ],
+                "summary": "Search parkings",
+                "parameters": [
+                    {
+                        "description": "Search filters",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parkingdto.ParkingSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base.MultipleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Authenticate user into the Vanak Parking System using phone number and returns user session info",
@@ -126,33 +240,24 @@
         },
         "/parking": {
             "get": {
-                "description": "Retrieve paginated list of all parkings without authentication",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve complete User parkings",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Public Parking"
+                    "Customer Parking"
                 ],
-                "summary": "Get all parkings",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number (default 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Items per page (default 10, max 100)",
-                        "name": "pageSize",
-                        "in": "query"
-                    }
-                ],
+                "summary": "Get User parkings",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/parkingdto.ParkingSearchResponse"
+                            "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
                         }
                     },
                     "400": {
@@ -485,41 +590,6 @@
                 }
             }
         },
-        "/parking/info/{id}": {
-            "get": {
-                "description": "Retrieve general parking information by ID without authentication",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Public Parking"
-                ],
-                "summary": "Get public parking info",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Parking ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/parkingdto.ParkingInfoResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/base.MultipleMessageResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/parking/parkingInfo/{id}": {
             "get": {
                 "security": [
@@ -549,45 +619,6 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/parkingdto.ParkingDetailResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/base.MultipleMessageResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/parking/search": {
-            "post": {
-                "description": "Search available parkings with optional filters. Pagination: send page + pageSize, offset is calculated here.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Public Parking"
-                ],
-                "summary": "Search parkings",
-                "parameters": [
-                    {
-                        "description": "Search filters",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/parkingdto.ParkingSearchResponse"
                         }
                     },
                     "400": {
