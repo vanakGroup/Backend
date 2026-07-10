@@ -206,6 +206,81 @@ definitions:
 info:
   contact: {}
 paths:
+  /Generalparking:
+    get:
+      description: Retrieve paginated list of all parkings without authentication
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 10, max 100)
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get all parkings
+      tags:
+      - Public Parking
+  /Generalparking/info/{id}:
+    get:
+      description: Retrieve general parking information by ID without authentication
+      parameters:
+      - description: Parking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Get public parking info
+      tags:
+      - Public Parking
+  /Generalparking/search:
+    post:
+      consumes:
+      - application/json
+      description: 'Search available parkings with optional filters. Pagination: send
+        page + pageSize, offset is calculated here.'
+      parameters:
+      - description: Search filters
+        in: body
+        name: request
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/base.MultipleMessageResponse'
+      summary: Search parkings
+      tags:
+      - Public Parking
   /auth/login:
     post:
       description: Authenticate user into the Vanak Parking System using phone number
@@ -288,30 +363,23 @@ paths:
       - Authentication
   /parking:
     get:
-      description: Retrieve paginated list of all parkings without authentication
-      parameters:
-      - description: Page number (default 1)
-        in: query
-        name: page
-        type: integer
-      - description: Items per page (default 10, max 100)
-        in: query
-        name: pageSize
-        type: integer
+      description: Retrieve complete User parkings
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
+            $ref: '#/definitions/parkingdto.ParkingDetailResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/base.MultipleMessageResponse'
-      summary: Get all parkings
+      security:
+      - BearerAuth: []
+      summary: Get User parkings
       tags:
-      - Public Parking
+      - Customer Parking
   /parking/crud/create:
     post:
       consumes:
@@ -526,29 +594,6 @@ paths:
       summary: Update an existing parking
       tags:
       - Customer Parking
-  /parking/info/{id}:
-    get:
-      description: Retrieve general parking information by ID without authentication
-      parameters:
-      - description: Parking ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/parkingdto.ParkingInfoResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/base.MultipleMessageResponse'
-      summary: Get public parking info
-      tags:
-      - Public Parking
   /parking/parkingInfo/{id}:
     get:
       description: Retrieve complete parking info
@@ -574,32 +619,6 @@ paths:
       summary: Get parking Info
       tags:
       - Customer Parking
-  /parking/search:
-    post:
-      consumes:
-      - application/json
-      description: 'Search available parkings with optional filters. Pagination: send
-        page + pageSize, offset is calculated here.'
-      parameters:
-      - description: Search filters
-        in: body
-        name: request
-        schema:
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/parkingdto.ParkingSearchResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/base.MultipleMessageResponse'
-      summary: Search parkings
-      tags:
-      - Public Parking
   /parking/static/attributes:
     get:
       description: Retrieve a list of all available parking attributes/features with
