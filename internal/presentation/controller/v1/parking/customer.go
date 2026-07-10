@@ -30,6 +30,7 @@ func NewCustomerParkingController(
 	}
 }
 
+
 // CreateParking godoc
 // @Summary      Create a new parking
 // @Description  Create a parking space with details, document, and images
