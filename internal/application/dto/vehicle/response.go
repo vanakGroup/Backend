@@ -7,7 +7,7 @@ type VehicleDTOResponse struct {
 }
 
 type VehicleListDTOResponse struct {
-	ID           uint   `json:"id"`
+	ID           string `json:"id"`
 	LicensePlate string `json:"license_plate"`
 	CarModel     string `json:"car_model"`
 }

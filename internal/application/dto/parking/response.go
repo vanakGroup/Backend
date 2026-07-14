@@ -77,6 +77,13 @@ type ParkingForListResponse struct {
 	ImageURLs    []string              `json:"image_urls"`
 }
 
+type ParkingReservationDetailResponse struct {
+	ID        string                `json:"id"`
+	Title     string                `json:"title"`
+	Latitude  float64               `json:"latitude"`
+	Longitude float64               `json:"longitude"`
+	Address   AddressDetailResponse `json:"address"`
+}
 type ParkingSearchPaginationMeta struct {
 	CurrentPage int   `json:"currentPage"`
 	PageSize    int   `json:"pageSize"`

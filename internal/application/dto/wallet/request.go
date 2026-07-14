@@ -7,4 +7,5 @@ type WalletDTORequest struct {
 	ReferenceType   enums.TransactionReferenceType
 	TransactionType enums.TransactionType
 	UserId          uint
+	ReferenceId     *uint
 }

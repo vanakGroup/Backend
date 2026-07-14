@@ -148,7 +148,7 @@ func (us *UserService) UpdateInformation(ctx context.Context, info userdto.UserF
 		firtname := strings.TrimSpace(*info.FirstName)
 		if firtname == "" {
 
-			updateData[us.cfg.Constant.ProfileFilleds.Firstname] = nil
+			updateData[us.cfg.Constant.ProfileFilleds.Firstname] = ""
 		} else {
 
 			updateData[us.cfg.Constant.ProfileFilleds.Firstname] = &firtname
@@ -159,7 +159,7 @@ func (us *UserService) UpdateInformation(ctx context.Context, info userdto.UserF
 	if info.LastName != nil {
 		lastname := strings.TrimSpace(*info.LastName)
 		if lastname == "" {
-			updateData[us.cfg.Constant.ProfileFilleds.Lastname] = nil
+			updateData[us.cfg.Constant.ProfileFilleds.Lastname] = ""
 		} else {
 			updateData[us.cfg.Constant.ProfileFilleds.Lastname] = &lastname
 			minInfo++

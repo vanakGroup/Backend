@@ -41,7 +41,18 @@ func (ps *ParkingService) CreateParking(userID uint, parkingInfo parkingdto.Crea
 	var response *parkingdto.CreateParkingResponse
 	var slotCount int
 
-	err := ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+	disableError := exception.NewDisabledError()
+	wallet, err := ps.unitOfWork.Factory().WalletRepository().FindWalletByUserId(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !wallet.IsActive {
+		disableError.Add(ps.cfg.Constant.ErrorField.Wallet, ps.cfg.Constant.ErrorTag.Disabled)
+		return nil, disableError
+	}
+
+	err = ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		parkingRepo := rf.ParkingRepository()
 		addressRepo := rf.AddressRepository()
 

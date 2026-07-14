@@ -23,6 +23,7 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	storage "github.com/Vanak/Backend/internal/infrastructure/storage"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/reservation"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/vehicle"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/wallet"
@@ -49,20 +50,21 @@ type Seeds struct {
 }
 
 type Application struct {
-	Database                  *Database
-	Translator                domainLocalization.Translator
-	Middlewares               *Middlewares
-	Constants                 *bootstrap.Constants
-	OtpService                *service.OtpService
-	UserService               *service.UserService
-	GeneralUserController     *user.GeneralUserController
-	Seeds                     *Seeds
-	CustomerParkingController *parking.CustomerParkingController
-	GeneralParkingController  *parking.GeneralParkingController
-	CustomerUserController    *user.CustomerUserController
-	CustomerVehicleController *vehicle.CustomerVehicleController
-	CustomerWalletController  *wallet.CustomerWalletController
-	HashID                    *hashed.HashID
+	Database                      *Database
+	Translator                    domainLocalization.Translator
+	Middlewares                   *Middlewares
+	Constants                     *bootstrap.Constants
+	OtpService                    *service.OtpService
+	UserService                   *service.UserService
+	GeneralUserController         *user.GeneralUserController
+	Seeds                         *Seeds
+	CustomerParkingController     *parking.CustomerParkingController
+	GeneralParkingController      *parking.GeneralParkingController
+	CustomerUserController        *user.CustomerUserController
+	CustomerVehicleController     *vehicle.CustomerVehicleController
+	CustomerWalletController      *wallet.CustomerWalletController
+	CustomerReservationController *reservation.CustomerReservationController
+	HashID                        *hashed.HashID
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -91,6 +93,7 @@ var DatabaseProviderSet = wire.NewSet(
 	postgresRepo.NewParkingRepository,
 	postgresRepo.NewVehicleRepository,
 	postgresRepo.NewWalletRepository,
+	postgresRepo.NewReservationRepository,
 	persistance.NewUnitOfWork,
 	persistance.NewRepositoryFactory,
 	storage.NewS3Storage,
@@ -103,6 +106,7 @@ var DatabaseProviderSet = wire.NewSet(
 	wire.Bind(new(postgresDomain.ParkingRepository), new(*postgresRepo.ParkingRepository)),
 	wire.Bind(new(postgresDomain.VehicleRepository), new(*postgresRepo.VehicleRepository)),
 	wire.Bind(new(postgresDomain.WalletRepository), new(*postgresRepo.WalletRepository)),
+	wire.Bind(new(postgresDomain.ReservationRepository), new(*postgresRepo.ReservationRepository)),
 	wire.Struct(new(Database), "*"),
 )
 
@@ -120,6 +124,7 @@ var ServiceSet = wire.NewSet(
 	service.NewJwtService,
 	service.NewParkingService,
 	service.NewWalletService,
+	service.NewReservationService,
 	jwt.NewJwtKeyManager,
 	service.NewVehicleService,
 	wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)),
@@ -131,6 +136,7 @@ var ServiceSet = wire.NewSet(
 	wire.Bind(new(usecase.JwtService), new(*service.JwtService)),
 	wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)),
 	wire.Bind(new(usecase.WalletService), new(*service.WalletService)),
+	wire.Bind(new(usecase.ReservationService), new(*service.ReservationService)),
 )
 
 var SeederSet = wire.NewSet(
@@ -152,6 +158,7 @@ var ControllerSet = wire.NewSet(
 	user.NewCustomerUserController,
 	vehicle.NewCustomerVehicleController,
 	wallet.NewCustomerWalletController,
+	reservation.NewCustomerReservationController,
 )
 
 func NewApplication(
@@ -168,22 +175,24 @@ func NewApplication(
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
 	customerWalletController *wallet.CustomerWalletController,
+	customerReservationController *reservation.CustomerReservationController,
 	hashID *hashed.HashID,
 ) *Application {
 	return &Application{
-		Database:                  db,
-		Translator:                trans,
-		Middlewares:               mid,
-		Constants:                 cons,
-		OtpService:                otpService,
-		UserService:               userService,
-		GeneralUserController:     generalUserController,
-		Seeds:                     seeds,
-		CustomerParkingController: customerParkingController,
-		CustomerUserController:    customerUserController,
-		CustomerVehicleController: customerVehicleController,
-		CustomerWalletController:  customerWalletController,
-		HashID:                    hashID,
+		Database:                      db,
+		Translator:                    trans,
+		Middlewares:                   mid,
+		Constants:                     cons,
+		OtpService:                    otpService,
+		UserService:                   userService,
+		GeneralUserController:         generalUserController,
+		Seeds:                         seeds,
+		CustomerParkingController:     customerParkingController,
+		CustomerUserController:        customerUserController,
+		CustomerVehicleController:     customerVehicleController,
+		CustomerWalletController:      customerWalletController,
+		CustomerReservationController: customerReservationController,
+		HashID:                        hashID,
 	}
 }
 

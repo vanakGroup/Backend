@@ -6,7 +6,7 @@ type WalletDTOResponse struct {
 }
 
 type TransactionListDTOResponse struct {
-	ID        uint   `json:"id"`
+	ID        string `json:"id"`
 	Amount    int64  `json:"amount"`
 	Type      string `json:"type"`
 	Reason    string `json:"reason"`

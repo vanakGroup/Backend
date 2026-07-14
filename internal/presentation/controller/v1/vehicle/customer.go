@@ -3,7 +3,6 @@ package vehicle
 import (
 	"fmt"
 	"mime/multipart"
-	"strconv"
 
 	"github.com/Vanak/Backend/bootstrap"
 	vehicledto "github.com/Vanak/Backend/internal/application/dto/vehicle"
@@ -40,7 +39,7 @@ func NewCustomerVehicleController(cfg *bootstrap.Config, vehicleService usecase.
 // @Failure      401  {object}  base.SingleMessageResponse "Unauthorized (missing or invalid token)"
 // @Failure      500  {object}  base.SingleMessageResponse "Internal server error (file upload or database issue)"
 // @Router       /vehicle [post]
-func (cvc CustomerVehicleController) CreateVehicle(ctx *gin.Context) {
+func (cvc *CustomerVehicleController) CreateVehicle(ctx *gin.Context) {
 
 	type VehiclesFilledParams struct {
 		LicensePlate     string                `form:"license_plate" validate:"required"`
@@ -113,7 +112,7 @@ func (cvc *CustomerVehicleController) GetAllVehicles(ctx *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id   path      int  true  "Vehicle ID"
+// @Param        id   path      string  true  "Vehicle ID"
 // @Success      200  {object}  vehicledto.VehicleDTOResponse "Vehicle details successfully retrieved"
 // @Failure      400  {object}  base.SingleMessageResponse "Invalid ID format"
 // @Failure      401  {object}  base.SingleMessageResponse "Unauthorized (missing or invalid token)"
@@ -122,7 +121,7 @@ func (cvc *CustomerVehicleController) GetAllVehicles(ctx *gin.Context) {
 // @Failure      500  {object}  base.SingleMessageResponse "Internal server error"
 // @Router       /vehicle/{id} [get]
 func (cvc *CustomerVehicleController) GetVehicle(ctx *gin.Context) {
-	vehicleIDString := ctx.Param("id")
+	vehicleID := ctx.Param("id")
 	userIDAny, exists := ctx.Get(cvc.cfg.Constant.Context.UserID)
 
 	if !exists {
@@ -130,15 +129,7 @@ func (cvc *CustomerVehicleController) GetVehicle(ctx *gin.Context) {
 		panic(unauthorizedError)
 	}
 
-	vehicleID64, err := strconv.ParseUint(vehicleIDString, 10, 0)
-	if err != nil {
-		formatError := exception.NewFormatError()
-		formatError.Add(cvc.cfg.Constant.VehicleFields.ID, cvc.cfg.Constant.ErrorTag.WrongFormat, cvc.cfg.Constant.ErrorField.VehicleId)
-		panic(formatError)
-	}
-
 	userId := userIDAny.(uint)
-	vehicleID := uint(vehicleID64)
 	vehicleInfo, informationErr := cvc.vehicleService.GetVehicle(vehicleID, userId)
 
 	if informationErr != nil {
@@ -158,7 +149,7 @@ func (cvc *CustomerVehicleController) GetVehicle(ctx *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id   path      int  true  "Vehicle ID"
+// @Param        id   path      string  true  "Vehicle ID"
 // @Success      200  {object}  base.SingleMessageResponse "Vehicle successfully deleted"
 // @Failure      400  {object}  base.SingleMessageResponse "Invalid ID format"
 // @Failure      401  {object}  base.SingleMessageResponse "Unauthorized (missing or invalid token)"
@@ -166,7 +157,7 @@ func (cvc *CustomerVehicleController) GetVehicle(ctx *gin.Context) {
 // @Failure      500  {object}  base.SingleMessageResponse "Internal server error"
 // @Router       /vehicle/{id} [delete]
 func (cvc *CustomerVehicleController) DeleteVehicle(ctx *gin.Context) {
-	vehicleIDString := ctx.Param("id")
+	vehicleID := ctx.Param("id")
 	userIDAny, exists := ctx.Get(cvc.cfg.Constant.Context.UserID)
 
 	if !exists {
@@ -174,17 +165,9 @@ func (cvc *CustomerVehicleController) DeleteVehicle(ctx *gin.Context) {
 		panic(unauthorizedError)
 	}
 
-	vehicleID64, err := strconv.ParseUint(vehicleIDString, 10, 0)
-	if err != nil {
-		formatError := exception.NewFormatError()
-		formatError.Add(cvc.cfg.Constant.VehicleFields.ID, cvc.cfg.Constant.ErrorTag.WrongFormat, cvc.cfg.Constant.ErrorField.VehicleId)
-		panic(formatError)
-	}
-
 	userId := userIDAny.(uint)
-	vehicleID := uint(vehicleID64)
 
-	err = cvc.vehicleService.DeleteVehicle(vehicleID, userId)
+	err := cvc.vehicleService.DeleteVehicle(vehicleID, userId)
 	if err != nil {
 		panic(err)
 	}

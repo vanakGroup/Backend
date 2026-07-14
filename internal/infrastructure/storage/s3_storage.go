@@ -27,6 +27,7 @@ func NewS3Storage(cfg *bootstrap.Config) *S3Storage {
 	buckets[enums.LogoPic] = storage.Buckets.LogoPic
 	buckets[enums.ParkingDoc] = storage.Buckets.ParkingDoc
 	buckets[enums.ParkingPic] = storage.Buckets.ParkingPic
+	buckets[enums.RegistrationCardPic] = storage.Buckets.RegistrationCardPic
 
 	return &S3Storage{
 		storage: &storage,

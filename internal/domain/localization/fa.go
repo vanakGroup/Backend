@@ -62,6 +62,9 @@ var Persian = map[string]interface{}{
 	"duplicate":            "تکراری",
 	"attribute":            "ویژگی",
 	"wallet":               "کیف پول",
+	"transaction":          "تراکنش",
+	"time":                 "زمان",
+	"balance":              "موجودی",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
 		"numeric":                "`{0}` باید عدد باشد.",
@@ -226,6 +229,10 @@ var Persian = map[string]interface{}{
 		"getTransactionList":        "لیست تراکنش ها با موفقیت دریافت شد.",
 		"getParkingInfo":            "دریافت اطلاعات پارکینگ با موفقیت بود.",
 		"getUserParkings":           "پارکینگ های کاربر با موفقیت دریافت شد.",
+		"registerReservation":       "رزرو با موفقیت انجام شد.",
+		"getReservationList":        "لیست رزرو با موفقیت دریافت شد.",
+		"verifySettlement":          "تسویه با موفقیت تایید شد.",
+		"getReservationInfo":        "اطلاعات رزرو با موفقیت دریافت شد.",
 		"searchParking":             "جستجوی پارکینگ با موفقیت انجام شد.",
 	},
 	"emailSubject": map[string]interface{}{
