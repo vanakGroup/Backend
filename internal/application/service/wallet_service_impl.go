@@ -7,20 +7,24 @@ import (
 	"github.com/Vanak/Backend/internal/domain/enums"
 	"github.com/Vanak/Backend/internal/domain/exception"
 	"github.com/Vanak/Backend/internal/domain/ports"
+	"github.com/Vanak/Backend/internal/infrastructure/hashed"
 )
 
 type WalletService struct {
 	unitOfWork ports.UnitOfWork
 	cfg        *bootstrap.Config
+	hashID     *hashed.HashID
 }
 
 func NewWalletService(
 	unitOfWork ports.UnitOfWork,
 	cfg *bootstrap.Config,
+	hashID *hashed.HashID,
 ) *WalletService {
 	return &WalletService{
 		unitOfWork: unitOfWork,
 		cfg:        cfg,
+		hashID:     hashID,
 	}
 }
 
@@ -48,7 +52,7 @@ func (ws *WalletService) GetWalletInformation(userId uint) (*walletdto.WalletDTO
 	return &wallet, nil
 }
 
-func (ws *WalletService) Deposit(transactionInfo walletdto.WalletDTORequest) error {
+func (ws *WalletService) depositInternal(rf ports.RepositoryFactory, transactionInfo walletdto.WalletDTORequest) error {
 	foundWallet, err := ws.unitOfWork.Factory().WalletRepository().FindWalletByUserId(transactionInfo.UserId)
 	disableErrors := exception.NewDisabledError()
 
@@ -60,55 +64,117 @@ func (ws *WalletService) Deposit(transactionInfo walletdto.WalletDTORequest) err
 		disableErrors.Add(ws.cfg.Constant.ErrorField.Wallet, ws.cfg.Constant.ErrorTag.Disabled)
 	}
 
+	if transactionInfo.TransactionType != enums.DEPOSIT {
+		return exception.NewConflictError(ws.cfg.Constant.ErrorField.Transaction)
+	}
+
 	if disableErrors.HasErrors() {
 		return disableErrors
 	}
 
-	err = ws.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
-		paymentRepo := rf.PaymentRepository()
-		transactionRepo := rf.TransactionRepository()
-		walletRepo := rf.WalletRepository()
+	paymentRepo := rf.PaymentRepository()
+	transactionRepo := rf.TransactionRepository()
+	walletRepo := rf.WalletRepository()
 
-		if transactionInfo.TransactionType == enums.DEPOSIT && transactionInfo.ReferenceType == enums.GATEWAY {
-			lockedWallet, err := walletRepo.FindByIdForUpdate(foundWallet.ID)
-			if err != nil {
-				return err
-			}
+	lockedWallet, err := walletRepo.FindByIdForUpdate(foundWallet.ID)
+	if err != nil {
+		return err
+	}
 
-			payment := &entities.MockPayment{
-				Amount: transactionInfo.Amount,
-				UserID: transactionInfo.UserId,
-			}
-
-			err = paymentRepo.Create(payment)
-			if err != nil {
-				return err
-			}
-
-			transaction := &entities.Transaction{
-				Amount:        transactionInfo.Amount,
-				Type:          transactionInfo.TransactionType,
-				ReferenceType: transactionInfo.ReferenceType,
-				ReferenceID:   payment.ID,
-				WalletID:      foundWallet.ID,
-			}
-
-			err = transactionRepo.Create(transaction)
-			if err != nil {
-				return err
-			}
-
-			err = walletRepo.UpdateBalance(lockedWallet.ID, lockedWallet.Balance+transaction.Amount)
-			if err != nil {
-				return err
-			}
-
+	var referenceId uint
+	if transactionInfo.ReferenceType == enums.GATEWAY {
+		payment := &entities.MockPayment{
+			Amount: transactionInfo.Amount,
+			UserID: transactionInfo.UserId,
 		}
 
-		return nil
-	})
+		err = paymentRepo.Create(payment)
+		if err != nil {
+			return err
+		}
 
-	return err
+		referenceId = payment.ID
+	} else if transactionInfo.ReferenceType == enums.RESERVATION {
+		if transactionInfo.ReferenceId == nil {
+			return exception.NewConflictError(ws.cfg.Constant.ErrorField.Transaction)
+		}
+		referenceId = *transactionInfo.ReferenceId
+	} else {
+		return exception.NewConflictError(ws.cfg.Constant.ErrorField.Transaction)
+	}
+
+	transaction := &entities.Transaction{
+		Amount:        transactionInfo.Amount,
+		Type:          transactionInfo.TransactionType,
+		ReferenceType: transactionInfo.ReferenceType,
+		ReferenceID:   referenceId,
+		WalletID:      foundWallet.ID,
+	}
+
+	err = transactionRepo.Create(transaction)
+	if err != nil {
+		return err
+	}
+
+	err = walletRepo.UpdateBalance(lockedWallet.ID, lockedWallet.Balance+transaction.Amount)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ws *WalletService) deductInternal(rf ports.RepositoryFactory, transactionInfo walletdto.WalletDTORequest) error {
+	foundWallet, err := ws.unitOfWork.Factory().WalletRepository().FindWalletByUserId(transactionInfo.UserId)
+	disableErrors := exception.NewDisabledError()
+
+	if err != nil {
+		return err
+	}
+
+	if transactionInfo.TransactionType != enums.PAYMENT {
+		return exception.NewConflictError(ws.cfg.Constant.ErrorField.Transaction)
+	}
+
+	if !foundWallet.IsActive {
+		disableErrors.Add(ws.cfg.Constant.ErrorField.Wallet, ws.cfg.Constant.ErrorTag.Disabled)
+	}
+
+	if disableErrors.HasErrors() {
+		return disableErrors
+	}
+
+	transactionRepo := rf.TransactionRepository()
+	walletRepo := rf.WalletRepository()
+
+	lockedWallet, err := walletRepo.FindByIdForUpdate(foundWallet.ID)
+	if err != nil {
+		return err
+	}
+
+	if lockedWallet.Balance < transactionInfo.Amount {
+		return exception.NewConflictError(ws.cfg.Constant.ErrorField.Balance)
+	}
+
+	transaction := &entities.Transaction{
+		Amount:        transactionInfo.Amount,
+		Type:          transactionInfo.TransactionType,
+		ReferenceType: transactionInfo.ReferenceType,
+		ReferenceID:   *transactionInfo.ReferenceId,
+		WalletID:      foundWallet.ID,
+	}
+
+	err = transactionRepo.Create(transaction)
+	if err != nil {
+		return err
+	}
+
+	err = walletRepo.UpdateBalance(lockedWallet.ID, lockedWallet.Balance-transaction.Amount)
+	if err != nil {
+		return err
+	}
+
+	return nil
 
 }
 
@@ -136,8 +202,12 @@ func (ws *WalletService) GetLastTransactions(userId uint) ([]walletdto.Transacti
 
 	transactionList := make([]walletdto.TransactionListDTOResponse, 0)
 	for _, t := range transactions {
+		transactionID, err := ws.hashID.Encode(t.ID)
+		if err != nil {
+			return nil, err
+		}
 		transactionList = append(transactionList, walletdto.TransactionListDTOResponse{
-			ID:        t.ID,
+			ID:        transactionID,
 			Amount:    t.Amount,
 			Type:      t.Type.String(),
 			Reason:    t.ReferenceType.String(),
@@ -146,4 +216,31 @@ func (ws *WalletService) GetLastTransactions(userId uint) ([]walletdto.Transacti
 	}
 
 	return transactionList, nil
+}
+
+func (ws *WalletService) Deposit(transactionInfo walletdto.WalletDTORequest) error {
+	return ws.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		return ws.depositInternal(rf, transactionInfo)
+	})
+}
+
+func (ws *WalletService) Deduct(transactionInfo walletdto.WalletDTORequest) error {
+	return ws.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		return ws.deductInternal(rf, transactionInfo)
+	})
+}
+
+func (ws *WalletService) Transfer(deductReq walletdto.WalletDTORequest, depositReq walletdto.WalletDTORequest) error {
+	return ws.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+
+		if err := ws.deductInternal(rf, deductReq); err != nil {
+			return err
+		}
+
+		if err := ws.depositInternal(rf, depositReq); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

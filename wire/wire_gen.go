@@ -26,6 +26,7 @@ import (
 	"github.com/Vanak/Backend/internal/infrastructure/seeder"
 	"github.com/Vanak/Backend/internal/infrastructure/storage"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/parking"
+	"github.com/Vanak/Backend/internal/presentation/controller/v1/reservation"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/user"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/vehicle"
 	"github.com/Vanak/Backend/internal/presentation/controller/v1/wallet"
@@ -77,11 +78,13 @@ func InitializeApplication(config *bootstrap.Config) (*Application, error) {
 	}
 	customerUserController := user.NewCustomerUserController(config, userService)
 	vehicleRepository := postgres.NewVehicleRepository(config, db)
-	vehicleService := service.NewVehicleService(unitOfWork, config, s3Storage, vehicleRepository)
+	vehicleService := service.NewVehicleService(unitOfWork, config, s3Storage, vehicleRepository, hashID)
 	customerVehicleController := vehicle.NewCustomerVehicleController(config, vehicleService)
-	walletService := service.NewWalletService(unitOfWork, config)
+	walletService := service.NewWalletService(unitOfWork, config, hashID)
 	customerWalletController := wallet.NewCustomerWalletController(config, walletService)
-	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, generalParkingController, seeds, customerUserController, customerVehicleController, customerWalletController, hashID)
+	reservationService := service.NewReservationService(config, unitOfWork, hashID, parkingService, vehicleService, walletService)
+	customerReservationController := reservation.NewCustomerReservationController(config, reservationService)
+	application := NewApplication(wireDatabase, translationService, middlewares, constants, otpService, userService, generalUserController, customerParkingController, generalParkingController, seeds, customerUserController, customerVehicleController, customerWalletController, customerReservationController, hashID)
 	return application, nil
 }
 
@@ -105,20 +108,21 @@ type Seeds struct {
 }
 
 type Application struct {
-	Database                  *Database
-	Translator                localization2.Translator
-	Middlewares               *Middlewares
-	Constants                 *bootstrap.Constants
-	OtpService                *service.OtpService
-	UserService               *service.UserService
-	GeneralUserController     *user.GeneralUserController
-	Seeds                     *Seeds
-	CustomerParkingController *parking.CustomerParkingController
-	GeneralParkingController  *parking.GeneralParkingController
-	CustomerUserController    *user.CustomerUserController
-	CustomerVehicleController *vehicle.CustomerVehicleController
-	CustomerWalletController  *wallet.CustomerWalletController
-	HashID                    *hashed.HashID
+	Database                      *Database
+	Translator                    localization2.Translator
+	Middlewares                   *Middlewares
+	Constants                     *bootstrap.Constants
+	OtpService                    *service.OtpService
+	UserService                   *service.UserService
+	GeneralUserController         *user.GeneralUserController
+	Seeds                         *Seeds
+	CustomerParkingController     *parking.CustomerParkingController
+	GeneralParkingController      *parking.GeneralParkingController
+	CustomerUserController        *user.CustomerUserController
+	CustomerVehicleController     *vehicle.CustomerVehicleController
+	CustomerWalletController      *wallet.CustomerWalletController
+	CustomerReservationController *reservation.CustomerReservationController
+	HashID                        *hashed.HashID
 }
 
 func ProvideDBConfig(config *bootstrap.Config) *bootstrap.Database {
@@ -134,17 +138,17 @@ func ProvideRedisCache(cfg *bootstrap.Config) database.Cache {
 	return &db
 }
 
-var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, postgres.NewParkingRepository, postgres.NewVehicleRepository, postgres.NewWalletRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, storage.NewS3Storage, wire.Bind(new(storage2.S3Storage), new(*storage.S3Storage)), wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Bind(new(postgres2.ParkingRepository), new(*postgres.ParkingRepository)), wire.Bind(new(postgres2.VehicleRepository), new(*postgres.VehicleRepository)), wire.Bind(new(postgres2.WalletRepository), new(*postgres.WalletRepository)), wire.Struct(new(Database), "*"))
+var DatabaseProviderSet = wire.NewSet(database.NewPostgresDataBase, ProvideRedisCache, redis.NewUserCacheRepository, postgres.NewUserRepository, postgres.NewAddressRepository, postgres.NewParkingRepository, postgres.NewVehicleRepository, postgres.NewWalletRepository, postgres.NewReservationRepository, persistance.NewUnitOfWork, persistance.NewRepositoryFactory, storage.NewS3Storage, wire.Bind(new(storage2.S3Storage), new(*storage.S3Storage)), wire.Bind(new(ports.UnitOfWork), new(*persistance.UnitOfWork)), wire.Bind(new(ports.RepositoryFactory), new(*persistance.RepositoryFactory)), wire.Bind(new(redis2.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(postgres2.UserRepository), new(*postgres.UserRepository)), wire.Bind(new(postgres2.AddressRepository), new(*postgres.AddressRepository)), wire.Bind(new(postgres2.ParkingRepository), new(*postgres.ParkingRepository)), wire.Bind(new(postgres2.VehicleRepository), new(*postgres.VehicleRepository)), wire.Bind(new(postgres2.WalletRepository), new(*postgres.WalletRepository)), wire.Bind(new(postgres2.ReservationRepository), new(*postgres.ReservationRepository)), wire.Struct(new(Database), "*"))
 
 var MiddlewareSet = wire.NewSet(middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleWare, middleware.NewCorsMiddleware, wire.Struct(new(Middlewares), "*"))
 
-var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, service.NewParkingService, service.NewWalletService, jwt.NewJwtKeyManager, service.NewVehicleService, wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)), wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)), wire.Bind(new(usecase.WalletService), new(*service.WalletService)))
+var ServiceSet = wire.NewSet(localization.NewTranslationService, service.NewOtpService, service.NewUserService, service.NewJwtService, service.NewParkingService, service.NewWalletService, service.NewReservationService, jwt.NewJwtKeyManager, service.NewVehicleService, wire.Bind(new(usecase.UserProfileUseCase), new(*service.UserService)), wire.Bind(new(usecase.VehicleService), new(*service.VehicleService)), wire.Bind(new(localization2.Translator), new(*localization.TranslationService)), wire.Bind(new(jwt2.KeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.OtpService), new(*service.OtpService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.JwtService), new(*service.JwtService)), wire.Bind(new(usecase.ParkingService), new(*service.ParkingService)), wire.Bind(new(usecase.WalletService), new(*service.WalletService)), wire.Bind(new(usecase.ReservationService), new(*service.ReservationService)))
 
 var SeederSet = wire.NewSet(seeder.NewAddressSeeder, seeder.NewAttributeTypeSeeder, seeder.NewParkingSeeder, seeder.NewUserSeeder, wire.Struct(new(Seeds), "*"))
 
 var HashIDSet = wire.NewSet(hashed.NewHashID)
 
-var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, parking.NewGeneralParkingController, user.NewCustomerUserController, vehicle.NewCustomerVehicleController, wallet.NewCustomerWalletController)
+var ControllerSet = wire.NewSet(user.NewGeneralUserController, parking.NewCustomerParkingController, parking.NewGeneralParkingController, user.NewCustomerUserController, vehicle.NewCustomerVehicleController, wallet.NewCustomerWalletController, reservation.NewCustomerReservationController)
 
 func NewApplication(
 	db *Database,
@@ -160,22 +164,23 @@ func NewApplication(
 	customerUserController *user.CustomerUserController,
 	customerVehicleController *vehicle.CustomerVehicleController,
 	customerWalletController *wallet.CustomerWalletController,
+	customerReservationController *reservation.CustomerReservationController,
 	hashID *hashed.HashID,
 ) *Application {
 	return &Application{
-		Database:                  db,
-		Translator:                trans,
-		Middlewares:               mid,
-		Constants:                 cons,
-		OtpService:                otpService,
-		UserService:               userService,
-		GeneralUserController:     generalUserController,
-		Seeds:                     seeds,
-		CustomerParkingController: customerParkingController,
-		GeneralParkingController:  generalParkingController,
-		CustomerUserController:    customerUserController,
-		CustomerVehicleController: customerVehicleController,
-		CustomerWalletController:  customerWalletController,
-		HashID:                    hashID,
+		Database:                      db,
+		Translator:                    trans,
+		Middlewares:                   mid,
+		Constants:                     cons,
+		OtpService:                    otpService,
+		UserService:                   userService,
+		GeneralUserController:         generalUserController,
+		Seeds:                         seeds,
+		CustomerParkingController:     customerParkingController,
+		CustomerUserController:        customerUserController,
+		CustomerVehicleController:     customerVehicleController,
+		CustomerWalletController:      customerWalletController,
+		CustomerReservationController: customerReservationController,
+		HashID:                        hashID,
 	}
 }

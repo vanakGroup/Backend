@@ -8,4 +8,5 @@ type VehicleRepository interface {
 	FindUserVehicle(vehicleId uint, userId uint) (*entities.Vehicle, error)
 	RemoveVehicle(vehicleId uint, userId uint) error
 	FindAllUserVehicles(userId uint) ([]entities.Vehicle, error)
+	FindVehicleByID(vehicleID uint) (*entities.Vehicle, error)
 }

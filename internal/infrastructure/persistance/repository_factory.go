@@ -46,3 +46,7 @@ func (f *RepositoryFactory) PaymentRepository() postgresDomain.PaymentRepository
 func (f *RepositoryFactory) TransactionRepository() postgresDomain.TransactionRepository {
 	return postgres.NewTransactionRepository(f.cfg, f.db)
 }
+
+func (f *RepositoryFactory) ReservationRepository() postgresDomain.ReservationRepository {
+	return postgres.NewReservationRepository(f.cfg, f.db)
+}

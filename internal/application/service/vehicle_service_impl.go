@@ -14,6 +14,7 @@ import (
 	"github.com/Vanak/Backend/internal/domain/ports/repository/postgres"
 	"github.com/Vanak/Backend/internal/domain/storage"
 	"github.com/Vanak/Backend/internal/domain/utils"
+	"github.com/Vanak/Backend/internal/infrastructure/hashed"
 )
 
 type VehicleService struct {
@@ -21,6 +22,7 @@ type VehicleService struct {
 	cfg         *bootstrap.Config
 	S3Storage   storage.S3Storage
 	vehicleRepo postgres.VehicleRepository
+	hashID      *hashed.HashID
 }
 
 func NewVehicleService(
@@ -28,12 +30,14 @@ func NewVehicleService(
 	cfg *bootstrap.Config,
 	S3Storage storage.S3Storage,
 	vehicleRepo postgres.VehicleRepository,
+	hashID *hashed.HashID,
 ) *VehicleService {
 	return &VehicleService{
 		cfg:         cfg,
 		S3Storage:   S3Storage,
 		vehicleRepo: vehicleRepo,
 		unitOfWork:  unitOfWork,
+		hashID:      hashID,
 	}
 }
 
@@ -98,7 +102,12 @@ func (vs *VehicleService) RegisterVehicle(ctx context.Context, vehicleInfo vehic
 	return err
 }
 
-func (vs *VehicleService) GetVehicle(vehicleId uint, userId uint) (*vehicledto.VehicleDTOResponse, error) {
+func (vs *VehicleService) GetVehicle(vehicleHashedId string, userId uint) (*vehicledto.VehicleDTOResponse, error) {
+	vehicleId, err := vs.hashID.Decode(vehicleHashedId)
+	if err != nil {
+		return nil, err
+	}
+
 	vehicle, err := vs.unitOfWork.Factory().VehicleRepository().FindUserVehicle(vehicleId, userId)
 	if err != nil {
 		not_found := exception.NewNotFoundError(vs.cfg.Constant.ErrorField.Vehicle)
@@ -119,7 +128,12 @@ func (vs *VehicleService) GetVehicle(vehicleId uint, userId uint) (*vehicledto.V
 	return &vehicleInformation, nil
 }
 
-func (vs *VehicleService) DeleteVehicle(vehicleId uint, userId uint) error {
+func (vs *VehicleService) DeleteVehicle(vehicleHashedId string, userId uint) error {
+	vehicleId, err := vs.hashID.Decode(vehicleHashedId)
+	if err != nil {
+		return err
+	}
+
 	vehicle, err := vs.vehicleRepo.FindUserVehicle(vehicleId, userId)
 	if err != nil {
 		not_found := exception.NewNotFoundError(vs.cfg.Constant.ErrorField.Vehicle)
@@ -151,8 +165,12 @@ func (vs *VehicleService) GetAllVehicles(userId uint) ([]vehicledto.VehicleListD
 
 	vehiclesList := make([]vehicledto.VehicleListDTOResponse, 0, len(vehicles))
 	for _, v := range vehicles {
+		vehicleID, err := vs.hashID.Encode(v.ID)
+		if err != nil {
+			return nil, err
+		}
 		vehiclesList = append(vehiclesList, vehicledto.VehicleListDTOResponse{
-			ID:           v.ID,
+			ID:           vehicleID,
 			LicensePlate: v.LicensePlate,
 			CarModel:     v.CarModel,
 		})

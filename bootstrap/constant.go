@@ -146,6 +146,9 @@ type ErrorField struct {
 	FirstName            string
 	LastName             string
 	Wallet               string
+	Transaction          string
+	Time                 string
+	Balance              string
 }
 
 type ProfileFilled struct {
@@ -282,6 +285,9 @@ func NewConstant() *Constants {
 			FirstName:            "firstName",
 			LastName:             "lastName",
 			Wallet:               "wallet",
+			Transaction:          "transaction",
+			Time:                 "time",
+			Balance:              "balance",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyRegistered:      "alreadyRegistered",

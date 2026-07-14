@@ -179,7 +179,7 @@ definitions:
       car_model:
         type: string
       id:
-        type: integer
+        type: string
       license_plate:
         type: string
     type: object
@@ -190,7 +190,7 @@ definitions:
       created_at:
         type: integer
       id:
-        type: integer
+        type: string
       reason:
         type: string
       type:
@@ -380,6 +380,132 @@ paths:
       summary: Get User parkings
       tags:
       - Customer Parking
+  /parking/{parking_id}/reservation/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all reservations made by the authenticated customer
+        for a specific parking facility using its hashed ID.
+      parameters:
+      - description: Hashed Parking ID
+        in: path
+        name: parking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of reservations successfully retrieved
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Invalid parking ID format
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "404":
+          description: Parking not found
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's reservations for a specific parking
+      tags:
+      - Parking Reservation
+  /parking/{parking_id}/reservation/{reserve_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information of a specific reservation inside
+        a specific parking lot using their hashed IDs.
+      parameters:
+      - description: Hashed Parking ID
+        in: path
+        name: parking_id
+        required: true
+        type: string
+      - description: Hashed Reservation ID
+        in: path
+        name: reserve_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reservation details successfully retrieved
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Invalid IDs provided
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "404":
+          description: Reservation or Parking not found
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get details of a specific parking reservation
+      tags:
+      - Parking Reservation
+  /parking/{parking_id}/reservation/{reserve_id}/settle:
+    post:
+      consumes:
+      - application/json
+      description: Settle the payment for a specific reservation and transfer funds
+        to the parking owner.
+      parameters:
+      - description: Hashed Reservation ID
+        in: path
+        name: reserve_id
+        required: true
+        type: string
+      - description: Hashed Parking ID
+        in: path
+        name: parking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Settlement successful
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Invalid IDs or Insufficient funds
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Verify and settle a reservation
+      tags:
+      - Reservation Settlement
   /parking/crud/create:
     post:
       consumes:
@@ -720,6 +846,57 @@ paths:
       summary: Update Customer Profile
       tags:
       - Profile
+  /reservation:
+    post:
+      consumes:
+      - application/json
+      description: Register a new parking reservation by providing hashed parking
+        and vehicle IDs, along with start and end times as Unix timestamps.
+      parameters:
+      - description: Reservation payload (Timestamps must be > 0 and end_time > start_time)
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            end_time:
+              type: integer
+            parking_id:
+              type: string
+            start_time:
+              type: integer
+            vehicle_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful reservation message
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Validation error (missing fields, invalid time range, or invalid
+            IDs)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "409":
+          description: Conflict error (Slots are unavailable or already booked)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new parking reservation
+      tags:
+      - Customer Reservation
   /vehicle:
     get:
       consumes:
@@ -805,7 +982,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -844,7 +1021,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -877,6 +1054,91 @@ paths:
       summary: Get customer vehicle details
       tags:
       - Customer Vehicle
+  /vehicle/{id}/reservation:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all reservations made by the authenticated customer
+        for a specific vehicle using its hashed ID.
+      parameters:
+      - description: Hashed Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of vehicle reservations successfully retrieved
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Invalid vehicle ID format or missing ID
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "404":
+          description: Vehicle not found
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's reservations for a specific vehicle
+      tags:
+      - Vehicle Reservation
+  /vehicle/{id}/reservation/{reserve_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information of a specific reservation for a given
+        vehicle using their hashed IDs.
+      parameters:
+      - description: Hashed Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Hashed Reservation ID
+        in: path
+        name: reserve_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reservation details successfully retrieved
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "400":
+          description: Invalid IDs provided
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "401":
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "404":
+          description: Reservation or Vehicle not found
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/base.SingleMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get details of a specific reservation for a vehicle
+      tags:
+      - Vehicle Reservation
   /wallet:
     get:
       consumes:

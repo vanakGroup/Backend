@@ -10,4 +10,5 @@ type RepositoryFactory interface {
 	WalletRepository() postgresDomain.WalletRepository
 	PaymentRepository() postgresDomain.PaymentRepository
 	TransactionRepository() postgresDomain.TransactionRepository
+	ReservationRepository() postgresDomain.ReservationRepository
 }

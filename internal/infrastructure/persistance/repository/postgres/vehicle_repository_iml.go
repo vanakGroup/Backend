@@ -69,3 +69,16 @@ func (vr *VehicleRepository) FindAllUserVehicles(userId uint) ([]entities.Vehicl
 	}
 	return vehicles, nil
 }
+
+func (vr *VehicleRepository) FindVehicleByID(vehicleID uint) (*entities.Vehicle, error) {
+	var vehicle entities.Vehicle
+	err := vr.db.Model(&entities.Vehicle{}).
+		Where("id = ?", vehicleID).
+		First(&vehicle).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &vehicle, nil
+}

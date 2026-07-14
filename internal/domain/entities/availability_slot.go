@@ -14,4 +14,6 @@ type AvailabilitySlot struct {
 
 	ParkingID uint    `gorm:"not null"`
 	Parking   Parking `gorm:"foreignKey:ParkingID;constraint:OnDelete:CASCADE"`
+
+	ReservationID *uint `gorm:"index"`
 }

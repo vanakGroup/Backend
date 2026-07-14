@@ -688,6 +688,197 @@
                 }
             }
         },
+        "/parking/{parking_id}/reservation/": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all reservations made by the authenticated customer for a specific parking facility using its hashed ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Parking Reservation"
+                ],
+                "summary": "Get user's reservations for a specific parking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Hashed Parking ID",
+                        "name": "parking_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of reservations successfully retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parking ID format",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Parking not found",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/{parking_id}/reservation/{reserve_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve detailed information of a specific reservation inside a specific parking lot using their hashed IDs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Parking Reservation"
+                ],
+                "summary": "Get details of a specific parking reservation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Hashed Parking ID",
+                        "name": "parking_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Hashed Reservation ID",
+                        "name": "reserve_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reservation details successfully retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid IDs provided",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Reservation or Parking not found",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/parking/{parking_id}/reservation/{reserve_id}/settle": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Settle the payment for a specific reservation and transfer funds to the parking owner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reservation Settlement"
+                ],
+                "summary": "Verify and settle a reservation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Hashed Reservation ID",
+                        "name": "reserve_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Hashed Parking ID",
+                        "name": "parking_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Settlement successful",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid IDs or Insufficient funds",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/profile": {
             "get": {
                 "security": [
@@ -781,6 +972,83 @@
                     },
                     "401": {
                         "description": "Unauthorized - Missing or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reservation": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Register a new parking reservation by providing hashed parking and vehicle IDs, along with start and end times as Unix timestamps.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer Reservation"
+                ],
+                "summary": "Create a new parking reservation",
+                "parameters": [
+                    {
+                        "description": "Reservation payload (Timestamps must be \u003e 0 and end_time \u003e start_time)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "end_time": {
+                                    "type": "integer"
+                                },
+                                "parking_id": {
+                                    "type": "string"
+                                },
+                                "start_time": {
+                                    "type": "integer"
+                                },
+                                "vehicle_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful reservation message",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error (missing fields, invalid time range, or invalid IDs)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict error (Slots are unavailable or already booked)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
                         }
@@ -918,7 +1186,7 @@
                 "summary": "Get customer vehicle details",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Vehicle ID",
                         "name": "id",
                         "in": "path",
@@ -983,7 +1251,7 @@
                 "summary": "Delete customer vehicle",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Vehicle ID",
                         "name": "id",
                         "in": "path",
@@ -1011,6 +1279,135 @@
                     },
                     "404": {
                         "description": "Vehicle not found",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vehicle/{id}/reservation": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all reservations made by the authenticated customer for a specific vehicle using its hashed ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicle Reservation"
+                ],
+                "summary": "Get user's reservations for a specific vehicle",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Hashed Vehicle ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of vehicle reservations successfully retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid vehicle ID format or missing ID",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Vehicle not found",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vehicle/{id}/reservation/{reserve_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve detailed information of a specific reservation for a given vehicle using their hashed IDs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicle Reservation"
+                ],
+                "summary": "Get details of a specific reservation for a vehicle",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Hashed Vehicle ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Hashed Reservation ID",
+                        "name": "reserve_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reservation details successfully retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid IDs provided",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/base.SingleMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Reservation or Vehicle not found",
                         "schema": {
                             "$ref": "#/definitions/base.SingleMessageResponse"
                         }
@@ -1451,7 +1848,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "license_plate": {
                     "type": "string"
@@ -1468,7 +1865,7 @@
                     "type": "integer"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "reason": {
                     "type": "string"

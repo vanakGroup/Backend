@@ -233,6 +233,18 @@ func (pr *ParkingRepository) GetAll(options *filter.QueryOptions) ([]entities.Pa
 	return parkings, nil
 }
 
+func (pr *ParkingRepository) FindByID(id uint) (*entities.Parking, error) {
+	var parking entities.Parking
+	err := pr.db.Model(&entities.Parking{}).
+		Where("id = ?", id).First(&parking).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &parking, err
+}
+
 func (pr *ParkingRepository) CountAll() (int64, error) {
 	var total int64
 	err := pr.db.Model(&entities.Parking{}).Count(&total).Error

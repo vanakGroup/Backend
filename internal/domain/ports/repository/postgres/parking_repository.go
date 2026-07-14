@@ -26,6 +26,7 @@ type ParkingRepository interface {
 	GetAllAttributes() ([]entities.ParkingAttribute, error)
 	GetParkingByIDAndUserID(userID uint, parkingID uint) (*entities.Parking, error)
 	GetAllByUserID(userID uint) ([]*entities.Parking, error)
+	FindByID(id uint) (*entities.Parking, error)
 	Search(f filter.ParkingFilter, options *filter.QueryOptions) ([]entities.Parking, error)
 	Count(f filter.ParkingFilter) (int64, error)
 	GetAll(options *filter.QueryOptions) ([]entities.Parking, error)
