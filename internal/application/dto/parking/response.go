@@ -65,6 +65,7 @@ type ParkingInfoResponse struct {
 	Address      AddressDetailResponse `json:"address"`
 	AttributeIDs []uint                `json:"attribute_ids"`
 	ImageURLs    []string              `json:"image_urls"`
+	Slots        []SlotDetailResponse  `json:"slots"`
 }
 
 type ParkingForListResponse struct {
