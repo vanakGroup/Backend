@@ -50,7 +50,7 @@ func (vs *VehicleService) RegisterVehicle(ctx context.Context, vehicleInfo vehic
 		validationError.Add(vs.cfg.Constant.ErrorField.CarModel, vs.cfg.Constant.ErrorTag.Empty)
 	}
 
-	if vehicleInfo.CardFile.Size > 10*1024*1024 {
+	if vehicleInfo.CardFile.Size > 100*5000*5000 {
 		validationError.Add(vs.cfg.Constant.ErrorField.RegistrationCardSize, vs.cfg.Constant.ErrorTag.TooLarge)
 	}
 
@@ -134,6 +134,15 @@ func (vs *VehicleService) DeleteVehicle(vehicleHashedId string, userId uint) err
 		return err
 	}
 
+	reservationList, verr := vs.unitOfWork.Factory().ReservationRepository().FindVehicleReservation(vehicleId)
+	if verr != nil {
+		return verr
+	}
+
+	if len(reservationList) >= 1 {
+		return exception.NewConflictError(vs.cfg.Constant.ErrorField.Reserve)
+	}
+
 	vehicle, err := vs.vehicleRepo.FindUserVehicle(vehicleId, userId)
 	if err != nil {
 		not_found := exception.NewNotFoundError(vs.cfg.Constant.ErrorField.Vehicle)
@@ -177,9 +186,9 @@ func (vs *VehicleService) GetAllVehicles(userId uint) ([]vehicledto.VehicleListD
 		}
 
 		vehiclesList = append(vehiclesList, vehicledto.VehicleListDTOResponse{
-			ID:           vehicleID,
-			LicensePlate: v.LicensePlate,
-			CarModel:     v.CarModel,
+			ID:                  vehicleID,
+			LicensePlate:        v.LicensePlate,
+			CarModel:            v.CarModel,
 			RegistrationCardUrl: registrationCardUrl,
 		})
 	}
