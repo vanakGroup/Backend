@@ -85,8 +85,19 @@ func (rs *ReservationService) CreateReservation(reservationInfo reservationdto.R
 		return disabledErr
 	}
 
+	vehicleReservations, err := rs.unitOfWork.Factory().ReservationRepository().FindVehicleReservation(vehicleID)
+	if err != nil {
+		return err
+	}
+
 	startTimeInt := reservationInfo.StartTime
 	endTimeInt := reservationInfo.EndTime
+
+	for _, r := range vehicleReservations {
+		if startTimeInt < r.EndTime && endTimeInt > r.StartTime {
+			return exception.NewConflictError(rs.cfg.Constant.ErrorField.Reserve)
+		}
+	}
 
 	loc, err := time.LoadLocation("Asia/Tehran")
 	if err != nil {
