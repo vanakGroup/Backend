@@ -30,6 +30,7 @@ type Pagination struct {
 
 type Server struct {
 	Port string
+	TopLevelDomain string
 }
 
 type ValidationTag struct {
@@ -199,6 +200,7 @@ func NewConstant() *Constants {
 		},
 		Server: Server{
 			Port: "8080",
+			TopLevelDomain : "ir",
 		},
 		Context: Context{
 			Translator: "translator",

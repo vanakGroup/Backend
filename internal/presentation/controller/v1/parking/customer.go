@@ -116,7 +116,7 @@ func (cpc *CustomerParkingController) CreateParking(ctx *gin.Context) {
 // @Security     BearerAuth
 // @Accept       mpfd
 // @Produce      json
-// @Param        parkingId            formData  int     true   "Parking ID to update"
+// @Param        parkingId            formData  string     true   "Parking ID to update"
 // @Param        title                formData  string  true   "Parking Title"
 // @Param        latitude             formData  number  true   "Latitude"
 // @Param        longitude            formData  number  true   "Longitude"
@@ -196,7 +196,7 @@ func (cpc *CustomerParkingController) UpdateParking(ctx *gin.Context) {
 // @Tags         Customer Parking
 // @Security     BearerAuth
 // @Produce      json
-// @Param        id   path      int  true  "Parking ID"
+// @Param        id   path      string  true  "Parking ID"
 // @Success      200  {object}  base.SingleMessageResponse
 // @Failure      400  {object}  base.MultipleMessageResponse
 // @Router       /parking/crud/delete/{id} [delete]
@@ -225,7 +225,7 @@ func (cpc *CustomerParkingController) DeleteParking(ctx *gin.Context) {
 // @Tags         Customer Parking
 // @Security     BearerAuth
 // @Produce      json
-// @Param        id   path      int  true  "Parking ID"
+// @Param        id   path      string  true  "Parking ID"
 // @Success      200  {object}  parkingdto.ParkingDetailResponse
 // @Failure      400  {object}  base.MultipleMessageResponse
 // @Router       /parking/crud/parkingDetail/{id} [get]
@@ -308,7 +308,7 @@ func (cpc *CustomerParkingController) GetAttributes(ctx *gin.Context) {
 // @Param        id   path      string  true  "Parking ID"
 // @Success      200  {object}  parkingdto.ParkingDetailResponse
 // @Failure      400  {object}  base.MultipleMessageResponse
-// @Router       /parking/parkingInfo/{id} [get]
+// @Router       /parking/info/{id} [get]
 func (cpc *CustomerParkingController) GetParkingInfo(ctx *gin.Context) {
 	type GetParkingInfoParam struct {
 		IDHashed string `uri:"id" validate:"required,min=1"`
