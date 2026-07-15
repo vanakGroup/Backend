@@ -188,6 +188,7 @@ func NewApplication(
 		GeneralUserController:         generalUserController,
 		Seeds:                         seeds,
 		CustomerParkingController:     customerParkingController,
+		GeneralParkingController:      generalParkingController,
 		CustomerUserController:        customerUserController,
 		CustomerVehicleController:     customerVehicleController,
 		CustomerWalletController:      customerWalletController,
