@@ -35,3 +35,10 @@ type SlotFilter struct {
 	StartHour uint
 	EndHour   uint
 }
+
+// HasTimeWindow reports whether the caller asked for a specific time range.
+// When only a date is provided (no hours), StartHour and EndHour are both zero
+// and this returns false, meaning "any available slot on that day".
+func (s SlotFilter) HasTimeWindow() bool {
+	return s.EndHour > s.StartHour
+}
