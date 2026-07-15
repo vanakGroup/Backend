@@ -256,6 +256,7 @@ func (pr *ParkingRepository) GetByID(id uint) (*entities.Parking, error) {
 	err := pr.db.Preload("Address").
 		Preload("Images").
 		Preload("Attributes").
+		Preload("Slots").
 		First(&parking, id).Error
 	if err != nil {
 		return nil, err

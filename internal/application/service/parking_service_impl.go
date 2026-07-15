@@ -810,6 +810,16 @@ func (ps *ParkingService) GetParkingPublicInfo(parkingIDHashed string) (*parking
 		attributeIDs = append(attributeIDs, attr.ID)
 	}
 
+	var slotsDTO []parkingdto.SlotDetailResponse
+	for _, slot := range parking.Slots {
+		slotsDTO = append(slotsDTO, parkingdto.SlotDetailResponse{
+			ID:       slot.ID,
+			Date:     slot.Date,
+			Hour:     slot.Hour,
+			IsBooked: slot.IsBooked,
+		})
+	}
+
 	parkingHashedID, err := ps.hashID.Encode(parking.ID)
 	if err != nil {
 		return nil, exception.NewBadRequestErrorWithField(ps.cfg.Constant.ErrorField.Hashed)
@@ -830,5 +840,6 @@ func (ps *ParkingService) GetParkingPublicInfo(parkingIDHashed string) (*parking
 		},
 		AttributeIDs: attributeIDs,
 		ImageURLs:    imageUrls,
+		Slots: slotsDTO,
 	}, nil
 }
