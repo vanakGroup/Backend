@@ -15,8 +15,8 @@ func RegisterSwagger(ginEngine *gin.Engine, cfg *bootstrap.Config) {
 	docs.SwaggerInfo.Description = "REST API documentation for Vanak core Parking services"
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.BasePath = "/v1"
-	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%s", cfg.Constant.Server.Port)
-	docs.SwaggerInfo.Schemes = []string{"http"}
+	docs.SwaggerInfo.Host = fmt.Sprintf("vparking.%s", cfg.Constant.Server.TopLevelDomain)
+	docs.SwaggerInfo.Schemes = []string{"https"}
 
 	ginEngine.GET("/swagger/*any", ginSwagger.WrapHandler((swaggerFiles.Handler)))
 }
