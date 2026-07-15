@@ -169,10 +169,18 @@ func (vs *VehicleService) GetAllVehicles(userId uint) ([]vehicledto.VehicleListD
 		if err != nil {
 			return nil, err
 		}
+
+		expirationTime := 15 * time.Minute
+		registrationCardUrl, errUrl := vs.S3Storage.GetPresignedURL(enums.RegistrationCardPic, v.RegistrationCardUrl, expirationTime)
+		if errUrl != nil {
+			return nil, errUrl
+		}
+
 		vehiclesList = append(vehiclesList, vehicledto.VehicleListDTOResponse{
 			ID:           vehicleID,
 			LicensePlate: v.LicensePlate,
 			CarModel:     v.CarModel,
+			RegistrationCardUrl: registrationCardUrl,
 		})
 	}
 

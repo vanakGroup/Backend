@@ -7,7 +7,8 @@ type VehicleDTOResponse struct {
 }
 
 type VehicleListDTOResponse struct {
-	ID           string `json:"id"`
-	LicensePlate string `json:"license_plate"`
-	CarModel     string `json:"car_model"`
+	ID                  string `json:"id"`
+	LicensePlate        string `json:"license_plate"`
+	CarModel            string `json:"car_model"`
+	RegistrationCardUrl string `json:"registration_card_url"`
 }
