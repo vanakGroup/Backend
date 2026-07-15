@@ -104,21 +104,34 @@ func (pqb *ParkingQueryBuilder) ApplyAttributes(attr filter.AttributeFilter) *Pa
 func (pqb *ParkingQueryBuilder) ApplySlot(slot *filter.SlotFilter) *ParkingQueryBuilder {
 	query := pqb.query
 
-	if slot != nil {
-		requestedHours := slot.EndHour - slot.StartHour
+	if slot == nil {
+		return pqb
+	}
 
-		query = query.
-			Joins(`
+	query = query.
+		Joins(`
 			JOIN availability_slots availability
 				ON availability.parking_id = parkings.id
 		`).
-			Where("availability.date = ?", slot.Date).
+		// Match on the calendar day rather than an exact timestamp so that a
+		// date supplied at UTC midnight still matches slots stored in another
+		// timezone.
+		Where("availability.date::date = ?::date", slot.Date).
+		Where("availability.is_booked = ?", false).
+		Group("parkings.id")
+
+	if slot.HasTimeWindow() {
+		// A specific time range was requested: the parking must have every hour
+		// in [StartHour, EndHour) available.
+		requestedHours := slot.EndHour - slot.StartHour
+
+		query = query.
 			Where("availability.hour >= ?", slot.StartHour).
 			Where("availability.hour < ?", slot.EndHour).
-			Where("availability.is_booked = ?", false).
-			Group("parkings.id").
 			Having("COUNT(DISTINCT availability.hour) = ?", requestedHours)
 	}
+	// Otherwise (date only) it is enough to have at least one available hour on
+	// that day, which the JOIN + is_booked filter already guarantees.
 
 	pqb.query = query
 
